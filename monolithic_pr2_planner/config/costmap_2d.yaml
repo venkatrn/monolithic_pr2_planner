@@ -1,0 +1,18 @@
+map_type: costmap
+# resolution: 0.02
+# z_resolution: 0.02
+publish_voxel_map: true
+map_topic: projected_map
+static_map: true
+# origin_x: 0
+# origin_y: 0
+# origin_z: 0
+lethal_cost_threshold: 50
+# Bug in costmap_2d!
+unknown_cost_value: 255
+track_unknown_space: true
+footprint: [[-0.4, -0.4], [-0.4, 0.4], [0.4, 0.4], [0.4, -0.4]]
+# footprint_padding: 0.01
+inflation_radius: 0.55
+# robot_radius: 0.7
+# cost_scaling_factor: 10.0

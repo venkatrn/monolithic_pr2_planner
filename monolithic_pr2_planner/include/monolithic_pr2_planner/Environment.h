@@ -50,6 +50,7 @@ namespace monolithic_pr2_planner {
             bool InitializeMDPCfg(MDPConfig *MDPCfg){ return true; };
             int  GetFromToHeuristic(int FromStateID, int ToStateID){ throw std::runtime_error("unimplement");  };
             int  GetGoalHeuristic(int stateID);
+            int  GetGoalHeuristic(int stateID, int goal_id);
             int  GetStartHeuristic(int stateID) { throw std::runtime_error("unimplement"); };
             void GetPreds(int TargetStateID, std::vector<int>* PredIDV, std::vector<int>* CostV){};
             void SetAllActionsandAllOutcomes(CMDPSTATE* state){};

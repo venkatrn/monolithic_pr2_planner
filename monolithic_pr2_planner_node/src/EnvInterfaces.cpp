@@ -25,6 +25,7 @@ EnvInterfaces::EnvInterfaces(boost::shared_ptr<monolithic_pr2_planner::Environme
         getParams();
     bool forward_search = true;
     m_planner.reset(new ARAPlanner(m_env.get(), forward_search));
+    // m_planner.reset(new MPlanner(m_env.get(), 3, forward_search));
     m_heur_map_pub = m_nodehandle.advertise<nav_msgs::OccupancyGrid>("heur_map", 1);
 }
 
@@ -83,6 +84,8 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
     }
 
     m_planner->set_initialsolution_eps(search_request->initial_epsilon);
+    // m_planner->set_initialsolution_eps1(10);
+    // m_planner->set_initialsolution_eps2(5);
     bool return_first_soln = true;
     m_planner->set_search_mode(return_first_soln);
     m_planner->set_start(start_id);
@@ -211,6 +214,7 @@ void EnvInterfaces::loadNavMap(const nav_msgs::OccupancyGridPtr& map){
                     map->info.width, map->info.height, map->info.resolution);
     ROS_DEBUG_NAMED(CONFIG_LOG, "origin is at %f %f", map->info.origin.position.x,
                                                       map->info.origin.position.y);
+    ROS_DEBUG_NAMED(CONFIG_LOG, "Map value: %d", map->data[0]);
     // TODO look up the values for this cropping from the occup grid parameters
     vector<signed char> final_map;
 

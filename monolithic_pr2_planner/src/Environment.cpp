@@ -35,9 +35,22 @@ bool Environment::configureRequest(SearchRequestParamsPtr search_request_params,
 
 int Environment::GetGoalHeuristic(int stateID){
     // For now, return the max of all the heuristics
+    return GetGoalHeuristic(stateID, 0);
+}
+
+int Environment::GetGoalHeuristic(int stateID, int goal_id){
+    // For now, return the max of all the heuristics
     std::vector<int> values = m_heur_mgr->getGoalHeuristic(m_hash_mgr->getGraphState(stateID));
     // return values[0];
-    return *std::max_element(values.begin(), values.end());
+    switch(goal_id){
+        case 0://anchor search
+            return values[0];
+        case 1:
+            return values[1];
+        default:
+            return *std::max_element(values.begin(), values.end());
+    }
+    // return *std::max_element(values.begin(), values.end());
 }
 
 void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs, 
@@ -54,8 +67,8 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
     GraphStatePtr source_state = m_hash_mgr->getGraphState(sourceStateID);
     ROS_DEBUG_NAMED(SEARCH_LOG, "Source state is:");
     source_state->robot_pose().printToDebug(SEARCH_LOG);
-    source_state->robot_pose().visualize();
-    usleep(10000);
+    // source_state->robot_pose().visualize();
+    // usleep(10000);
 
     for (auto mprim : m_mprims.getMotionPrims()){
         ROS_DEBUG_NAMED(SEARCH_LOG, "Applying motion:");
@@ -166,8 +179,8 @@ void Environment::configurePlanningDomain(){
 
     // Initialize the heuristics. The (optional) parameter defines the cost multiplier.
     // TODO: It's 40 for now, until the actual cost for arm costs are computed.
-    // m_heur_mgr->add3DHeur(40);
-    m_heur_mgr->add2DHeur(20);
+    m_heur_mgr->add3DHeur(40);
+    m_heur_mgr->add2DHeur(40);
 
     // used for arm kinematics
     LeftContArmState::initArmModel(m_param_catalog.m_left_arm_params);

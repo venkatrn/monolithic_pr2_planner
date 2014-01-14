@@ -19,14 +19,13 @@
     <param name="filter_ground" value="true"/>
     <param name="occupancy_min_z" value="0.05"/>
     <param name="occupancy_max_z" value="2.0"/>
+    <param name="base_frame_id" value="map" />
     <remap from="cloud_in" to="pcl_environment" />
 
   </node>
   <node pkg="monolithic_pr2_planner_node" type="stlToOctomap"
   name="stlToOctomap" args="package://monolithic_pr2_planner_node/maps/max_kitchen.dae" />
   <param name="robot_description" command="$(find xacro)/xacro.py '$(find pr2_description)/robots/pr2.urdf.xacro'" />
-  <rosparam file="$(find monolithic_pr2_planner)/config/costmap_2d.yaml" command="load" ns="monolithic_pr2_planner" />
-
   
   <node pkg="monolithic_pr2_planner_node" type="node" name="monolithic_pr2_planner_node" output="screen" launch-prefix="gdb --args">
       <rosparam command="load" file="$(find monolithic_pr2_planner_node)/config/logging_levels.yaml" />
@@ -37,6 +36,7 @@
       <param name="planner/base_motion_primitive_file" value="$(find monolithic_pr2_planner)/config/full_body_base.mprim" />
       <param name="planner/left_arm_description_file" value="$(find monolithic_pr2_planner)/config/pr2_left_arm.cfg" />
       <param name="planner/right_arm_description_file" value="$(find monolithic_pr2_planner)/config/pr2_right_arm.cfg" />
+      <rosparam file="$(find monolithic_pr2_planner)/config/costmap_2d.yaml" command="load" ns="costmap_2d" />
   </node>
   
   <node pkg="tf" type="static_transform_publisher" name="map_to_base_broadcaster" args="0 0 0 0 0 0 map base_link 100" />

@@ -45,5 +45,12 @@ namespace monolithic_pr2_planner_node {
             std::unique_ptr<SBPLPlanner> m_planner;
             ros::Subscriber m_nav_map;
             ros::Publisher m_heur_map_pub;
+            
+            // Doesn't have the need to store the Costmap2D object. Simply has
+// to update the costmap of the heurMgr.
+            std::unique_ptr<costmap_2d::Costmap2DROS> m_costmap_ros;
+            std::unique_ptr<costmap_2d::Costmap2DPublisher> m_costmap_publisher;
+            
+
     };
 }

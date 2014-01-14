@@ -9,7 +9,7 @@ MotionPrimitivesMgr::MotionPrimitivesMgr(boost::shared_ptr<GoalState>& goal){ }
 
 bool MotionPrimitivesMgr::loadMPrims(const MotionPrimitiveParams& params){
     m_params = params;
-    // m_parser.parseArmMotionPrimitives(params.arm_motion_primitive_file, m_motprims);
+    m_parser.parseArmMotionPrimitives(params.arm_motion_primitive_file, m_motprims);
     m_parser.parseBaseMotionPrimitives(params.base_motion_primitive_file, m_motprims);
     ArmAdaptiveMotionPrimitivePtr armAMP = make_shared<ArmAdaptiveMotionPrimitive>();
     m_motprims.push_back(armAMP);

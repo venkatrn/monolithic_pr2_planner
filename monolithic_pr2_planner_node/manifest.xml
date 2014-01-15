@@ -20,6 +20,7 @@
   <depend package="sensor_msgs" />
   <depend package="arm_navigation_msgs" />
   <rosdep name="yaml-cpp" />
+  <depend package="costmap_2d"/>
 
 </package>
 

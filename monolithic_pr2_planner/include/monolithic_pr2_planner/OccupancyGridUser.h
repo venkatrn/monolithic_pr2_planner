@@ -12,5 +12,6 @@ namespace monolithic_pr2_planner {
             static void init(OccupancyGridParams& og_params, RobotResolutionParams& r_params);
             static boost::shared_ptr<sbpl_arm_planner::OccupancyGrid> m_occupancy_grid;
             static RobotResolutionParams m_resolution_params;
+            void getOccupancyGridSize(int& dimX, int& dimY, int&dimZ){m_occupancy_grid->getGridSize(dimX, dimY, dimZ);};
     };
 }

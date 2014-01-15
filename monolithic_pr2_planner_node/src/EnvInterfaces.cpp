@@ -26,7 +26,9 @@ EnvInterfaces::EnvInterfaces(boost::shared_ptr<monolithic_pr2_planner::Environme
     bool forward_search = true;
     m_planner.reset(new ARAPlanner(m_env.get(), forward_search));
     // m_planner.reset(new MPlanner(m_env.get(), 3, forward_search));
-    m_heur_map_pub = m_nodehandle.advertise<nav_msgs::OccupancyGrid>("heur_map", 1);
+    m_costmap_pub = m_nodehandle.advertise<nav_msgs::OccupancyGrid>("costmap_pub", 1);
+    m_costmap_publisher.reset(new
+        costmap_2d::Costmap2DPublisher(m_nodehandle,1,"/map"));
 }
 
 void EnvInterfaces::getParams(){
@@ -170,20 +172,21 @@ void EnvInterfaces::bindNavMapToTopic(string topic){
     m_nav_map = m_nodehandle.subscribe(topic, 1, &EnvInterfaces::loadNavMap, this);
 }
 
-void EnvInterfaces::crop2DMap(const nav_msgs::OccupancyGridPtr& map,
+void EnvInterfaces::crop2DMap(const nav_msgs::MapMetaData& map_info, const std::vector<signed char>&
+    v,
                               double new_origin_x, double new_origin_y,
                               double width, double height, 
                               vector<signed char>& final_map){
-    vector<vector<signed char> > tmp_map(map->info.height);
-    for (unsigned int i=0; i < map->info.height; i++){
-        for (unsigned int j=0; j < map->info.width; j++){
-            tmp_map[i].push_back(map->data.at(i*map->info.height+j));
+    vector<vector<signed char> > tmp_map(map_info.height);
+    for (unsigned int i=0; i < map_info.height; i++){
+        for (unsigned int j=0; j < map_info.width; j++){
+            tmp_map[i].push_back(v[i*map_info.height+j]);
         }
     }
 
-    double res = map->info.resolution;
-    int new_origin_x_idx = (new_origin_x-map->info.origin.position.x)/res;
-    int new_origin_y_idx = (new_origin_y-map->info.origin.position.y)/res;
+    double res = map_info.resolution;
+    int new_origin_x_idx = (new_origin_x-map_info.origin.position.x)/res;
+    int new_origin_y_idx = (new_origin_y-map_info.origin.position.y)/res;
     int new_width = width/res + 1;
     int new_height = height/res + 1;
     ROS_DEBUG_NAMED(HEUR_LOG, "new origin: %d %d, width and height: %d %d",
@@ -214,25 +217,82 @@ void EnvInterfaces::loadNavMap(const nav_msgs::OccupancyGridPtr& map){
                     map->info.width, map->info.height, map->info.resolution);
     ROS_DEBUG_NAMED(CONFIG_LOG, "origin is at %f %f", map->info.origin.position.x,
                                                       map->info.origin.position.y);
-    ROS_DEBUG_NAMED(CONFIG_LOG, "Map value: %d", map->data[0]);
-    // TODO look up the values for this cropping from the occup grid parameters
-    vector<signed char> final_map;
 
-    double width = 9;
-    double height = 6;
-    crop2DMap(map, 0, 0, width, height, final_map);
-    nav_msgs::OccupancyGrid heur_map;
-    heur_map.header.frame_id = "/map";
-    heur_map.header.stamp = ros::Time::now();
-    heur_map.info.map_load_time = ros::Time::now();
-    heur_map.info.resolution = map->info.resolution;
+    // look up the values from the occup grid parameters
+    // This stuff is in cells.
+    int dimX, dimY, dimZ;
+    m_collision_space_interface.getOccupancyGridSize(dimX, dimY,
+        dimZ);
+    // This costmap_ros object listens to the map topic as defined
+    // in the costmap_2d.yaml file.
+    m_costmap_ros.reset(new costmap_2d::Costmap2DROS("costmap_2d", m_tf));
+
+    // Get the underlying costmap in the cost_map object.
+    // Publish for visualization. Publishing is done for the entire (uncropped) costmap.
+    costmap_2d::Costmap2D cost_map;
+    m_costmap_ros->getCostmapCopy(cost_map);
+
+    // Normalize and convert to array.
+    std::vector<signed char> uncropped_map;
+    for (unsigned int j = 0; j < cost_map.getSizeInCellsY(); ++j)
+    {
+        for (unsigned int i = 0; i < cost_map.getSizeInCellsX(); ++i)
+        {
+            // Row major. X is row wise, Y is column wise.
+            int c = cost_map.getCost(i,j);
+
+            // Set unknowns to free space (we're dealing with static maps for
+            // now)
+            c = (c==costmap_2d::NO_INFORMATION)?costmap_2d::FREE_SPACE:c;
+
+            // Re-set the cost.
+            cost_map.setCost(i,j,c);
+        }
+    }
+
+    // Re-inflate because we modified the unknown cells to be free space.
+    cost_map.reinflateWindow(dimX*map->info.resolution/2, dimY*map->info.resolution/2, dimX*map->info.resolution, dimY*map->info.resolution);
+
+    for (unsigned int j = 0; j < cost_map.getSizeInCellsY(); ++j)
+    {
+        for (unsigned int i = 0; i < cost_map.getSizeInCellsX(); ++i)
+        {
+            // Normalize the values from 0 to 100. Not absolutely needed, but
+            // makes life easier when dealing with the heuristic later.
+            uncropped_map.push_back(static_cast<double>(cost_map.getCost(i,j))/costmap_2d::NO_INFORMATION*100);
+        }
+    }
+    m_costmap_publisher->updateCostmapData(cost_map,
+    m_costmap_ros->getRobotFootprint());
+
+    // Publish the full costmap
+    m_costmap_publisher->publishCostmap();
+    m_costmap_publisher->publishFootprint();
+    
+    std::vector<signed char> final_map;
+
+    // TODO: Check if this is the right thing to do : Take the resolution from
+    // the map for the occupancy grid's values.
+    double width = dimX*map->info.resolution;
+    double height = dimY*map->info.resolution;
+    
+    crop2DMap(map->info, uncropped_map, 0, 0, width, height, final_map);
+    
+    // Don't want to publish this.
+    nav_msgs::OccupancyGrid costmap_pub;
+    costmap_pub.header.frame_id = "/map";
+    costmap_pub.header.stamp = ros::Time::now();
+    costmap_pub.info.map_load_time = ros::Time::now();
+    costmap_pub.info.resolution = map->info.resolution;
     // done in the crop function too.
-    heur_map.info.width = (width/map->info.resolution+1);
-    heur_map.info.height = (height/map->info.resolution+1);
-    heur_map.info.origin.position.x = 0;
-    heur_map.info.origin.position.y = 0;
-    heur_map.data = final_map;
-    m_heur_map_pub.publish(heur_map);
+    costmap_pub.info.width = (width/map->info.resolution+1);
+    costmap_pub.info.height = (height/map->info.resolution+1);
+    costmap_pub.info.origin.position.x = 0;
+    costmap_pub.info.origin.position.y = 0;
+    costmap_pub.data = final_map;
+
+    // Publish the cropped version of the costmap
+    m_costmap_pub.publish(costmap_pub);
 
     m_collision_space_interface.update2DHeuristicMaps(final_map);
 }

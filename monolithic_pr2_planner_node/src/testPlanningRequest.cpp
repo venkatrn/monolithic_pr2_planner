@@ -5,6 +5,7 @@
 #include <monolithic_pr2_planner_node/GetMobileArmPlan.h>
 #include <monolithic_pr2_planner/Constants.h>
 #include <angles/angles.h>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 int main(int argc, char** argv){
     ros::init(argc, argv, "testPlanningRequest");
@@ -39,6 +40,14 @@ int main(int argc, char** argv){
     right_arm_start[5] = -1.413143;
     right_arm_start[6] = 2.889659;
 
+    // right_arm_start[0] = 0.0;
+    // right_arm_start[1] = 0.0;
+    // right_arm_start[2] = 0.0;
+    // right_arm_start[3] = 0.0;
+    // right_arm_start[4] = 0.0;
+    // right_arm_start[5] = 0.0;
+    // right_arm_start[6] = 0.0;
+
     left_arm_start[0] = 0.137274;
     left_arm_start[1] = 0.314918;
     left_arm_start[2] = 0.185035;
@@ -50,7 +59,7 @@ int main(int argc, char** argv){
     body_start[0] = 1.5;
     body_start[1] = 2;
     body_start[2] = .1;
-    body_start[3] = -M_PI/2;
+    body_start[3] = -M_PI;
 
     // body_start[0] = 1.5;
     // body_start[1] = 2.5;
@@ -61,14 +70,14 @@ int main(int argc, char** argv){
     srv.request.larm_start = left_arm_start;
     srv.request.body_start = body_start;
 
-    KDL::Rotation rot = KDL::Rotation::RPY(0,0,0);
+    KDL::Rotation rot = KDL::Rotation::RPY(0,0,-M_PI);
     double qx, qy, qz, qw;
     rot.GetQuaternion(qx, qy, qz, qw);
 
     geometry_msgs::PoseStamped pose;
-    pose.pose.position.x = 5.0;
-    pose.pose.position.y = 1.0;
-    pose.pose.position.z = 1.0;
+    pose.pose.position.x = 3.2;
+    pose.pose.position.y = 1.9;
+    pose.pose.position.z = 1.1;
     pose.pose.orientation.x = qx;
     pose.pose.orientation.y = qy;
     pose.pose.orientation.z = qz;
@@ -95,8 +104,8 @@ int main(int argc, char** argv){
     srv.request.larm_object = larm_offset;
 
     srv.request.goal = pose;
-    srv.request.initial_eps = 10;
-    srv.request.final_eps = 9;
+    srv.request.initial_eps = 100;
+    srv.request.final_eps = 100;
     srv.request.dec_eps = .1;
     srv.request.xyz_tolerance = .1;
     srv.request.roll_tolerance = .1;
@@ -107,6 +116,8 @@ int main(int argc, char** argv){
 
     srv.request.planning_mode = monolithic_pr2_planner::PlanningModes::RIGHT_ARM_MOBILE;
 
+    ROS_INFO("Sending request at : %s",
+        boost::posix_time::to_simple_string(boost::posix_time::microsec_clock::local_time()).c_str());
     if (client.call(srv))
     {
         ROS_INFO("called service");

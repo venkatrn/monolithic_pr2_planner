@@ -30,7 +30,8 @@ namespace monolithic_pr2_planner_node {
             void packageStats(std::vector<std::string>& stat_names,
                               std::vector<double>& stats,
                               int solution_cost,
-                              size_t solution_size);
+                              size_t solution_size,
+                              double total_planning_time);
 
         private:
             void loadNavMap(const nav_msgs::OccupancyGridPtr& map);

@@ -25,7 +25,7 @@ EnvInterfaces::EnvInterfaces(boost::shared_ptr<monolithic_pr2_planner::Environme
         getParams();
     bool forward_search = true;
     m_planner.reset(new ARAPlanner(m_env.get(), forward_search));
-    // m_planner.reset(new MPlanner(m_env.get(), 3, forward_search));
+    // m_planner.reset(new MPlanner(m_env.get(), 4, forward_search));
     m_costmap_pub = m_nodehandle.advertise<nav_msgs::OccupancyGrid>("costmap_pub", 1);
     m_costmap_publisher.reset(new
         costmap_2d::Costmap2DPublisher(m_nodehandle,1,"/map"));
@@ -80,15 +80,16 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
     res.stats_field_names.resize(18);
     res.stats.resize(18);
     int start_id, goal_id;
+    double total_planning_time = clock();
     bool retVal = m_env->configureRequest(search_request, start_id, goal_id);
     if(!retVal){
         return false;
     }
 
     m_planner->set_initialsolution_eps(search_request->initial_epsilon);
-    // m_planner->set_initialsolution_eps1(10);
-    // m_planner->set_initialsolution_eps2(5);
-    bool return_first_soln = true;
+    m_planner->set_initialsolution_eps1(7.5);
+    m_planner->set_initialsolution_eps2(1.5);
+    bool return_first_soln = false;
     m_planner->set_search_mode(return_first_soln);
     m_planner->set_start(start_id);
     ROS_INFO("setting goal id to %d", goal_id);
@@ -101,9 +102,11 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
 
     if (isPlanFound){
         vector<FullBodyState> states =  m_env->reconstructPath(soln);
+        total_planning_time = clock() - total_planning_time;
         vector<string> stat_names;
         vector<double> stats;
-        packageStats(stat_names, stats, soln_cost, states.size());
+        packageStats(stat_names, stats, soln_cost, states.size(),
+            total_planning_time);
         res.stats_field_names = stat_names;
         res.stats = stats;
         //for (auto state : states){
@@ -132,7 +135,8 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
 void EnvInterfaces::packageStats(vector<string>& stat_names, 
                                  vector<double>& stats,
                                  int solution_cost,
-                                 size_t solution_size){
+                                 size_t solution_size,
+                                 double total_planning_time){
     
     stat_names.resize(10);
     stats.resize(10);
@@ -149,7 +153,7 @@ void EnvInterfaces::packageStats(vector<string>& stat_names,
 
     // TODO fix the total planning time
     //stats[0] = totalPlanTime;
-    stats[0] = m_planner->get_initial_eps_planning_time();
+    stats[0] = total_planning_time/static_cast<double>(CLOCKS_PER_SEC);
     stats[1] = m_planner->get_initial_eps_planning_time();
     stats[2] = m_planner->get_initial_eps();
     stats[3] = m_planner->get_n_expands_init_solution();

@@ -44,6 +44,9 @@ namespace monolithic_pr2_planner {
             MotionPrimitivesMgr m_mprims;
             HeuristicMgrPtr m_heur_mgr;
 
+            // MHA stuff
+            int m_base_heur_id;
+
         // SBPL interface stuff
         public:
             bool InitializeEnv(const char* sEnvFile){return false;};

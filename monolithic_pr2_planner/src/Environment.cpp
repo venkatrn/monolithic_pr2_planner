@@ -35,22 +35,22 @@ bool Environment::configureRequest(SearchRequestParamsPtr search_request_params,
 
 int Environment::GetGoalHeuristic(int stateID){
     // For now, return the max of all the heuristics
-    return GetGoalHeuristic(stateID, -1);
+    return GetGoalHeuristic(stateID, 0);
 }
 
 int Environment::GetGoalHeuristic(int stateID, int goal_id){
     // For now, return the max of all the heuristics
     std::vector<int> values = m_heur_mgr->getGoalHeuristic(m_hash_mgr->getGraphState(stateID));
-    // return values[0];
-    switch(goal_id){
-        case 0://anchor search
-            return values[0];
-        case 1:
-            return values[1];
-        default:
-            return *std::max_element(values.begin(), values.end());
-    }
-    // return *std::max_element(values.begin(), values.end());
+    // ROS_DEBUG_NAMED(HEUR_LOG, "Heuristic values: Arm : %d\t Base 1: %d\t Base 2: %d", values[0], values[1], values[2]);
+    return std::max(values[0], values[goal_id+1]);
+    // switch(goal_id){
+    //     case 0://anchor search - same for ARA* and MHA* : max(end eff, )
+    //         // return values[0];
+    //         return std::max(values[0], values[1]);
+    //         // return std::max(values[0], values[2]);
+    //     default:    // This is for ARA* : Must be the same as case 0
+    //         return std::max(values[0], values[goal_id+1]);
+    // }
 }
 
 void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs, 
@@ -128,6 +128,17 @@ bool Environment::setStartGoal(SearchRequestPtr search_request,
     obj_state.printToInfo(SEARCH_LOG);
     start_pose.visualize();
 
+    // Compute the arm's reach
+    // double basex,basey;
+    // basex = start_pose.getContBaseState().x();
+    // basey = start_pose.getContBaseState().y();
+    // double armx, army;
+    // armx = obj_state.x();
+    // army = obj_state.y();
+    // ROS_DEBUG_NAMED(HEUR_LOG, "(arm's reach: %f, %f)\n", sqrt((basex-armx)*(basex-armx)),
+    //     sqrt((basey-army)*(basey-army)));
+
+
     m_goal = search_request->createGoalState();
 
     goal_id = saveFakeGoalState(start_graph_state);
@@ -143,6 +154,10 @@ bool Environment::setStartGoal(SearchRequestPtr search_request,
 
     // informs the heuristic about the goal
     m_heur_mgr->setGoal(*m_goal);
+
+    // Create additional heuristics for MHA planner
+    m_heur_mgr->initializeMHAHeuristics(m_base_heur_id, 1);
+
     return true;
 }
 
@@ -179,8 +194,16 @@ void Environment::configurePlanningDomain(){
 
     // Initialize the heuristics. The (optional) parameter defines the cost multiplier.
     // TODO: It's 40 for now, until the actual cost for arm costs are computed.
-    m_heur_mgr->add3DHeur(40);
-    m_heur_mgr->add2DHeur(40);
+
+    // 3DHeur is unit costs - multiply by whatever you want.
+    // To get them in terms of mm distance
+    m_heur_mgr->add3DHeur(20);  //0 - multiply by 20 : grid resolution in mm :
+    // underestimated
+    
+    // Already in mm.
+    m_base_heur_id = m_heur_mgr->add2DHeur(1, 0.7);//1
+    // m_heur_mgr->add2DHeur(1, 0.0);//2
+    // m_heur_mgr->numberOfMHAHeuristics(3);
 
     // used for arm kinematics
     LeftContArmState::initArmModel(m_param_catalog.m_left_arm_params);

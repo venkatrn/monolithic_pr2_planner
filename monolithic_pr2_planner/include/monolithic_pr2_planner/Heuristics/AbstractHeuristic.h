@@ -28,6 +28,12 @@ namespace monolithic_pr2_planner {
 
             // Get the cost multiplier
             int getCostMultiplier();
+
+            // Add all the virtual stuff that may or may not be implemented
+            // For the 2DHeuristic
+            virtual void setRadiusAroundGoal(double radius_m) {};
+            virtual double getRadiusAroundGoal() {return 0;};
+
         private:
             int m_cost_multiplier;
     };

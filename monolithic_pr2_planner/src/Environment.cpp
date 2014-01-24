@@ -41,7 +41,8 @@ int Environment::GetGoalHeuristic(int stateID){
 int Environment::GetGoalHeuristic(int stateID, int goal_id){
     // For now, return the max of all the heuristics
     std::vector<int> values = m_heur_mgr->getGoalHeuristic(m_hash_mgr->getGraphState(stateID));
-    // ROS_DEBUG_NAMED(HEUR_LOG, "Heuristic values: Arm : %d\t Base 1: %d\t Base 2: %d", values[0], values[1], values[2]);
+    // ROS_DEBUG_NAMED(HEUR_LOG, "Heuristic values: Arm : %d\t Base 1: %d\t Goal ID: %d", values[0], values[1],
+    //     goal_id);
     return std::max(values[0], values[goal_id+1]);
     // switch(goal_id){
     //     case 0://anchor search - same for ARA* and MHA* : max(end eff, )
@@ -67,8 +68,8 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
     GraphStatePtr source_state = m_hash_mgr->getGraphState(sourceStateID);
     ROS_DEBUG_NAMED(SEARCH_LOG, "Source state is:");
     source_state->robot_pose().printToDebug(SEARCH_LOG);
-    source_state->robot_pose().visualize();
-    usleep(10000);
+    // source_state->robot_pose().visualize();
+    // usleep(10000);
 
     for (auto mprim : m_mprims.getMotionPrims()){
         ROS_DEBUG_NAMED(SEARCH_LOG, "Applying motion:");

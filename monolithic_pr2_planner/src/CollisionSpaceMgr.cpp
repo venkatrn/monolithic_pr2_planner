@@ -135,7 +135,12 @@ bool CollisionSpaceMgr::isValidTransitionStates(const TransitionData& t_data){
         // let's check the validity of all intermediate poses
         if (onlyBaseMotion){
             BodyPose body_pose = interp_base_motions[idx].body_pose();
-            return m_cspace->checkBaseMotion(l_arm, r_arm, body_pose, verbose, dist, debug);
+            if (!m_cspace->checkBaseMotion(l_arm, r_arm, body_pose, verbose, dist,
+                debug)){
+                return false;
+            }
+            // return m_cspace->checkBaseMotion(l_arm, r_arm, body_pose, verbose, dist,
+            //     debug);
         } else if (onlyArmMotion){
             ROS_DEBUG_NAMED(CSPACE_LOG, "skipping the intermediate points for arms because there are none.");
         } else {

@@ -40,14 +40,6 @@ int main(int argc, char** argv){
     right_arm_start[5] = -1.413143;
     right_arm_start[6] = 2.889659;
 
-    // right_arm_start[0] = 0.0;
-    // right_arm_start[1] = 0.0;
-    // right_arm_start[2] = 0.0;
-    // right_arm_start[3] = 0.0;
-    // right_arm_start[4] = 0.0;
-    // right_arm_start[5] = 0.0;
-    // right_arm_start[6] = 0.0;
-
     left_arm_start[0] = 0.137274;
     left_arm_start[1] = 0.314918;
     left_arm_start[2] = 0.185035;
@@ -56,28 +48,53 @@ int main(int argc, char** argv){
     left_arm_start[5] = -1.305254;
     left_arm_start[6] = -0.370584;
 
-    body_start[0] = 1.5;
-    body_start[1] = 2;
-    body_start[2] = .1;
+    // Config1
+    // body_start[0] = 1.5;
+    // body_start[1] = 2;
+    // body_start[2] = .1;
+    // body_start[3] = -M_PI;
+
+    // Potential bug!
+    body_start[0] = 5.0;
+    body_start[1] = 1.0;
+    body_start[2] = 0.1;
     body_start[3] = -M_PI;
 
-    // body_start[0] = 1.5;
-    // body_start[1] = 2.5;
+    // body_start[0] = 5.0;
+    // body_start[1] = 3.0;
     // body_start[2] = 0.1;
-    // body_start[3] = 0;
+    // body_start[3] = -M_PI;
 
     srv.request.rarm_start = right_arm_start;
     srv.request.larm_start = left_arm_start;
     srv.request.body_start = body_start;
 
+    // Config1
+    // KDL::Rotation rot = KDL::Rotation::RPY(0,0,-M_PI);
+
+    // Potential bug!
     KDL::Rotation rot = KDL::Rotation::RPY(0,0,-M_PI);
+
+
+    // KDL::Rotation rot = KDL::Rotation::RPY(0,0,M_PI/2);
     double qx, qy, qz, qw;
     rot.GetQuaternion(qx, qy, qz, qw);
 
     geometry_msgs::PoseStamped pose;
-    pose.pose.position.x = 3.2;
-    pose.pose.position.y = 1.9;
-    pose.pose.position.z = 1.1;
+
+    // Config1
+    // pose.pose.position.x = 3.2;
+    // pose.pose.position.y = 1.9;
+    // pose.pose.position.z = 1.1;
+
+    // Potential bug!
+    pose.pose.position.x = 2.7;
+    pose.pose.position.y = 4.5;
+    pose.pose.position.z = 0.7;
+
+    // pose.pose.position.x = 2.7;
+    // pose.pose.position.y = 4.8;
+    // pose.pose.position.z = 0.7;
     pose.pose.orientation.x = qx;
     pose.pose.orientation.y = qy;
     pose.pose.orientation.z = qz;

@@ -14,9 +14,9 @@ OMPLPR2Planner::OMPLPR2Planner(const CSpaceMgrPtr& cspace){
     ompl::base::SE2StateSpace* se2 = new ompl::base::SE2StateSpace();
     ompl::base::RealVectorBounds base_bounds(2);
     base_bounds.setLow(0,0);
-    base_bounds.setHigh(0,7.2);//3
+    base_bounds.setHigh(0,9);//3
     base_bounds.setLow(1,0);
-    base_bounds.setHigh(1,6.2);//3
+    base_bounds.setHigh(1,6);//3
     se2->setBounds(base_bounds);
     ompl::base::RealVectorStateSpace* r7 = new ompl::base::RealVectorStateSpace(9);
     r7->setDimensionName(0,"arms_x");
@@ -78,11 +78,11 @@ OMPLPR2Planner::OMPLPR2Planner(const CSpaceMgrPtr& cspace){
 // given the start and goal from the request, create a start and goal that
 // conform to the ompl types
 bool OMPLPR2Planner::createStartGoal(FullState& ompl_start, FullState& ompl_goal, 
-                                     NodeRequest& req){
+                                     SearchRequestParams& req){
     ROS_INFO("createStartGoal received a start of ");
-    LeftContArmState left_arm_start(req.larm_start);
-    RightContArmState right_arm_start(req.rarm_start);
-    ContBaseState base_start = req.body_start;
+    LeftContArmState left_arm_start = req.left_arm_start;
+    RightContArmState right_arm_start = req.right_arm_start;
+    ContBaseState base_start = req.base_start;
     ContObjectState obj_state = right_arm_start.getObjectStateRelBody();
 
     (*(ompl_start->as<VectorState>(0)))[0] = obj_state.x();
@@ -102,30 +102,19 @@ bool OMPLPR2Planner::createStartGoal(FullState& ompl_start, FullState& ompl_goal
              obj_state.x(), obj_state.y(), obj_state.z(),
              base_start.x(), base_start.y(), base_start.theta());
 
-    KDL::Frame goal_kdl;
-    tf::PoseMsgToKDL(req.goal.pose, goal_kdl);
-    ContBaseState base_goal = req.body_goal;
-    double r,p,y;
-    goal_kdl.M.GetRPY(r,p,y);
-
-    (*(ompl_goal->as<VectorState>(0)))[0] = 0.560000;
-    (*(ompl_goal->as<VectorState>(0)))[1] = -.2;
-    (*(ompl_goal->as<VectorState>(0)))[2] = .18;
-    (*(ompl_goal->as<VectorState>(0)))[3] = r;
-    (*(ompl_goal->as<VectorState>(0)))[4] = p;
-    (*(ompl_goal->as<VectorState>(0)))[5] = y;
-    (*(ompl_goal->as<VectorState>(0)))[6] = 0;//req.rarm_goal[2];
-    (*(ompl_goal->as<VectorState>(0)))[7] = 0;//req.larm_goal[2];
-    (*(ompl_goal->as<VectorState>(0)))[8] = .1;
-    ompl_goal->as<SE2State>(1)->setXY(6,5);
-    // may need to normalize the theta?
-    ompl_goal->as<SE2State>(1)->setYaw(0);
+    ContObjectState goal_obj_state = req.right_arm_goal.getObjectStateRelBody();
+    (*(ompl_goal->as<VectorState>(0)))[0] = goal_obj_state.x();
+    (*(ompl_goal->as<VectorState>(0)))[1] = goal_obj_state.y();
+    (*(ompl_goal->as<VectorState>(0)))[2] = goal_obj_state.z();
+    (*(ompl_goal->as<VectorState>(0)))[3] = goal_obj_state.roll();
+    (*(ompl_goal->as<VectorState>(0)))[4] = goal_obj_state.pitch();
+    (*(ompl_goal->as<VectorState>(0)))[5] = goal_obj_state.yaw();
+    (*(ompl_goal->as<VectorState>(0)))[6] = req.right_arm_goal.getUpperArmRollAngle();//req.rarm_goal[2];
+    (*(ompl_goal->as<VectorState>(0)))[7] = req.left_arm_goal.getUpperArmRollAngle();//req.larm_goal[2];
+    (*(ompl_goal->as<VectorState>(0)))[8] = req.base_goal.z();
+    ompl_goal->as<SE2State>(1)->setXY(req.base_goal.x(),req.base_goal.y());
+    ompl_goal->as<SE2State>(1)->setYaw(req.base_goal.theta());
     
-    //(*(ompl_goal->as<VectorState>(0)))[8] = base_goal.z();
-    //ompl_goal->as<SE2State>(1)->setXY(base_goal.x(),
-    //                                   base_goal.y());
-    //// may need to normalize the theta?
-    //ompl_goal->as<SE2State>(1)->setYaw(base_goal.theta());
     return true;
 }
 
@@ -161,11 +150,11 @@ bool OMPLPR2Planner::convertFullState(ompl::base::State* state, RobotState& robo
     return true;
 }
 
-bool OMPLPR2Planner::planPathCallback(monolithic_pr2_planner_node::GetMobileArmPlan::Request& req, monolithic_pr2_planner_node::GetMobileArmPlan::Response& res){
+bool OMPLPR2Planner::planPathCallback(SearchRequestParams& search_request){
     ROS_INFO("running ompl planner!");
     FullState ompl_start(fullBodySpace);
     FullState ompl_goal(fullBodySpace);
-    createStartGoal(ompl_start, ompl_goal, req);
+    createStartGoal(ompl_start, ompl_goal, search_request);
     pdef->setStartAndGoalStates(ompl_start,ompl_goal);
     ompl::base::GoalState* temp_goal = new ompl::base::GoalState(planner->getSpaceInformation());
     temp_goal->setState(ompl_goal);

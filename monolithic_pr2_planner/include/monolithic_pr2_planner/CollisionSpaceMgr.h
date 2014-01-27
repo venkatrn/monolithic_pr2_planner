@@ -2,6 +2,8 @@
 #include <boost/shared_ptr.hpp>
 #include <monolithic_pr2_planner/StateReps/GraphState.h>
 #include <monolithic_pr2_planner/StateReps/RobotState.h>
+#include <monolithic_pr2_planner/StateReps/ContBaseState.h>
+#include <monolithic_pr2_planner/StateReps/ContBaseState.h>
 #include <monolithic_pr2_planner/MotionPrimitives/MotionPrimitive.h>
 #include <monolithic_pr2_planner/ParameterCatalog.h>
 #include <monolithic_pr2_planner/OccupancyGridUser.h>
@@ -22,6 +24,7 @@ namespace monolithic_pr2_planner {
             CollisionSpaceMgr(SBPLArmModelPtr right_arm,
                               SBPLArmModelPtr left_arm);
             bool isValid(DiscObjectState& obj_state);
+            bool isValid(ContBaseState& base, RightContArmState r_arm, LeftContArmState l_arm);
             bool isValid(RobotState& robot_pose);
             bool isValidSuccessor(const GraphState& successor,
                                   const TransitionData& t_data);

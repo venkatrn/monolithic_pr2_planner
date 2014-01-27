@@ -19,8 +19,11 @@ namespace monolithic_pr2_planner {
         ContObjectState obj_start;
         ContObjectState obj_goal;
         ContBaseState base_start;
+        ContBaseState base_goal;
         LeftContArmState left_arm_start;
         RightContArmState right_arm_start;
+        LeftContArmState left_arm_goal;
+        RightContArmState right_arm_goal;
         KDL::Frame left_arm_object;
         KDL::Frame right_arm_object;
         int planning_mode;

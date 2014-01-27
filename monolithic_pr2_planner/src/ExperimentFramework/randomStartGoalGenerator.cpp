@@ -109,8 +109,9 @@ bool StartGoalGenerator::generateRandomValidState(RobotState& generated_state,
     return false;
 }
 
-bool StartGoalGenerator::generateUniformPairs(int num_pairs){
-    // int counter = 0;
+bool StartGoalGenerator::generateUniformPairs(int num_pairs, 
+                                              vector<pair<RobotState, RobotState> >& pairs){
+    int counter = 0;
     for (int i=0; i < num_pairs; i++){
         ROS_INFO("generating pair %d", i);
         // counter++;
@@ -120,6 +121,7 @@ bool StartGoalGenerator::generateUniformPairs(int num_pairs){
         ROS_DEBUG_NAMED(HEUR_LOG, "generated the following start goal");
         generateRandomValidState(start_state, set_uniform_sampling);
         generateRandomValidState(goal_state, set_uniform_sampling);
+        pairs.push_back(pair<RobotState, RobotState>(start_state, goal_state));
         start_state.printToDebug(HEUR_LOG);
         goal_state.printToDebug(HEUR_LOG);
     }

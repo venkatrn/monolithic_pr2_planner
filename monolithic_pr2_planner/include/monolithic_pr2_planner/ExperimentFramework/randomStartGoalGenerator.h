@@ -3,9 +3,9 @@
 #include <monolithic_pr2_planner/CollisionSpaceMgr.h>
 
 #define X_MIN 0
-#define X_MAX 7.2
+#define X_MAX 9
 #define Y_MIN 0
-#define Y_MAX 6.3
+#define Y_MAX 6
 #define Z_MIN 0
 #define Z_MAX 2
 
@@ -24,7 +24,7 @@ class StartGoalGenerator {
         monolithic_pr2_planner::RobotState generateRandomState(int region_id=-1);
         bool generateRandomValidState(monolithic_pr2_planner::RobotState& robot_state,
                                       int region_id=-1);
-        bool generateUniformPairs(int num_pairs);
+        bool generateUniformPairs(int num_pairs, std::vector<std::pair<monolithic_pr2_planner::RobotState, monolithic_pr2_planner::RobotState> >& pair);
 
         inline double randomDouble(double min, double max){
             return min + (max-min) * ( double(rand()) / RAND_MAX );

@@ -22,7 +22,7 @@ using namespace KDL;
 // topic.
 EnvInterfaces::EnvInterfaces(boost::shared_ptr<monolithic_pr2_planner::Environment> env) : 
     m_env(env), m_collision_space_interface(env->getCollisionSpace(), env->getHeuristicMgr()),
-    m_exp_interface(env->getCollisionSpace()), m_ompl_planner(env->getCollisionSpace()){
+    m_generator(env->getCollisionSpace()), m_ompl_planner(env->getCollisionSpace()){
         getParams();
     bool forward_search = true;
     m_planner.reset(new ARAPlanner(m_env.get(), forward_search));
@@ -43,11 +43,80 @@ void EnvInterfaces::bindPlanPathToEnv(string service_name){
                                                    this);
 }
 
+void EnvInterfaces::bindExperimentToEnv(string service_name){
+    m_experiment_service = m_nodehandle.advertiseService(service_name, 
+                                                         &EnvInterfaces::experimentCallback,
+                                                         this);
+}
+
+/*! \brief this is callback is purely for simulation purposes
+ */
+bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
+                                       GetMobileArmPlan::Response &res){
+    ROS_INFO("running simulations!");
+    vector<pair<RobotState, RobotState> > start_goal_pairs;
+    RobotState::setPlanningMode(PlanningModes::RIGHT_ARM_MOBILE);
+    m_generator.generateUniformPairs(10, start_goal_pairs);
+
+    for (auto& start_goal : start_goal_pairs){
+        ROS_INFO("using start:");
+        start_goal.first.printToInfo(SEARCH_LOG);
+        ROS_INFO("using goal:");
+        start_goal.second.printToInfo(SEARCH_LOG);
+        SearchRequestParamsPtr search_request = make_shared<SearchRequestParams>();
+        search_request->initial_epsilon = req.initial_eps;
+        search_request->final_epsilon = req.final_eps;
+        search_request->decrement_epsilon = req.dec_eps;
+        
+        search_request->base_start = start_goal.first.base_state();
+        search_request->base_goal = start_goal.second.base_state();
+        search_request->left_arm_start = start_goal.first.left_arm();
+        search_request->right_arm_start = start_goal.first.right_arm();
+        search_request->left_arm_goal = start_goal.second.left_arm();
+        search_request->right_arm_goal = start_goal.second.right_arm();
+
+        KDL::Frame rarm_offset, larm_offset;
+        rarm_offset.p.x(req.rarm_object.pose.position.x);
+        rarm_offset.p.y(req.rarm_object.pose.position.y);
+        rarm_offset.p.z(req.rarm_object.pose.position.z);
+        larm_offset.p.x(req.larm_object.pose.position.x);
+        larm_offset.p.y(req.larm_object.pose.position.y);
+        larm_offset.p.z(req.larm_object.pose.position.z);
+
+        rarm_offset.M = Rotation::Quaternion(req.rarm_object.pose.orientation.x, 
+                                             req.rarm_object.pose.orientation.y, 
+                                             req.rarm_object.pose.orientation.z, 
+                                             req.rarm_object.pose.orientation.w);
+        larm_offset.M = Rotation::Quaternion(req.larm_object.pose.orientation.x, 
+                                             req.larm_object.pose.orientation.y, 
+                                             req.larm_object.pose.orientation.z, 
+                                             req.larm_object.pose.orientation.w);
+        search_request->left_arm_object = larm_offset;
+        search_request->right_arm_object = rarm_offset;
+        search_request->xyz_tolerance = req.xyz_tolerance;
+        search_request->roll_tolerance = req.roll_tolerance;
+        search_request->pitch_tolerance = req.pitch_tolerance;
+        search_request->yaw_tolerance = req.yaw_tolerance;
+        search_request->planning_mode = req.planning_mode;
+
+        res.stats_field_names.resize(18);
+        res.stats.resize(18);
+        int start_id, goal_id;
+        if(!m_env->configureRequest(search_request, start_id, goal_id))
+            return false;
+
+        //exp happening here. note - the configureRequest call must happen before
+        //the ompl planner is called (because we have to configure RobotState's IK
+        //solver from the planning request.
+        m_ompl_planner.planPathCallback(*search_request);
+    }
+
+    return true;
+
+}
+
 bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req, 
                                      GetMobileArmPlan::Response &res){
-
-
-
     SearchRequestParamsPtr search_request = make_shared<SearchRequestParams>();
     search_request->initial_epsilon = req.initial_eps;
     search_request->final_epsilon = req.final_eps;
@@ -89,11 +158,6 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
     if(!retVal){
         return false;
     }
-
-
-    //exp happening here
-    // m_exp_interface.generatePairs();
-    // m_ompl_planner.planPathCallback(req, res);
 
     m_planner->set_initialsolution_eps(search_request->initial_epsilon);
     m_planner->set_initialsolution_eps1(20);

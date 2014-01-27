@@ -15,6 +15,7 @@
 #include <monolithic_pr2_planner/CollisionSpaceMgr.h>
 #include <monolithic_pr2_planner/StateReps/RobotState.h>
 #include <monolithic_pr2_planner_node/GetMobileArmPlan.h>
+#include <monolithic_pr2_planner/SearchRequest.h>
 
 typedef ompl::base::RealVectorStateSpace::StateType VectorState;
 typedef ompl::base::SE2StateSpace::StateType SE2State;
@@ -23,8 +24,8 @@ typedef monolithic_pr2_planner_node::GetMobileArmPlan::Request NodeRequest;
 class OMPLPR2Planner{
     public:
         OMPLPR2Planner(const monolithic_pr2_planner::CSpaceMgrPtr& cspace);
-        bool planPathCallback(monolithic_pr2_planner_node::GetMobileArmPlan::Request& req, monolithic_pr2_planner_node::GetMobileArmPlan::Response& res);
-        bool createStartGoal(FullState& start, FullState& goal, NodeRequest& req);
+        bool planPathCallback(monolithic_pr2_planner::SearchRequestParams& search_request);
+        bool createStartGoal(FullState& start, FullState& goal, monolithic_pr2_planner::SearchRequestParams& req);
     private:
         bool convertFullState(ompl::base::State* state,
                               monolithic_pr2_planner::RobotState& robot_state);

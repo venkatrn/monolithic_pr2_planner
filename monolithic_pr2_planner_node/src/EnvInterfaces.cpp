@@ -21,7 +21,8 @@ using namespace KDL;
 // loads it up with a pointer to the collision space mgr. it doesn't bind to any
 // topic.
 EnvInterfaces::EnvInterfaces(boost::shared_ptr<monolithic_pr2_planner::Environment> env) : 
-    m_env(env), m_collision_space_interface(env->getCollisionSpace(), env->getHeuristicMgr()){
+    m_env(env), m_collision_space_interface(env->getCollisionSpace(), env->getHeuristicMgr()),
+    m_exp_interface(env->getCollisionSpace()){
         getParams();
     bool forward_search = true;
     m_planner.reset(new ARAPlanner(m_env.get(), forward_search));
@@ -44,6 +45,9 @@ void EnvInterfaces::bindPlanPathToEnv(string service_name){
 
 bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req, 
                                      GetMobileArmPlan::Response &res){
+
+
+
     SearchRequestParamsPtr search_request = make_shared<SearchRequestParams>();
     search_request->initial_epsilon = req.initial_eps;
     search_request->final_epsilon = req.final_eps;
@@ -86,6 +90,24 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
         return false;
     }
 
+
+
+    //exp happening here
+
+
+
+
+    m_exp_interface.generatePairs();
+
+
+
+
+
+
+
+
+
+
     m_planner->set_initialsolution_eps(search_request->initial_epsilon);
     m_planner->set_initialsolution_eps1(20);
     m_planner->set_initialsolution_eps2(5);
@@ -109,23 +131,6 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
             total_planning_time);
         res.stats_field_names = stat_names;
         res.stats = stats;
-        //for (auto state : states){
-        //    printf("base states: ");
-        //    for (auto value: state.base){
-        //        printf("%f ", value);
-        //    }
-        //    printf("\n");
-        //    printf("right arm angles: ");
-        //    for (auto angle: state.right_arm){
-        //        printf("%f ", angle);
-        //    }
-        //    printf("\n");
-        //    printf("left arm angles: ");
-        //    for (auto angle: state.left_arm){
-        //        printf("%f ", angle);
-        //    }
-        //    printf("\n");
-        //}
     } else {
         ROS_INFO("No plan found!");
     }

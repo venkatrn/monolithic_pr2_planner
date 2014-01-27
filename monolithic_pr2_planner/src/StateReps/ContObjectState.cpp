@@ -6,7 +6,7 @@
 using namespace monolithic_pr2_planner;
 using namespace angles;
 
-ContObjectState::ContObjectState(){};
+ContObjectState::ContObjectState():m_coord(6,0){};
 ContObjectState::ContObjectState(double vx, double vy, double vz,
                                  double vroll, double vpitch, double vyaw):
     m_coord(6,0){

@@ -10,7 +10,7 @@ namespace monolithic_pr2_planner {
         public:
             bool operator==(const DiscObjectState& other);
             bool operator!=(const DiscObjectState& other);
-            DiscObjectState(){};
+            DiscObjectState();
             DiscObjectState(ContObjectState obj_state);
             DiscObjectState(int x, int y, int z, int roll, int pitch, int yaw);
             std::vector<unsigned int>::const_iterator getCoordBegin(){ return m_coord.begin(); };

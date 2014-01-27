@@ -11,8 +11,8 @@ set(ROS_BUILD_TYPE Release)
 
 rosbuild_init()
 SET(CMAKE_CXX_FLAGS "-std=c++0x")
-add_definitions(-DUSE_IKFAST_SOLVER)
-#add_definitions(-DUSE_KDL_SOLVER)
+#add_definitions(-DUSE_IKFAST_SOLVER)
+add_definitions(-DUSE_KDL_SOLVER)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(SBPL REQUIRED sbpl)
@@ -63,6 +63,9 @@ rosbuild_add_library(monolithic_pr2_planner src/StateReps/RobotState.cpp
                                             src/TransitionData.cpp
                                             src/Visualizer.cpp
                                             src/PathPostProcessor.cpp
+
+                                            src/ExperimentFramework/randomStartGoalGenerator.cpp
+                                            src/ExperimentFramework/ExpInterface.cpp
                                             )
 target_link_libraries(monolithic_pr2_planner ${SBPL_LIBRARIES} bfs3d)
 #rosbuild_add_boost_directories()

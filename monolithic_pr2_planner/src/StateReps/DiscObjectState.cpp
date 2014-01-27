@@ -11,6 +11,8 @@ bool DiscObjectState::operator!=(const DiscObjectState& other){
     return !(*this == other);
 }
 
+DiscObjectState::DiscObjectState():m_coord(6,0){}
+
 DiscObjectState::DiscObjectState(int x, int y, 
                                  int z, int roll, 
                                  int pitch, int yaw) : m_coord(6){

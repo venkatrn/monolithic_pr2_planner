@@ -5,7 +5,7 @@ using namespace monolithic_pr2_planner;
 using namespace angles;
 using namespace std;
 
-ContBaseState::ContBaseState(){};
+ContBaseState::ContBaseState():m_pose(4,0){};
 
 ContBaseState::ContBaseState(double vx, double vy, double vz, double vtheta):
     m_pose(4){

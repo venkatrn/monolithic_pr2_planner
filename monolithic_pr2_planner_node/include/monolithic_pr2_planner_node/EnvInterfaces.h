@@ -13,6 +13,10 @@
 #include <costmap_2d/costmap_2d_ros.h>
 #include <costmap_2d/costmap_2d_publisher.h>
 
+
+
+#include <monolithic_pr2_planner/ExperimentFramework/ExpInterface.h>
+
 namespace monolithic_pr2_planner_node {
     struct InterfaceParams {
         std::string ref_frame;
@@ -53,5 +57,6 @@ namespace monolithic_pr2_planner_node {
             std::unique_ptr<costmap_2d::Costmap2DROS> m_costmap_ros;
             std::unique_ptr<costmap_2d::Costmap2DPublisher> m_costmap_publisher;
 
+            ExpInterface m_exp_interface;
     };
 }

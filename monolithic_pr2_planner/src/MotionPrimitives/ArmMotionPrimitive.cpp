@@ -25,6 +25,7 @@ bool ArmMotionPrimitive::apply(const GraphState& source_state,
         t_data.motion_type(motion_type());
         t_data.cost(cost());
     }
+    // the arm movements are so small that i'm ignoring the intermediate points
     //computeIntermSteps(source_state, *successor, t_data);
 
     return isSuccessorCreated;

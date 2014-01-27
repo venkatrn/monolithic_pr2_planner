@@ -22,6 +22,7 @@ m_cspace_mgr(cspace_mgr), m_hash_mgr(hash_mgr)
 vector<FullBodyState> PathPostProcessor::reconstructPath(vector<int> soln_path,
                                                          GoalState& goal_state,
                                                          vector<MotionPrimitivePtr> mprims){
+    double temptime = clock();
     vector<TransitionData> transition_states;
     // the last state in the soln path return by the SBPL planner will always be
     // the goal state ID. Since this doesn't actually correspond to a real state
@@ -46,6 +47,7 @@ vector<FullBodyState> PathPostProcessor::reconstructPath(vector<int> soln_path,
                                                     transition_states,
                                                     goal_state);
     visualizeFinalPath(final_path);
+    ROS_INFO("my reconstruct took %.3f", (clock()-temptime)/(double)CLOCKS_PER_SEC);
     return final_path;
 }
 
@@ -83,18 +85,19 @@ bool PathPostProcessor::findBestTransition(int start_id, int end_id,
         if (!mprim->apply(*source_state, successor, t_data)){
             continue;
         }
-        if (!m_cspace_mgr->isValidSuccessor(*successor, t_data) ||  
-                !m_cspace_mgr->isValidTransitionStates(t_data)){
-            continue;
-        }
+
         successor->id(m_hash_mgr->getStateID(successor));
-        if ((successor->id() == end_id)){
-            if (t_data.cost() < best_cost){
+        bool matchesEndID = successor->id() == end_id;
+        bool isCheaperAction = t_data.cost() < best_cost;
+        if (matchesEndID && isCheaperAction){
+            if (m_cspace_mgr->isValidSuccessor(*successor, t_data) && 
+                    m_cspace_mgr->isValidTransitionStates(t_data)){
                 best_cost = t_data.cost();
                 best_transition = t_data;
                 best_transition.successor_id(successor->id());
-            } 
+            }
         }
+
     }
     return (best_cost != 1000000);
 }

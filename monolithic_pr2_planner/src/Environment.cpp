@@ -78,6 +78,7 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
             ROS_DEBUG_NAMED(MPRIM_LOG, "couldn't apply mprim");
             continue;
         }
+
         if (m_cspace_mgr->isValidSuccessor(*successor, t_data) && 
             m_cspace_mgr->isValidTransitionStates(t_data)){
             ROS_DEBUG_NAMED(SEARCH_LOG, "Source state is:");

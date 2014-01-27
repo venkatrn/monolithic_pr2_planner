@@ -27,10 +27,17 @@ RobotState StartGoalGenerator::generateRandomState(int region_id){
         //ROS_INFO("random object state is");
         //obj_state.printToDebug(HEUR_LOG);
 
-        LeftContArmState l_arm;
         RightContArmState r_arm;
-        l_arm.setUpperArmRoll(randomDouble(-.65, 3.75));
         r_arm.setUpperArmRoll(randomDouble(-3.75, .65));
+        
+        LeftContArmState l_arm;
+        l_arm.setShoulderPan(0.038946287971107774);
+        l_arm.setShoulderLift(1.2146697069025374);
+        l_arm.setUpperArmRoll(1.3963556492780154);
+        l_arm.setElbowFlex(-1.1972269899800325);
+        l_arm.setForearmRoll(-4.616317135720829);
+        l_arm.setWristFlex(-0.9887266887318599);
+        l_arm.setWristRoll(1.1755681069775656);
 
         // if region_id = -1, then we do a random sample across the entire state space
         double x_lower_bound = 0;
@@ -39,7 +46,7 @@ RobotState StartGoalGenerator::generateRandomState(int region_id){
         double y_upper_bound = Y_MAX;
 
         if (region_id != -1){
-            int padding = 1;
+            double padding = 1.0;
             x_lower_bound = (m_regions[region_id].x_min-padding < 0) ? 0 : m_regions[region_id].x_min-padding;
             x_upper_bound = (m_regions[region_id].x_max+padding > X_MAX) ? X_MAX : m_regions[region_id].x_max+padding;
             y_lower_bound = (m_regions[region_id].y_min-padding < 0) ? 0 : m_regions[region_id].y_min-padding;
@@ -101,7 +108,7 @@ bool StartGoalGenerator::generateRandomValidState(RobotState& generated_state,
                 }
             }
         } else {
-            ROS_ERROR("not valid");
+            ROS_ERROR("not valid: In collision");
         }
     }
     // only reaches here if no state generated
@@ -111,11 +118,14 @@ bool StartGoalGenerator::generateRandomValidState(RobotState& generated_state,
 
 bool StartGoalGenerator::generateUniformPairs(int num_pairs, 
                                               vector<pair<RobotState, RobotState> >& pairs){
-    int counter = 0;
+    // int counter = 0;
     for (int i=0; i < num_pairs; i++){
         ROS_INFO("generating pair %d", i);
         // counter++;
         int set_uniform_sampling = -1;
+        if(!m_regions.empty()){
+            set_uniform_sampling = rand()%static_cast<int>(m_regions.size());
+        }
         RobotState start_state;
         RobotState goal_state;
         ROS_DEBUG_NAMED(HEUR_LOG, "generated the following start goal");
@@ -165,21 +175,36 @@ void omplFullBodyCollisionChecker::readFile(char filename[], std::vector<std::pa
         pairs.push_back(point);
     }
 }
-
-void omplFullBodyCollisionChecker::initializeRegions(std::string file){
-  FILE* fin = fopen(file.c_str(), "r");
-  while(1){
-    Region region;
-    int ret_code = fscanf(fin, "%lf, %lf, %lf, %lf, %lf, %lf\n",&(region.x_min),
-                                                                &(region.x_max),
-                                                                &(region.y_min),
-                                                                &(region.y_max),
-                                                                &(region.z_min),
-                                                                &(region.z_max));
-    if (ret_code < 6){
-        return;
-    }
-    m_regions.push_back(region);
-  }
-}
 */
+
+void StartGoalGenerator::initializeRegions(){
+    // Initialize from Param server.
+    ros::NodeHandle nh;
+    int number_of_regions;
+    nh.getParam("/monolithic_pr2_planner_node/experiments/number_of_regions",
+        number_of_regions);
+    ROS_INFO("[randomStartGoalGenerator] Initializing %d regions", number_of_regions);
+    for (int i = 0; i < number_of_regions; ++i)
+    {
+        Region region;
+        double X, Y, Z, dimX, dimY, dimZ;
+        nh.getParam("/monolithic_pr2_planner_node/experiments/goal_region_x_" + std::to_string(i), X);
+        nh.getParam("/monolithic_pr2_planner_node/experiments/goal_region_y_" + std::to_string(i), Y);
+        nh.getParam("/monolithic_pr2_planner_node/experiments/goal_region_z_" + std::to_string(i), Z);
+        nh.getParam("/monolithic_pr2_planner_node/experiments/goal_region_dimx_" + std::to_string(i),
+            dimX);
+        nh.getParam("/monolithic_pr2_planner_node/experiments/goal_region_dimy_" + std::to_string(i),
+            dimY);
+        nh.getParam("/monolithic_pr2_planner_node/experiments/goal_region_dimz_" + std::to_string(i),
+            dimZ);
+        
+        region.x_min = X;
+        region.y_min = Y;
+        region.z_min = dimZ;    //We want to goal to be *above* the table
+
+        region.x_max = region.x_min + dimX;
+        region.y_max = region.y_min + dimY;
+        region.z_max = region.z_min + 0.4;  //Defined by the obstacle size
+        m_regions.push_back(region);
+    }
+}

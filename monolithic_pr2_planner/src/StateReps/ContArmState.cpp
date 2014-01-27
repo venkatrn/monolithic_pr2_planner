@@ -37,10 +37,6 @@ void ContArmState::setRobotResolutionParams(const RobotResolutionParams& params)
     m_params = params;
 }
 
-void ContArmState::setUpperArmRoll(double cont_value){
-    m_angles[Joints::UPPER_ARM_ROLL] = normalize_angle_positive(cont_value);
-}
-
 int ContArmState::getDiscFreeAngle() const {
     double free_angle_res = m_params.arm_free_angle_resolution;
     double free_angle = m_angles[Joints::UPPER_ARM_ROLL];

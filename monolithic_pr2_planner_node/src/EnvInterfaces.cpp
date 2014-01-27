@@ -56,7 +56,8 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
     ROS_INFO("running simulations!");
     vector<pair<RobotState, RobotState> > start_goal_pairs;
     RobotState::setPlanningMode(PlanningModes::RIGHT_ARM_MOBILE);
-    m_generator.generateUniformPairs(10, start_goal_pairs);
+    m_generator.initializeRegions();
+    m_generator.generateUniformPairs(1, start_goal_pairs);
 
     for (auto& start_goal : start_goal_pairs){
         ROS_INFO("using start:");
@@ -67,7 +68,7 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
         search_request->initial_epsilon = req.initial_eps;
         search_request->final_epsilon = req.final_eps;
         search_request->decrement_epsilon = req.dec_eps;
-        
+        search_request->obj_goal= start_goal.second.getObjectStateRelMap();
         search_request->base_start = start_goal.first.base_state();
         search_request->base_goal = start_goal.second.base_state();
         search_request->left_arm_start = start_goal.first.left_arm();
@@ -102,13 +103,43 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
         res.stats_field_names.resize(18);
         res.stats.resize(18);
         int start_id, goal_id;
+        clock_t total_planning_time = clock();
         if(!m_env->configureRequest(search_request, start_id, goal_id))
             return false;
 
         //exp happening here. note - the configureRequest call must happen before
         //the ompl planner is called (because we have to configure RobotState's IK
         //solver from the planning request.
-        m_ompl_planner.planPathCallback(*search_request);
+        // m_ompl_planner.planPathCallback(*search_request);
+
+        m_planner->set_initialsolution_eps(search_request->initial_epsilon);
+        m_planner->set_initialsolution_eps1(20);
+        m_planner->set_initialsolution_eps2(5);
+        bool return_first_soln = true;
+        m_planner->set_search_mode(return_first_soln);
+        m_planner->set_start(start_id);
+        ROS_INFO("setting goal id to %d", goal_id);
+        m_planner->set_goal(goal_id);
+        m_planner->force_planning_from_scratch();
+        vector<int> soln;
+        int soln_cost;
+        bool isPlanFound = m_planner->replan(req.allocated_planning_time, 
+                                             &soln, &soln_cost);
+
+        if (isPlanFound){
+            ROS_INFO("Plan found. Moving on to reconstruction.");
+            vector<FullBodyState> states =  m_env->reconstructPath(soln);
+            total_planning_time = clock() - total_planning_time;
+            vector<string> stat_names;
+            vector<double> stats;
+            packageStats(stat_names, stats, soln_cost, states.size(),
+                total_planning_time);
+            res.stats_field_names = stat_names;
+            res.stats = stats;
+        } else {
+            ROS_INFO("No plan found!");
+        }
+        return isPlanFound;
     }
 
     return true;

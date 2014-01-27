@@ -39,13 +39,13 @@ namespace monolithic_pr2_planner {
             inline double getWristFlexAngle() const { return m_angles[Joints::WRIST_FLEX]; };
             inline double getWristRollAngle() const { return m_angles[Joints::WRIST_ROLL]; };
             int getDiscFreeAngle() const;
-            void setShoulderPan(double cont_value);
-            void setShoulderLift(double cont_value);
-            void setUpperArmRoll(double cont_value);
-            void setElbowFlex(double cont_value);
-            void setForearmRoll(double cont_value);
-            void setWristFlex(double cont_value);
-            void setWristRoll(double cont_value);
+            inline void setShoulderPan(double cont_value) { m_angles[Joints::SHOULDER_PAN] = normalize_angle_positive(cont_value); };
+            inline void setShoulderLift(double cont_value){ m_angles[Joints::SHOULDER_LIFT] = normalize_angle_positive(cont_value); };
+            inline void setUpperArmRoll(double cont_value){ m_angles[Joints::UPPER_ARM_ROLL] = normalize_angle_positive(cont_value); };
+            inline void setElbowFlex(double cont_value){ m_angles[Joints::ELBOW_FLEX] = normalize_angle_positive(cont_value); };
+            inline void setForearmRoll(double cont_value){ m_angles[Joints::FOREARM_ROLL] = normalize_angle_positive(cont_value); };
+            inline void setWristFlex(double cont_value){ m_angles[Joints::WRIST_FLEX] = normalize_angle_positive(cont_value); };
+            inline void setWristRoll(double cont_value){ m_angles[Joints::WRIST_ROLL] = normalize_angle_positive(cont_value); };
             void setArm(ArmSide arm);
             void setDiscFreeAngle(int value) { setUpperArmRoll(convertDiscFreeAngleToCont(value)); };
 

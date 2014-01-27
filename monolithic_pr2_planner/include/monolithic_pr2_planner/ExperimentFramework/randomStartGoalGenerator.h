@@ -29,6 +29,8 @@ class StartGoalGenerator {
         inline double randomDouble(double min, double max){
             return min + (max-min) * ( double(rand()) / RAND_MAX );
         }
+
+        void initializeRegions();
     private:
         vector<Region> m_regions;
         monolithic_pr2_planner::CSpaceMgrPtr m_cspace;

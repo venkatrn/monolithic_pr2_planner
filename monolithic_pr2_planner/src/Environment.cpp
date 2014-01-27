@@ -68,7 +68,7 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
     ROS_DEBUG_NAMED(SEARCH_LOG, "Source state is:");
     source_state->robot_pose().printToDebug(SEARCH_LOG);
     source_state->robot_pose().visualize();
-    usleep(100000);
+    usleep(10000);
     for (auto mprim : m_mprims.getMotionPrims()){
         ROS_DEBUG_NAMED(SEARCH_LOG, "Applying motion:");
         // mprim->printEndCoord();
@@ -90,7 +90,8 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
 
             if (m_goal->isSatisfiedBy(successor)){
                 m_goal->storeAsSolnState(successor);
-                ROS_INFO_NAMED(SEARCH_LOG, "Found potential goal at state %d", successor->id());
+                ROS_INFO_NAMED(SEARCH_LOG, "Found potential goal at state %d %d", successor->id(),
+                    mprim->cost());
                 succIDs->push_back(GOAL_STATE);
             } else {
                 succIDs->push_back(successor->id());
@@ -172,6 +173,7 @@ int Environment::saveFakeGoalState(const GraphStatePtr& start_graph_state){
     fake_goal->robot_pose(fake_robot_state);
     m_hash_mgr->save(fake_goal);
     int goal_id = fake_goal->id();
+    assert(goal_id == GOAL_STATE);
     return goal_id;
 }
 

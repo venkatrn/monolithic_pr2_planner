@@ -97,7 +97,7 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
 
 
 
-    m_exp_interface.generatePairs();
+    // m_exp_interface.generatePairs();
 
 
 
@@ -123,6 +123,7 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
                                          &soln, &soln_cost);
 
     if (isPlanFound){
+        ROS_INFO("Plan found. Moving on to reconstruction.");
         vector<FullBodyState> states =  m_env->reconstructPath(soln);
         total_planning_time = clock() - total_planning_time;
         vector<string> stat_names;

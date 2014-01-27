@@ -85,7 +85,7 @@ bool PathPostProcessor::findBestTransition(int start_id, int end_id,
         if (!mprim->apply(*source_state, successor, t_data)){
             continue;
         }
-
+        
         successor->id(m_hash_mgr->getStateID(successor));
         bool matchesEndID = successor->id() == end_id;
         bool isCheaperAction = t_data.cost() < best_cost;

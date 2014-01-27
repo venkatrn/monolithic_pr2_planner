@@ -68,6 +68,9 @@ unsigned int HashManager::getStateID(const GraphStatePtr& graph_state){
             return g_s->id();
         }
     }
+    ROS_DEBUG_NAMED(HASH_LOG, "State looking for:");
+    graph_state->printToDebug(HASH_LOG);
+    graph_state->robot_pose().printToDebug(HASH_LOG);
     throw std::out_of_range("Graph state does not exist in heap");
 }
 

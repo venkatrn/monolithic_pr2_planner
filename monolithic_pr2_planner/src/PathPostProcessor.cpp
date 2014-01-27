@@ -86,16 +86,18 @@ bool PathPostProcessor::findBestTransition(int start_id, int end_id,
             continue;
         }
         
+        if (!(m_cspace_mgr->isValidSuccessor(*successor, t_data) && 
+                m_cspace_mgr->isValidTransitionStates(t_data))){
+            continue;
+        }
+
         successor->id(m_hash_mgr->getStateID(successor));
         bool matchesEndID = successor->id() == end_id;
         bool isCheaperAction = t_data.cost() < best_cost;
         if (matchesEndID && isCheaperAction){
-            if (m_cspace_mgr->isValidSuccessor(*successor, t_data) && 
-                    m_cspace_mgr->isValidTransitionStates(t_data)){
-                best_cost = t_data.cost();
-                best_transition = t_data;
-                best_transition.successor_id(successor->id());
-            }
+            best_cost = t_data.cost();
+            best_transition = t_data;
+            best_transition.successor_id(successor->id());
         }
 
     }

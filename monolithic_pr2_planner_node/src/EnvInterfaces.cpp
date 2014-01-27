@@ -22,7 +22,7 @@ using namespace KDL;
 // topic.
 EnvInterfaces::EnvInterfaces(boost::shared_ptr<monolithic_pr2_planner::Environment> env) : 
     m_env(env), m_collision_space_interface(env->getCollisionSpace(), env->getHeuristicMgr()),
-    m_exp_interface(env->getCollisionSpace()){
+    m_exp_interface(env->getCollisionSpace()), m_ompl_planner(env->getCollisionSpace()){
         getParams();
     bool forward_search = true;
     m_planner.reset(new ARAPlanner(m_env.get(), forward_search));
@@ -91,8 +91,8 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
     }
 
 
-
     //exp happening here
+<<<<<<< HEAD
 
 
 
@@ -107,6 +107,10 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
 
 
 
+=======
+    //m_exp_interface.generatePairs();
+    m_ompl_planner.planPathCallback(req, res);
+>>>>>>> aeb341700292d706e243083b4a7b27b943d87028
 
     m_planner->set_initialsolution_eps(search_request->initial_epsilon);
     m_planner->set_initialsolution_eps1(20);

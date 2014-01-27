@@ -16,6 +16,7 @@
 
 
 #include <monolithic_pr2_planner/ExperimentFramework/ExpInterface.h>
+#include <monolithic_pr2_planner_node/ompl_pr2_planner.h>
 
 namespace monolithic_pr2_planner_node {
     struct InterfaceParams {
@@ -58,5 +59,6 @@ namespace monolithic_pr2_planner_node {
             std::unique_ptr<costmap_2d::Costmap2DPublisher> m_costmap_publisher;
 
             ExpInterface m_exp_interface;
+            OMPLPR2Planner m_ompl_planner;
     };
 }

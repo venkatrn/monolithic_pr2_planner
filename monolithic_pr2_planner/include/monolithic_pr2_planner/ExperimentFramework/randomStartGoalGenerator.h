@@ -30,6 +30,6 @@ class StartGoalGenerator {
             return min + (max-min) * ( double(rand()) / RAND_MAX );
         }
     private:
-        vector<Region> regions;
+        vector<Region> m_regions;
         monolithic_pr2_planner::CSpaceMgrPtr m_cspace;
 };

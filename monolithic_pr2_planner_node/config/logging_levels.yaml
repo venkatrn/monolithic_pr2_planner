@@ -4,7 +4,7 @@ debug:
         initialization: info
         collision_space: info
         kinematics: info
-        hashmanager: debug
-        search: debug
+        hashmanager: info
+        search: info
         motionprimitives: info
         heuristics: debug

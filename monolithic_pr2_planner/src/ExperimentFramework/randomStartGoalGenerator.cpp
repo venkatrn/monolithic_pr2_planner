@@ -40,10 +40,10 @@ RobotState StartGoalGenerator::generateRandomState(int region_id){
 
         if (region_id != -1){
             int padding = 1;
-            x_lower_bound = (regions[region_id].x_min-padding < 0) ? 0 : regions[region_id].x_min-padding;
-            x_upper_bound = (regions[region_id].x_max+padding > X_MAX) ? X_MAX : regions[region_id].x_max+padding;
-            y_lower_bound = (regions[region_id].y_min-padding < 0) ? 0 : regions[region_id].y_min-padding;
-            y_upper_bound = (regions[region_id].y_max+padding > Y_MAX) ? Y_MAX : regions[region_id].y_max+padding;
+            x_lower_bound = (m_regions[region_id].x_min-padding < 0) ? 0 : m_regions[region_id].x_min-padding;
+            x_upper_bound = (m_regions[region_id].x_max+padding > X_MAX) ? X_MAX : m_regions[region_id].x_max+padding;
+            y_lower_bound = (m_regions[region_id].y_min-padding < 0) ? 0 : m_regions[region_id].y_min-padding;
+            y_upper_bound = (m_regions[region_id].y_max+padding > Y_MAX) ? Y_MAX : m_regions[region_id].y_max+padding;
         }
         base.x(randomDouble(x_lower_bound, x_upper_bound));
         base.y(randomDouble(y_lower_bound, y_upper_bound));
@@ -66,7 +66,7 @@ RobotState StartGoalGenerator::generateRandomState(int region_id){
 }
 
 // generates a bunch of states while making sure they're not in collision and
-// they are within user defined regions.
+// they are within user defined m_regions.
 bool StartGoalGenerator::generateRandomValidState(RobotState& generated_state,
                                                   int region_id){
     int counter = 0;
@@ -79,10 +79,10 @@ bool StartGoalGenerator::generateRandomValidState(RobotState& generated_state,
         if (m_cspace->isValid(generated_state)){
             ContObjectState obj = generated_state.getObjectStateRelMap();
 
-            //iterate through our desired regions
-            //if the object location is in one of our regions then we found a valid state
+            //iterate through our desired m_regions
+            //if the object location is in one of our m_regions then we found a valid state
             if (region_id != -1){
-                Region region = regions[region_id];
+                Region region = m_regions[region_id];
                 bool isWithinRegion = (obj.x() >= region.x_min && obj.x() <= region.x_max &&
                         obj.y() >= region.y_min && obj.y() <= region.y_max &&
                         obj.z() >= region.z_min && obj.z() <= region.z_max);
@@ -110,10 +110,10 @@ bool StartGoalGenerator::generateRandomValidState(RobotState& generated_state,
 }
 
 bool StartGoalGenerator::generateUniformPairs(int num_pairs){
-    int counter = 0;
+    // int counter = 0;
     for (int i=0; i < num_pairs; i++){
         ROS_INFO("generating pair %d", i);
-        counter++;
+        // counter++;
         int set_uniform_sampling = -1;
         RobotState start_state;
         RobotState goal_state;
@@ -177,7 +177,7 @@ void omplFullBodyCollisionChecker::initializeRegions(std::string file){
     if (ret_code < 6){
         return;
     }
-    regions.push_back(region);
+    m_regions.push_back(region);
   }
 }
 */

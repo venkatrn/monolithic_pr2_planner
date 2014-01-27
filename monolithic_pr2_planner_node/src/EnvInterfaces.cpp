@@ -92,25 +92,8 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
 
 
     //exp happening here
-<<<<<<< HEAD
-
-
-
-
     // m_exp_interface.generatePairs();
-
-
-
-
-
-
-
-
-
-=======
-    //m_exp_interface.generatePairs();
-    m_ompl_planner.planPathCallback(req, res);
->>>>>>> aeb341700292d706e243083b4a7b27b943d87028
+    // m_ompl_planner.planPathCallback(req, res);
 
     m_planner->set_initialsolution_eps(search_request->initial_epsilon);
     m_planner->set_initialsolution_eps1(20);

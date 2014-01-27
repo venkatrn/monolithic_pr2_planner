@@ -86,17 +86,7 @@ void addCuboid(pcl::PointCloud<pcl::PointXYZ>::Ptr pclCloud, double X, double Y,
 void addRandomObstacles(pcl::PointCloud<pcl::PointXYZ>::Ptr pclCloud, int
     numSurfaces, int numObstaclesPerSurface){
     ros::NodeHandle nh;
-    ros::Publisher hotspot_pub = nh.advertise<std_msgs::Float32MultiArray>("hotspot_regions", 1);
 
-    std_msgs::Float32MultiArray generated_hotspots;
-    generated_hotspots.layout.dim.resize(2);
-    generated_hotspots.layout.dim[0].label = "region";
-    generated_hotspots.layout.dim[0].size = 6;
-    generated_hotspots.layout.dim[0].stride = 6*numSurfaces;
-
-    generated_hotspots.layout.dim[1].label = "object";
-    generated_hotspots.layout.dim[1].size = numSurfaces;
-    generated_hotspots.layout.dim[1].stride = numSurfaces;
     // Add the surface - these are generated only within these bounds.
     double surfaceBoundsXMin = 3.5;
     double surfaceBoundsXMax = 6;
@@ -128,6 +118,8 @@ void addRandomObstacles(pcl::PointCloud<pcl::PointXYZ>::Ptr pclCloud, int
     double obstacleSizeZMin = 0.1;
     double obstacleSizeZMax = 0.4;
 
+    nh.setParam("/monolithic_pr2_planner_node/experiments/number_of_regions",
+        numSurfaces);
 
     for (int i = 0; i < numSurfaces; ++i){
         srand(clock());
@@ -149,12 +141,16 @@ void addRandomObstacles(pcl::PointCloud<pcl::PointXYZ>::Ptr pclCloud, int
 
         double dimZ = surfaceSizeZ;
 
-        generated_hotspots.data.push_back(X);
-        generated_hotspots.data.push_back(Y);
-        generated_hotspots.data.push_back(Z);
-        generated_hotspots.data.push_back(dimX);
-        generated_hotspots.data.push_back(dimY);
-        generated_hotspots.data.push_back(dimZ);
+        // Add to Param server (not the best thing to do, but whatever)
+        nh.setParam("/monolithic_pr2_planner_node/experiments/goal_region_x_" + std::to_string(i), X);
+        nh.setParam("/monolithic_pr2_planner_node/experiments/goal_region_y_" + std::to_string(i), Y);
+        nh.setParam("/monolithic_pr2_planner_node/experiments/goal_region_z_" + std::to_string(i), Z);
+        nh.setParam("/monolithic_pr2_planner_node/experiments/goal_region_dimx_" + std::to_string(i),
+            dimX);
+        nh.setParam("/monolithic_pr2_planner_node/experiments/goal_region_dimy_" + std::to_string(i),
+            dimY);
+        nh.setParam("/monolithic_pr2_planner_node/experiments/goal_region_dimz_" + std::to_string(i),
+            dimZ);
 
         // Now, we can add this surface.
         addCuboid(pclCloud, X, Y, Z, dimX, dimY, dimZ, false);
@@ -187,8 +183,8 @@ void addRandomObstacles(pcl::PointCloud<pcl::PointXYZ>::Ptr pclCloud, int
             addCuboid(pclCloud, oX, oY, oZ, odimX, odimY, odimZ, true);
         }
     }
-    // sleep(1);
-    hotspot_pub.publish(generated_hotspots);
+    
+
 }
 
 vector<Eigen::Vector3d> getVoxelsFromFile(std::string filename){

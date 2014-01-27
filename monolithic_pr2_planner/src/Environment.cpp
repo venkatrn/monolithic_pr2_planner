@@ -68,7 +68,7 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
     ROS_DEBUG_NAMED(SEARCH_LOG, "Source state is:");
     source_state->robot_pose().printToDebug(SEARCH_LOG);
     source_state->robot_pose().visualize();
-    usleep(10000);
+    usleep(100000);
     for (auto mprim : m_mprims.getMotionPrims()){
         ROS_DEBUG_NAMED(SEARCH_LOG, "Applying motion:");
         // mprim->printEndCoord();

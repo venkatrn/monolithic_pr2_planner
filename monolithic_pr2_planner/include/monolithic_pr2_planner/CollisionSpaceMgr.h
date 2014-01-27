@@ -24,7 +24,7 @@ namespace monolithic_pr2_planner {
             CollisionSpaceMgr(SBPLArmModelPtr right_arm,
                               SBPLArmModelPtr left_arm);
             bool isValid(DiscObjectState& obj_state);
-            bool isValid(ContBaseState& base, RightContArmState r_arm, LeftContArmState l_arm);
+            bool isValid(ContBaseState& base, RightContArmState& r_arm, LeftContArmState& l_arm);
             bool isValid(RobotState& robot_pose);
             bool isValidSuccessor(const GraphState& successor,
                                   const TransitionData& t_data);

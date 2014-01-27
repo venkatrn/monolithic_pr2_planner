@@ -94,6 +94,7 @@ bool StartGoalGenerator::generateRandomValidState(RobotState& generated_state,
                         obj.y() >= region.y_min && obj.y() <= region.y_max &&
                         obj.z() >= region.z_min && obj.z() <= region.z_max);
                 if (isWithinRegion){
+                    ROS_INFO("found one in region");
                     return true;
                 }
             // else, uniform sampling across entire map
@@ -103,7 +104,6 @@ bool StartGoalGenerator::generateRandomValidState(RobotState& generated_state,
                    obj.z() >= Z_MIN && obj.z() <= Z_MAX){
                     return true;
                 } else {
-                    obj.printToInfo(HEUR_LOG);
                     ROS_ERROR("not in map");
                 }
             }
@@ -132,8 +132,6 @@ bool StartGoalGenerator::generateUniformPairs(int num_pairs,
         generateRandomValidState(start_state, set_uniform_sampling);
         generateRandomValidState(goal_state, set_uniform_sampling);
         pairs.push_back(pair<RobotState, RobotState>(start_state, goal_state));
-        start_state.printToDebug(HEUR_LOG);
-        goal_state.printToDebug(HEUR_LOG);
     }
     return true;
 }

@@ -64,6 +64,20 @@ bool CollisionSpaceMgr::isValid(RobotState& robot_pose){
     return m_cspace->checkAllMotion(l_arm, r_arm, body_pose, false, dist_temp, 
                                     debug_code);
 }
+
+bool CollisionSpaceMgr::isValid(ContBaseState& base, RightContArmState& r_arm, 
+                                LeftContArmState& l_arm){
+    vector<double> l_arm_v;
+    vector<double> r_arm_v;
+    l_arm.getAngles(&l_arm_v);
+    r_arm.getAngles(&r_arm_v);
+    double dist_temp;
+    int debug_code;
+    BodyPose bp = base.body_pose();
+    return m_cspace->checkAllMotion(l_arm_v, r_arm_v, bp, false, dist_temp, 
+                                    debug_code);
+}
+
 /*! \brief Given the transition data from a state expansion, this does a smart
  * collision check on the successor.
  *

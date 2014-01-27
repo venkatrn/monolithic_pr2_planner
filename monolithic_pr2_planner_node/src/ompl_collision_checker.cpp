@@ -48,13 +48,16 @@ bool omplFullBodyCollisionChecker::isValid(const ompl::base::State *state) const
     RightContArmState r_arm(arm0);
     LeftContArmState l_arm(arm1);
     ContBaseState base(wpose[8], wpose[9], wpose[10], wpose[11]);
+    base.printToDebug(SEARCH_LOG);
     RobotState seed_state(base, r_arm, l_arm);
 
     RobotPosePtr new_robot_state;
     if (!RobotState::computeRobotPose(DiscObjectState(obj_state), seed_state, new_robot_state)){
         return false;
     }
-    if ( m_cspace->isValid(*new_robot_state)){
+    RightContArmState new_r_arm;
+    LeftContArmState new_l_arm;
+    if ( m_cspace->isValid(base, new_r_arm, new_l_arm)){
         return true;
     } else {
         return false;

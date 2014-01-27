@@ -27,8 +27,8 @@ namespace monolithic_pr2_planner {
                                   int& start_id, int& goal_id);
             void GetSuccs(int sourceStateID, vector<int>* succIDs, 
                           vector<int>* costs);
-            std::vector<FullBodyState> reconstructPath(std::vector<int> state_ids);
-
+            std::vector<FullBodyState> reconstructPath(std::vector<int> 
+                state_ids);
         protected:
             bool setStartGoal(SearchRequestPtr search_request, 
                               int& start_id, int& goal_id);

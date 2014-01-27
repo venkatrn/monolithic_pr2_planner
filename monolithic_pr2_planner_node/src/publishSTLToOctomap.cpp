@@ -2,12 +2,15 @@
 #include <pcl/point_types.h>
 #include <pcl/ros/conversions.h>
 #include <sensor_msgs/PointCloud2.h>
+#include <std_msgs/Float32MultiArray.h>
 #include <vector>
 #include <boost/filesystem.hpp>
 #include <leatherman/utils.h>
 #include <leatherman/file.h>
 #include <leatherman/binvox.h>
 #include <ros/ros.h>
+#include <monolithic_pr2_planner/LoggerNames.h>
+#include <cstdlib>
 
 using namespace boost::filesystem;
 using namespace std;
@@ -47,6 +50,145 @@ bool getVoxelsFromMesh(std::string resource,
     sbpl::Voxelizer::voxelizeMesh(scaled_vertices, triangles, pose, 0.02, voxels, false);
 
     return true;
+}
+
+void addCuboid(pcl::PointCloud<pcl::PointXYZ>::Ptr pclCloud, double X, double Y, double Z, double dimX, double dimY, double dimZ, bool fill = true){
+    // Add a cuboid of size dimX, dimY, dimZ, with the bottom left being the
+    // reference point: X, Y, Z
+    // double dimX, dimY, dimZ;
+    // double X, Y, Z;
+
+
+    // Must randomize.
+    // dimX = 0.6;
+    // dimY = 1.2;
+    // dimZ = 0.8;
+
+    // X = 4.5;
+    // Y = 2;
+    // Z = 0.0;
+
+    std::vector<std::vector<double> > voxels;
+    sbpl::Voxelizer::voxelizeBox(dimX, dimY, dimZ, 0.02, voxels, fill);
+    size_t currentPCLCloudSize = pclCloud->points.size();
+    pclCloud->points.resize(currentPCLCloudSize + voxels.size());
+    for (size_t i = 0; i < voxels.size(); ++i)
+    {
+        pclCloud->points[currentPCLCloudSize + i].x = voxels[i][0] + (X +
+            dimX/2);
+        pclCloud->points[currentPCLCloudSize + i].y = voxels[i][1] + (Y +
+            dimY/2);
+        pclCloud->points[currentPCLCloudSize + i].z = voxels[i][2] + (Z +
+            dimZ/2);
+    }
+}
+
+void addRandomObstacles(pcl::PointCloud<pcl::PointXYZ>::Ptr pclCloud, int
+    numSurfaces, int numObstaclesPerSurface){
+    ros::NodeHandle nh;
+    ros::Publisher hotspot_pub = nh.advertise<std_msgs::Float32MultiArray>("hotspot_regions", 1);
+
+    std_msgs::Float32MultiArray generated_hotspots;
+    generated_hotspots.layout.dim.resize(2);
+    generated_hotspots.layout.dim[0].label = "region";
+    generated_hotspots.layout.dim[0].size = 6;
+    generated_hotspots.layout.dim[0].stride = 6*numSurfaces;
+
+    generated_hotspots.layout.dim[1].label = "object";
+    generated_hotspots.layout.dim[1].size = numSurfaces;
+    generated_hotspots.layout.dim[1].stride = numSurfaces;
+    // Add the surface - these are generated only within these bounds.
+    double surfaceBoundsXMin = 3.5;
+    double surfaceBoundsXMax = 6;
+    
+    double surfaceBoundsYMin = 0;
+    double surfaceBoundsYMax = 4;
+
+    double surfaceSizeXMax = 0.65;
+    double surfaceSizeXMin = 0.65;
+
+    double surfaceSizeYMax = 2.0;
+    double surfaceSizeYMin = 1.0;
+
+    double surfaceSizeZ = 0.8;
+    
+
+    double obstacleBoundsXMin = 3.5;
+    double obstacleBoundsXMax = 6;
+    
+    double obstacleBoundsYMin = 0;
+    double obstacleBoundsYMax = 4;
+
+    double obstacleSizeXMax = 0.3;
+    double obstacleSizeXMin = 0.1;
+
+    double obstacleSizeYMax = 0.3;
+    double obstacleSizeYMin = 0.1;
+
+    double obstacleSizeZMin = 0.1;
+    double obstacleSizeZMax = 0.4;
+
+
+    for (int i = 0; i < numSurfaces; ++i){
+        srand(clock());
+        
+        // Generate position
+        double X = surfaceBoundsXMin + static_cast<double>(rand())/RAND_MAX *
+        (surfaceBoundsXMax - surfaceBoundsXMin);
+        double Y = surfaceBoundsYMin + static_cast<double>(rand())/RAND_MAX *
+        (surfaceBoundsYMax - surfaceBoundsYMin);
+
+        double Z = 0.0;
+        
+        // Generate size
+        double dimX = surfaceSizeXMin + static_cast<double>(rand())/RAND_MAX *
+        (surfaceSizeXMax - surfaceSizeXMin);
+
+        double dimY = surfaceSizeYMin + static_cast<double>(rand())/RAND_MAX *
+        (surfaceSizeYMax - surfaceSizeYMin);
+
+        double dimZ = surfaceSizeZ;
+
+        generated_hotspots.data.push_back(X);
+        generated_hotspots.data.push_back(Y);
+        generated_hotspots.data.push_back(Z);
+        generated_hotspots.data.push_back(dimX);
+        generated_hotspots.data.push_back(dimY);
+        generated_hotspots.data.push_back(dimZ);
+
+        // Now, we can add this surface.
+        addCuboid(pclCloud, X, Y, Z, dimX, dimY, dimZ, false);
+
+        obstacleBoundsXMin = X;
+        obstacleBoundsXMax = X + (dimX - obstacleSizeXMax);
+
+        obstacleBoundsYMin = Y;
+        obstacleBoundsYMax = Y + (dimY - obstacleSizeYMax);
+
+        // Add the obstacles on the surface
+        for (int j = 0; j < numObstaclesPerSurface; ++j){
+            double oX = obstacleBoundsXMin + static_cast<double>(rand())/RAND_MAX *
+            (obstacleBoundsXMax - obstacleBoundsXMin);
+            double oY = obstacleBoundsYMin + static_cast<double>(rand())/RAND_MAX *
+            (obstacleBoundsYMax - obstacleBoundsYMin);
+
+            double oZ = dimZ;
+            
+            // Generate size
+            double odimX = obstacleSizeXMin + static_cast<double>(rand())/RAND_MAX *
+            (obstacleSizeXMax - obstacleSizeXMin);
+
+            double odimY = obstacleSizeYMin + static_cast<double>(rand())/RAND_MAX *
+            (obstacleSizeYMax - obstacleSizeYMin);
+
+            double odimZ = obstacleSizeZMin + static_cast<double>(rand())/RAND_MAX *
+            (obstacleSizeZMax - obstacleSizeZMin);
+            
+            addCuboid(pclCloud, oX, oY, oZ, odimX, odimY, odimZ, true);
+        }
+    }
+    // sleep(1);
+    hotspot_pub.publish(generated_hotspots);
 }
 
 vector<Eigen::Vector3d> getVoxelsFromFile(std::string filename){
@@ -115,6 +257,7 @@ vector<Eigen::Vector3d> getVoxelsFromFile(std::string filename){
         pclCloud->points[i].y = points[i][1];
         pclCloud->points[i].z = points[i][2];
     }
+    addRandomObstacles(pclCloud, 1, 5);
     sensor_msgs::PointCloud2 pc;
     pcl::toROSMsg (*pclCloud, pc);
     pc.header.frame_id = "/map";
@@ -124,6 +267,7 @@ vector<Eigen::Vector3d> getVoxelsFromFile(std::string filename){
 
     return points;
 }
+
 
 bool isValidPath(std::string filename){
     path input_path(filename.c_str());

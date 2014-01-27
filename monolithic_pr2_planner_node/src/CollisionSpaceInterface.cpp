@@ -51,15 +51,5 @@ void CollisionSpaceInterface::update3DHeuristicMaps(){
 }
 
 void CollisionSpaceInterface::update2DHeuristicMaps(std::vector<signed char>& data){
-    int counter = 0;
-    for (size_t i=0; i < data.size(); i++){
-        if (data[i] > -1){
-            counter += 1;
-            if (counter % 10000 == 0)
-                printf("%d ", data[i]);
-        }
-    }
-    ROS_DEBUG_NAMED(HEUR_LOG, "%d nonzero cells out of %lu", counter, 
-                                                             data.size());
     m_heur_mgr->update2DHeuristicMaps(data);
 }

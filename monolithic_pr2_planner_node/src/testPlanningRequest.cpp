@@ -53,17 +53,17 @@ int main(int argc, char** argv){
     // body_start[1] = 2;
     // body_start[2] = .1;
     // body_start[3] = -M_PI;
-
-    // Potential bug!
-    body_start[0] = 5.0;
-    body_start[1] = 1.0;
+    
+    // Config2 - cupboard
+    body_start[0] = 1.5;
+    body_start[1] = 3.0;
     body_start[2] = 0.1;
     body_start[3] = -M_PI;
 
-    // body_start[0] = 5.0;
-    // body_start[1] = 3.0;
+    // body_start[0] = 4.5;
+    // body_start[1] = 1.0;
     // body_start[2] = 0.1;
-    // body_start[3] = -M_PI;
+    // body_start[3] = 0;
 
     srv.request.rarm_start = right_arm_start;
     srv.request.larm_start = left_arm_start;
@@ -72,11 +72,11 @@ int main(int argc, char** argv){
     // Config1
     // KDL::Rotation rot = KDL::Rotation::RPY(0,0,-M_PI);
 
-    // Potential bug!
-    KDL::Rotation rot = KDL::Rotation::RPY(0,0,-M_PI);
+    // Config2 - cupboard
+    KDL::Rotation rot = KDL::Rotation::RPY(0,0,M_PI/2);
 
 
-    // KDL::Rotation rot = KDL::Rotation::RPY(0,0,M_PI/2);
+    // KDL::Rotation rot = KDL::Rotation::RPY(0,0,0);
     double qx, qy, qz, qw;
     rot.GetQuaternion(qx, qy, qz, qw);
 
@@ -87,14 +87,14 @@ int main(int argc, char** argv){
     // pose.pose.position.y = 1.9;
     // pose.pose.position.z = 1.1;
 
-    // Potential bug!
-    pose.pose.position.x = 2.7;
-    pose.pose.position.y = 4.5;
-    pose.pose.position.z = 0.7;
+    // Config2 - cupboard
+    pose.pose.position.x = 3.0;
+    pose.pose.position.y = 4.9;
+    pose.pose.position.z = 1.0;
 
-    // pose.pose.position.x = 2.7;
-    // pose.pose.position.y = 4.8;
-    // pose.pose.position.z = 0.7;
+    // pose.pose.position.x = 5.0;
+    // pose.pose.position.y = 1.0;
+    // pose.pose.position.z = 1.0;
     pose.pose.orientation.x = qx;
     pose.pose.orientation.y = qy;
     pose.pose.orientation.z = qz;

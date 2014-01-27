@@ -25,7 +25,7 @@ EnvInterfaces::EnvInterfaces(boost::shared_ptr<monolithic_pr2_planner::Environme
         getParams();
     bool forward_search = true;
     m_planner.reset(new ARAPlanner(m_env.get(), forward_search));
-    // m_planner.reset(new MPlanner(m_env.get(), 4, forward_search));
+    // m_planner.reset(new MPlanner(m_env.get(), 3, forward_search));
     m_costmap_pub = m_nodehandle.advertise<nav_msgs::OccupancyGrid>("costmap_pub", 1);
     m_costmap_publisher.reset(new
         costmap_2d::Costmap2DPublisher(m_nodehandle,1,"/map"));
@@ -87,8 +87,8 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
     }
 
     m_planner->set_initialsolution_eps(search_request->initial_epsilon);
-    m_planner->set_initialsolution_eps1(7.5);
-    m_planner->set_initialsolution_eps2(1.5);
+    m_planner->set_initialsolution_eps1(20);
+    m_planner->set_initialsolution_eps2(5);
     bool return_first_soln = true;
     m_planner->set_search_mode(return_first_soln);
     m_planner->set_start(start_id);

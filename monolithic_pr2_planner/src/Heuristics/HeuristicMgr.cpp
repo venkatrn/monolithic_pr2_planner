@@ -150,6 +150,23 @@ void HeuristicMgr::initializeMHAHeuristics(const int
             int heur_num = add2DHeur(cost_multiplier,0);
             m_heuristics[heur_num]->update2DHeuristicMap(m_grid_data);
             m_heuristics[heur_num]->setGoal(new_goal_state);
+
+            // Temporary, to make sure points are selected on opposing sides.
+            int side = (circle_x[p] - m_goal.getObjectState().x() < 0)?-1:1;
+            for (size_t i = 0; i < circle_x.size();)
+            {
+                if((circle_x[i] - m_goal.getObjectState().x())*side > 0){
+                    // erase
+                    ROS_DEBUG_NAMED(HEUR_LOG, "Removing %d %d", circle_x[i],
+                        circle_y[i]);
+                    circle_x.erase(circle_x.begin() + i);
+                    circle_y.erase(circle_y.begin() + i);
+                    selected.erase(selected.begin() + i);
+                }
+                else
+                    ++i;
+            }
+            number_of_points = circle_x.size();
         }
     }
     // GoalState new_goal_state = boost::make_shared<GoalState>(goal_state);

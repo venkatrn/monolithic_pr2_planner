@@ -124,17 +124,20 @@ void BFS2DHeuristic::visualizeRadiusAroundGoal(int x0, int y0){
     
     // circle.header.frame_id = "/map";
     // circle.header.stamp = ros::Time::now();
+    unsigned char threshold = 80;
     std::vector<geometry_msgs::Point> circle_points;
     
     for (size_t i = 0; i < circle_x.size(); ++i)
     {
         // ROS_DEBUG_NAMED(HEUR_LOG, "Circle points: %f %f", circle_x[i]*res,
         //     circle_y[i]*res);
-        geometry_msgs::Point out_pt;
-        out_pt.x = circle_x[i]*res;
-        out_pt.y = circle_y[i]*res;
-        out_pt.z = 0.0;
-        circle_points.push_back(out_pt);
+        if(m_grid[circle_x[i]][circle_y[i]] <= threshold){
+            geometry_msgs::Point out_pt;
+            out_pt.x = circle_x[i]*res;
+            out_pt.y = circle_y[i]*res;
+            out_pt.z = 0.0;
+            circle_points.push_back(out_pt);
+        }
     }
     std::stringstream ss;
     ss<<"radius_around_goal"<<x0<<y0;

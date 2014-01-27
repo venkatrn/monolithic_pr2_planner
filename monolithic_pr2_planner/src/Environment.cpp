@@ -41,8 +41,7 @@ int Environment::GetGoalHeuristic(int stateID){
 int Environment::GetGoalHeuristic(int stateID, int goal_id){
     // For now, return the max of all the heuristics
     std::vector<int> values = m_heur_mgr->getGoalHeuristic(m_hash_mgr->getGraphState(stateID));
-    // ROS_DEBUG_NAMED(HEUR_LOG, "Heuristic values: Arm : %d\t Base 1: %d\t Goal ID: %d", values[0], values[1],
-    //     goal_id);
+    // ROS_DEBUG_NAMED(HEUR_LOG, "Heuristic values: Arm : %d\t Base 1: %d", values[0], values[1]);
     return std::max(values[0], values[goal_id+1]);
     // switch(goal_id){
     //     case 0://anchor search - same for ARA* and MHA* : max(end eff, )
@@ -68,12 +67,11 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
     GraphStatePtr source_state = m_hash_mgr->getGraphState(sourceStateID);
     ROS_DEBUG_NAMED(SEARCH_LOG, "Source state is:");
     source_state->robot_pose().printToDebug(SEARCH_LOG);
-    // source_state->robot_pose().visualize();
-    // usleep(10000);
-
+    source_state->robot_pose().visualize();
+    usleep(10000);
     for (auto mprim : m_mprims.getMotionPrims()){
         ROS_DEBUG_NAMED(SEARCH_LOG, "Applying motion:");
-        mprim->printEndCoord();
+        // mprim->printEndCoord();
         GraphStatePtr successor;
         TransitionData t_data;
         if (!mprim->apply(*source_state, successor, t_data)){
@@ -157,7 +155,7 @@ bool Environment::setStartGoal(SearchRequestPtr search_request,
     m_heur_mgr->setGoal(*m_goal);
 
     // Create additional heuristics for MHA planner
-    m_heur_mgr->initializeMHAHeuristics(m_base_heur_id, 1);
+    // m_heur_mgr->initializeMHAHeuristics(m_base_heur_id, 1);
 
     return true;
 }
@@ -204,7 +202,7 @@ void Environment::configurePlanningDomain(){
     // Already in mm.
     m_base_heur_id = m_heur_mgr->add2DHeur(1, 0.7);//1
     // m_heur_mgr->add2DHeur(1, 0.0);//2
-    // m_heur_mgr->numberOfMHAHeuristics(3);
+    // m_heur_mgr->numberOfMHAHeuristics(2);
 
     // used for arm kinematics
     LeftContArmState::initArmModel(m_param_catalog.m_left_arm_params);

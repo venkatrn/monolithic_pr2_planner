@@ -34,7 +34,7 @@ intermediateposes: 10
 primID: 2
 startangle_c: 0
 endpose_c: 0 0 1
-additionalactioncostmult: 2
+additionalactioncostmult: 1
 intermediateposes: 10
 0.0000 0.0000 0.0000
 0.0000 0.0000 0.0436
@@ -49,7 +49,7 @@ intermediateposes: 10
 primID: 3
 startangle_c: 0
 endpose_c: 0 0 -1
-additionalactioncostmult: 2
+additionalactioncostmult: 1
 intermediateposes: 10
 0.0000 0.0000 0.0000
 0.0000 0.0000 -0.0436

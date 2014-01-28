@@ -21,9 +21,10 @@ struct Region {
 class StartGoalGenerator {
     public:
         StartGoalGenerator(monolithic_pr2_planner::CSpaceMgrPtr cspace);
-        monolithic_pr2_planner::RobotState generateRandomState(int region_id=-1);
+        monolithic_pr2_planner::RobotState generateRandomState(Region* region);
         bool generateRandomValidState(monolithic_pr2_planner::RobotState& robot_state,
-                                      int region_id=-1);
+                                      int region_id=-1, bool is_start_state =
+                                      false);
         bool generateUniformPairs(int num_pairs, std::vector<std::pair<monolithic_pr2_planner::RobotState, monolithic_pr2_planner::RobotState> >& pair);
 
         inline double randomDouble(double min, double max){
@@ -32,6 +33,7 @@ class StartGoalGenerator {
 
         void initializeRegions();
     private:
-        vector<Region> m_regions;
+        vector<Region> m_goal_regions;
+        Region m_start_region;
         monolithic_pr2_planner::CSpaceMgrPtr m_cspace;
 };

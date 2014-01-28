@@ -187,6 +187,27 @@ void addRandomObstacles(pcl::PointCloud<pcl::PointXYZ>::Ptr pclCloud, int
 
 }
 
+void addStartStateRegionToParamServer(){
+    // Sets the start state regions to the param server for experiments.
+    // Note: Setting only one start region for now.
+    ros::NodeHandle nh;
+    double X = 1.3;
+    double Y = 1.6;
+    double Z = 0.1;
+    double dimX = 0.3;
+    double dimY = 3;
+    double dimZ = 0.0;
+    nh.setParam("/monolithic_pr2_planner_node/experiments/start_region_x", X);
+    nh.setParam("/monolithic_pr2_planner_node/experiments/start_region_y", Y);
+    nh.setParam("/monolithic_pr2_planner_node/experiments/start_region_z", Z);
+    nh.setParam("/monolithic_pr2_planner_node/experiments/start_region_dimx",
+        dimX);
+    nh.setParam("/monolithic_pr2_planner_node/experiments/start_region_dimy",
+        dimY);
+    nh.setParam("/monolithic_pr2_planner_node/experiments/start_region_dimz",
+        dimZ);
+}
+
 vector<Eigen::Vector3d> getVoxelsFromFile(std::string filename){
     ros::NodeHandle nh;
     ros::Publisher pcl_pub = nh.advertise<sensor_msgs::PointCloud2>("pcl_environment", 1);
@@ -254,6 +275,7 @@ vector<Eigen::Vector3d> getVoxelsFromFile(std::string filename){
         pclCloud->points[i].z = points[i][2];
     }
     addRandomObstacles(pclCloud, 1, 5);
+    addStartStateRegionToParamServer();
     sensor_msgs::PointCloud2 pc;
     pcl::toROSMsg (*pclCloud, pc);
     pc.header.frame_id = "/map";

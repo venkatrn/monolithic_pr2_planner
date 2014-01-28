@@ -8,7 +8,7 @@ using namespace monolithic_pr2_planner;
 StartGoalGenerator::StartGoalGenerator(monolithic_pr2_planner::CSpaceMgrPtr cspace):
     m_cspace(cspace){}
 
-RobotState StartGoalGenerator::generateRandomState(int region_id){
+RobotState StartGoalGenerator::generateRandomState(Region* region_ptr){
     bool foundState = false;
     RobotPosePtr final_state;
     while (!foundState){
@@ -20,8 +20,12 @@ RobotState StartGoalGenerator::generateRandomState(int region_id){
         obj_state.z(randomDouble(-0.6, 0.6));
 
         // TODO find some better values here
-        obj_state.roll(randomDouble(-1.396, 1.396));
-        obj_state.pitch(randomDouble(-1.396, 1.396));
+        // obj_state.roll(randomDouble(-1.396, 1.396));
+        // obj_state.pitch(randomDouble(-1.396, 1.396));
+        // obj_state.yaw(randomDouble(-1.396, 1.396));
+
+        obj_state.roll(0);
+        obj_state.pitch(randomDouble(0, 1.5));
         obj_state.yaw(randomDouble(-1.396, 1.396));
 
         //ROS_INFO("random object state is");
@@ -45,12 +49,17 @@ RobotState StartGoalGenerator::generateRandomState(int region_id){
         double y_lower_bound = 0;
         double y_upper_bound = Y_MAX;
 
-        if (region_id != -1){
-            double padding = 1.0;
-            x_lower_bound = (m_regions[region_id].x_min-padding < 0) ? 0 : m_regions[region_id].x_min-padding;
-            x_upper_bound = (m_regions[region_id].x_max+padding > X_MAX) ? X_MAX : m_regions[region_id].x_max+padding;
-            y_lower_bound = (m_regions[region_id].y_min-padding < 0) ? 0 : m_regions[region_id].y_min-padding;
-            y_upper_bound = (m_regions[region_id].y_max+padding > Y_MAX) ? Y_MAX : m_regions[region_id].y_max+padding;
+        if (region_ptr != NULL){
+            Region region = *region_ptr;
+            double padding = 0.0;
+            if(region_ptr != &m_start_region)
+                padding = 1.0;
+            else
+                padding = 0.0;
+            x_lower_bound = (region.x_min-padding < 0) ? 0 : region.x_min-padding;
+            x_upper_bound = (region.x_max+padding > X_MAX) ? X_MAX : region.x_max+padding;
+            y_lower_bound = (region.y_min-padding < 0) ? 0 : region.y_min-padding;
+            y_upper_bound = (region.y_max+padding > Y_MAX) ? Y_MAX : region.y_max+padding;
         }
         base.x(randomDouble(x_lower_bound, x_upper_bound));
         base.y(randomDouble(y_lower_bound, y_upper_bound));
@@ -73,23 +82,30 @@ RobotState StartGoalGenerator::generateRandomState(int region_id){
 }
 
 // generates a bunch of states while making sure they're not in collision and
-// they are within user defined m_regions.
+// they are within user defined m_goal_regions.
 bool StartGoalGenerator::generateRandomValidState(RobotState& generated_state,
-                                                  int region_id){
+                                                  int region_id, bool
+                                                  is_start_state){
     int counter = 0;
     while(1){
         counter++;
         if (counter % 1000 == 0)
             ROS_INFO("up to iteration %d while searching for valid state", counter);
 
-        generated_state = generateRandomState(region_id);
+        if(region_id==-1)  //if -1, we sample uniformly
+            generated_state = generateRandomState(NULL);
+        else if(is_start_state)  //If we're generating a start state within region bounds
+            generated_state = generateRandomState(&m_start_region);
+        else
+            generated_state = generateRandomState(&m_goal_regions[region_id]);
+
         if (m_cspace->isValid(generated_state)){
             ContObjectState obj = generated_state.getObjectStateRelMap();
 
-            //iterate through our desired m_regions
-            //if the object location is in one of our m_regions then we found a valid state
-            if (region_id != -1){
-                Region region = m_regions[region_id];
+            //iterate through our desired m_goal_regions
+            //if the object location is in one of our m_goal_regions then we found a valid state
+            if (region_id != -1 && !is_start_state){
+                Region region = m_goal_regions[region_id];
                 bool isWithinRegion = (obj.x() >= region.x_min && obj.x() <= region.x_max &&
                         obj.y() >= region.y_min && obj.y() <= region.y_max &&
                         obj.z() >= region.z_min && obj.z() <= region.z_max);
@@ -97,8 +113,13 @@ bool StartGoalGenerator::generateRandomValidState(RobotState& generated_state,
                     ROS_INFO("found one in region");
                     return true;
                 }
+            }
+            else if (region_id!=-1 && is_start_state){
+                // Nothing to check. Just return true.
+                return true;
+            }
+            else if (region_id == -1){
             // else, uniform sampling across entire map
-            } else {
                 if(obj.x() >= X_MIN && obj.x() <= X_MAX &&
                    obj.y() >= Y_MIN && obj.y() <= Y_MAX &&
                    obj.z() >= Z_MIN && obj.z() <= Z_MAX){
@@ -123,13 +144,14 @@ bool StartGoalGenerator::generateUniformPairs(int num_pairs,
         ROS_INFO("generating pair %d", i);
         // counter++;
         int set_uniform_sampling = -1;
-        if(!m_regions.empty()){
-            set_uniform_sampling = rand()%static_cast<int>(m_regions.size());
+        if(!m_goal_regions.empty()){
+            set_uniform_sampling = rand()%static_cast<int>(m_goal_regions.size());
         }
         RobotState start_state;
         RobotState goal_state;
         ROS_DEBUG_NAMED(HEUR_LOG, "generated the following start goal");
-        generateRandomValidState(start_state, set_uniform_sampling);
+        // Will set start region if setting a goal region
+        generateRandomValidState(start_state, set_uniform_sampling, true);
         generateRandomValidState(goal_state, set_uniform_sampling);
         pairs.push_back(pair<RobotState, RobotState>(start_state, goal_state));
     }
@@ -203,6 +225,25 @@ void StartGoalGenerator::initializeRegions(){
         region.x_max = region.x_min + dimX;
         region.y_max = region.y_min + dimY;
         region.z_max = region.z_min + 0.4;  //Defined by the obstacle size
-        m_regions.push_back(region);
+        m_goal_regions.push_back(region);
     }
+
+    // Start region : Only one for now.
+    double X, Y, Z, dimX, dimY, dimZ;
+    nh.getParam("/monolithic_pr2_planner_node/experiments/start_region_x", X);
+    nh.getParam("/monolithic_pr2_planner_node/experiments/start_region_y", Y);
+    nh.getParam("/monolithic_pr2_planner_node/experiments/start_region_z", Z);
+    nh.getParam("/monolithic_pr2_planner_node/experiments/start_region_dimx",
+        dimX);
+    nh.getParam("/monolithic_pr2_planner_node/experiments/start_region_dimy",
+        dimY);
+    nh.getParam("/monolithic_pr2_planner_node/experiments/start_region_dimz",
+        dimZ);
+    m_start_region.x_min = X;
+    m_start_region.y_min = Y;
+    m_start_region.z_min = Z;    //We want to goal to be *above* the table
+
+    m_start_region.x_max = m_start_region.x_min + dimX;
+    m_start_region.y_max = m_start_region.y_min + dimY;
+    m_start_region.z_max = m_start_region.z_min;  //Defined by the obstacle size
 }

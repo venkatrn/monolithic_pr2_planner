@@ -43,14 +43,6 @@ int Environment::GetGoalHeuristic(int stateID, int goal_id){
     std::vector<int> values = m_heur_mgr->getGoalHeuristic(m_hash_mgr->getGraphState(stateID));
     // ROS_DEBUG_NAMED(HEUR_LOG, "Heuristic values: Arm : %d\t Base 1: %d", values[0], values[1]);
     return std::max(values[0], values[goal_id+1]);
-    // switch(goal_id){
-    //     case 0://anchor search - same for ARA* and MHA* : max(end eff, )
-    //         // return values[0];
-    //         return std::max(values[0], values[1]);
-    //         // return std::max(values[0], values[2]);
-    //     default:    // This is for ARA* : Must be the same as case 0
-    //         return std::max(values[0], values[goal_id+1]);
-    // }
 }
 
 void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs, 
@@ -157,7 +149,7 @@ bool Environment::setStartGoal(SearchRequestPtr search_request,
     m_heur_mgr->setGoal(*m_goal);
 
     // Create additional heuristics for MHA planner
-    // m_heur_mgr->initializeMHAHeuristics(m_base_heur_id, 1);
+    m_heur_mgr->initializeMHAHeuristics(m_base_heur_id, 1);
 
     return true;
 }
@@ -204,8 +196,9 @@ void Environment::configurePlanningDomain(){
     
     // Already in mm.
     m_base_heur_id = m_heur_mgr->add2DHeur(1, 0.7);//1
-    // m_heur_mgr->add2DHeur(1, 0.0);//2
-    // m_heur_mgr->numberOfMHAHeuristics(2);
+    // The argument is TOTAL_HEUR_NUM - 1 (TOTAL_HEUR_NUM is what you
+    // entered in the MPlanner parameters)
+    m_heur_mgr->numberOfMHAHeuristics(2);
 
     // used for arm kinematics
     LeftContArmState::initArmModel(m_param_catalog.m_left_arm_params);

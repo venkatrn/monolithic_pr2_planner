@@ -20,10 +20,6 @@ RobotState StartGoalGenerator::generateRandomState(Region* region_ptr){
         obj_state.z(randomDouble(-0.6, 0.6));
 
         // TODO find some better values here
-        // obj_state.roll(randomDouble(-1.396, 1.396));
-        // obj_state.pitch(randomDouble(-1.396, 1.396));
-        // obj_state.yaw(randomDouble(-1.396, 1.396));
-
         obj_state.roll(0);
         obj_state.pitch(randomDouble(0, 1.5));
         obj_state.yaw(randomDouble(-1.396, 1.396));
@@ -64,7 +60,17 @@ RobotState StartGoalGenerator::generateRandomState(Region* region_ptr){
         base.x(randomDouble(x_lower_bound, x_upper_bound));
         base.y(randomDouble(y_lower_bound, y_upper_bound));
         base.theta(randomDouble(-M_PI, M_PI));
-        RobotState seed_state(base, r_arm, l_arm);
+        
+        vector<double> init_l_arm(7,0);
+        init_l_arm[0] = (0.038946287971107774);
+        init_l_arm[1] = (1.2146697069025374);
+        init_l_arm[2] = (1.3963556492780154);
+        init_l_arm[3] = -1.1972269899800325;
+        init_l_arm[4] = (-4.616317135720829);
+        init_l_arm[5] = -0.9887266887318599;
+        init_l_arm[6] = 1.1755681069775656;
+        LeftContArmState init_l_arm_v(init_l_arm);
+        RobotState seed_state(base, r_arm, init_l_arm_v);
 
         //ROS_INFO("printing seed state");
         //seed_state.printToInfo(HEUR_LOG);

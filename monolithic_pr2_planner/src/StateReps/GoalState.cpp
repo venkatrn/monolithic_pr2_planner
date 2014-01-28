@@ -21,6 +21,25 @@ GoalState::GoalState(DiscObjectState obj_goal, double xyz_tol,
     m_tolerances[Tolerances::PITCH] = pitch_tol;
     m_tolerances[Tolerances::YAW] = yaw_tol;
 }
+
+bool GoalState::withinXYZTol(const GraphStatePtr& graph_state){
+    // not sure why there's a .005 here. ask ben
+    ContObjectState c_tol(m_tolerances[Tolerances::XYZ]-.005, 
+                          m_tolerances[Tolerances::XYZ]-.005, 
+                          m_tolerances[Tolerances::XYZ]-.005,
+                          m_tolerances[Tolerances::ROLL],
+                          m_tolerances[Tolerances::PITCH],
+                          m_tolerances[Tolerances::YAW]);
+    DiscObjectState d_tol = c_tol.getDiscObjectState();
+    DiscObjectState obj = graph_state->getObjectStateRelMap();
+
+
+    bool within_xyz_tol = (abs(m_goal_state.x()-obj.x()) < d_tol.x() &&
+                           abs(m_goal_state.y()-obj.y()) < d_tol.y() &&
+                           abs(m_goal_state.z()-obj.z()) < d_tol.z());
+    return within_xyz_tol;
+}
+
 bool GoalState::isSatisfiedBy(const GraphStatePtr& graph_state){
     // not sure why there's a .005 here. ask ben
     ContObjectState c_tol(m_tolerances[Tolerances::XYZ]-.005, 

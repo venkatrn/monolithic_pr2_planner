@@ -16,5 +16,6 @@ class omplFullBodyCollisionChecker : public ompl::base::StateValidityChecker {
     //void generateRandomState(State& s, int region_id);
     inline double randomDouble(double min, double max);
     virtual bool isValid(const ompl::base::State *state) const;
+    std::vector<double> l_arm_init;
 
 };

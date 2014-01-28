@@ -40,6 +40,12 @@ namespace monolithic_pr2_planner {
             ContObjectState getObjectStateRelMap() const;
             DiscObjectState getObjectStateRelBody() const;
 
+            static bool computeRobotPose(const ContObjectState& obj_state,
+                                  const ContBaseState& base_state,
+                                  const RightContArmState& seed_r_arm,
+                                  const LeftContArmState& seed_l_arm,
+                                  RightContArmState& output_r_arm,
+                                  LeftContArmState& output_l_arm);
             static bool computeRobotPose(const DiscObjectState& disc_obj_state,
                                          const RobotState& robot_pose,
                                          boost::shared_ptr<RobotState>& new_robot_pose,

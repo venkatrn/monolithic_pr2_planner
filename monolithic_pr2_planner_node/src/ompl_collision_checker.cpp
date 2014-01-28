@@ -35,13 +35,14 @@ bool omplFullBodyCollisionChecker::isValid(const ompl::base::State *state) const
     vector<double> arm0(7,0); //right arm angles
     vector<double> arm1(7,0); //left arm angles
 
-    arm1[0] = 0.137274;
-    arm1[1] = 0.314918;
-    arm1[2] = 0.185035;
-    arm1[3] = -1.662954;
-    arm1[4] = 2.923877;
-    arm1[5] = -1.305254;
-    arm1[6] = -0.370584;
+    arm1 = l_arm_init;
+    //arm1[0] = 0.137274;
+    //arm1[1] = 0.314918;
+    //arm1[2] = 0.185035;
+    //arm1[3] = -1.662954;
+    //arm1[4] = 2.923877;
+    //arm1[5] = -1.305254;
+    //arm1[6] = -0.370584;
 
     arm0[2] = (*(s->as<ompl::base::RealVectorStateSpace::StateType>(0)))[6];
     //arm1[2] = (*(s->as<ompl::base::RealVectorStateSpace::StateType>(0)))[5];

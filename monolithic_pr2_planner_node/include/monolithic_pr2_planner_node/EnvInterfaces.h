@@ -12,6 +12,7 @@
 #include <sbpl/planners/planner.h>
 #include <costmap_2d/costmap_2d_ros.h>
 #include <costmap_2d/costmap_2d_publisher.h>
+#include <monolithic_pr2_planner_node/StatsWriter.h>
 
 
 
@@ -64,5 +65,6 @@ namespace monolithic_pr2_planner_node {
 
             StartGoalGenerator m_generator;
             OMPLPR2Planner m_ompl_planner;
+            StatsWriter m_stats_writer;
     };
 }

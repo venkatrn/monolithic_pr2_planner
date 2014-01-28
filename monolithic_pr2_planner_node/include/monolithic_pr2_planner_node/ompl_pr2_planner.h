@@ -16,6 +16,7 @@
 #include <monolithic_pr2_planner/StateReps/RobotState.h>
 #include <monolithic_pr2_planner_node/GetMobileArmPlan.h>
 #include <monolithic_pr2_planner/SearchRequest.h>
+#include <monolithic_pr2_planner_node/StatsWriter.h>
 
 typedef ompl::base::RealVectorStateSpace::StateType VectorState;
 typedef ompl::base::SE2StateSpace::StateType SE2State;
@@ -24,13 +25,17 @@ typedef monolithic_pr2_planner_node::GetMobileArmPlan::Request NodeRequest;
 class OMPLPR2Planner{
     public:
         OMPLPR2Planner(const monolithic_pr2_planner::CSpaceMgrPtr& cspace);
-        bool planPathCallback(monolithic_pr2_planner::SearchRequestParams& search_request);
+        bool planPathCallback(monolithic_pr2_planner::SearchRequestParams& search_request, int trial_id);
+        bool checkRequest(monolithic_pr2_planner::SearchRequestParams& search_request);
         bool createStartGoal(FullState& start, FullState& goal, monolithic_pr2_planner::SearchRequestParams& req);
     private:
         bool convertFullState(ompl::base::State* state,
-                              monolithic_pr2_planner::RobotState& robot_state);
+                              monolithic_pr2_planner::RobotState& robot_state,
+                              monolithic_pr2_planner::ContBaseState& base);
         ompl::base::StateSpacePtr fullBodySpace;
         ompl::base::ProblemDefinition* pdef;
         ompl::base::Planner* planner;
         ompl::geometric::PathSimplifier* pathSimplifier;
+        omplFullBodyCollisionChecker* m_collision_checker;
+        StatsWriter m_stats_writer;
 };

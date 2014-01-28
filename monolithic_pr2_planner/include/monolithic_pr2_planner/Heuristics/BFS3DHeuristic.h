@@ -22,6 +22,7 @@ namespace monolithic_pr2_planner {
             void visualize();
             void update3DHeuristicMap();
         private:
+            GoalState m_goal;
             std::unique_ptr<sbpl_arm_planner::BFS_3D> m_bfs;
     };
     typedef boost::shared_ptr<BFS3DHeuristic> BFS3DHeuristicPtr;

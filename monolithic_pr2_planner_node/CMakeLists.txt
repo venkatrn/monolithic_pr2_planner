@@ -35,6 +35,7 @@ rosbuild_add_executable(node src/node.cpp src/EnvInterfaces.cpp
                              src/CollisionSpaceInterface.cpp
                              src/ompl_pr2_planner.cpp
                              src/ompl_collision_checker.cpp
+                             src/StatsWriter.cpp
                         )
 # TODO figure out why i have to include bfs3d here
 target_link_libraries(node monolithic_pr2_planner bfs3d ${SBPL_LIBRARIES})

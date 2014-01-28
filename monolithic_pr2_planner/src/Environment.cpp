@@ -134,7 +134,12 @@ bool Environment::setStartGoal(SearchRequestPtr search_request,
 
     m_goal = search_request->createGoalState();
 
-    goal_id = saveFakeGoalState(start_graph_state);
+    if (m_hash_mgr->size() < 2){
+        goal_id = saveFakeGoalState(start_graph_state);
+        ROS_ERROR("goal id is %d", goal_id);
+    } else {
+        goal_id = 1;
+    }
 
     ROS_INFO_NAMED(SEARCH_LOG, "Goal state created:");
     ContObjectState c_goal = m_goal->getObjectState();

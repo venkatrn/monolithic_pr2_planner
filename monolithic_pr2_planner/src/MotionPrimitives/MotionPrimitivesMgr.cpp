@@ -18,8 +18,8 @@ bool MotionPrimitivesMgr::loadMPrims(const MotionPrimitiveParams& params){
     int POS_TURN = 1;
     BaseAdaptiveMotionPrimitivePtr bamp1 = make_shared<BaseAdaptiveMotionPrimitive>(NEG_TURN);
     BaseAdaptiveMotionPrimitivePtr bamp2 = make_shared<BaseAdaptiveMotionPrimitive>(POS_TURN);
-    m_motprims.push_back(bamp1);
-    m_motprims.push_back(bamp2);
+    //m_motprims.push_back(bamp1);
+    //m_motprims.push_back(bamp2);
 
     int VERTICAL_UP = 1;
     int VERTICAL_DOWN = -1;

@@ -90,15 +90,15 @@ int main(int argc, char** argv){
     srv.request.larm_object = larm_offset;
 
     srv.request.goal = pose;
-    srv.request.initial_eps = 10;
-    srv.request.final_eps = 10;
+    srv.request.initial_eps = 50;
+    srv.request.final_eps = 50;
     srv.request.dec_eps = .1;
     srv.request.xyz_tolerance = .02;
     srv.request.roll_tolerance = .1;
     srv.request.pitch_tolerance = .1;
     srv.request.yaw_tolerance = .1;
 
-    srv.request.allocated_planning_time = 10;
+    srv.request.allocated_planning_time = 60;
 
     srv.request.planning_mode = monolithic_pr2_planner::PlanningModes::RIGHT_ARM_MOBILE;
 

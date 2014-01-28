@@ -145,7 +145,7 @@ void HeuristicMgr::initializeMHAHeuristics(const int
     {
         // angles_with_center[i] = (circle_x[i] == center_x)?((circle_y[i] < center_y)?normalize_angle_positive(-M_PI/2):normalize_angle_positive(M_PI/2)):normalize_angle_positive(static_cast<double>(circle_y[i] -
         //     center_y)/(circle_x[i] - center_x));
-        angles_with_center[i] = normalize_angle_positive(std::atan2(static_cast<double>(circle_y[i] -
+        angles_with_center[i] = normalize_angle(std::atan2(static_cast<double>(circle_y[i] -
             center_y),static_cast<double>(circle_x[i]
                     - center_x)));
         ROS_DEBUG_NAMED(HEUR_LOG, "Angle with center %d:: %d %d : %f",
@@ -161,8 +161,9 @@ void HeuristicMgr::initializeMHAHeuristics(const int
         min_angle, max_angle, increment);
     double current_angle = min_angle;
     int num_selected = 0;
+    int direction = 1;
     while(num_selected < m_num_mha_heuristics) {
-        current_angle += increment;
+        current_angle += direction*increment;
         ROS_DEBUG_NAMED(HEUR_LOG, "current_angle : %f", current_angle);
         int idx = 0;
         double min_difference = std::fabs(min_angle - max_angle);
@@ -173,6 +174,13 @@ void HeuristicMgr::initializeMHAHeuristics(const int
                 idx = i;
             }
         }
+        if(idx == 0 || idx == circle_x.size() -1){
+            // Go the other way
+            direction = -1;
+            current_angle += direction*increment;
+            continue;
+        }
+
         ROS_DEBUG_NAMED(HEUR_LOG,"Selected point: %d :: %d %d",
             static_cast<int>(idx),
             circle_x[idx], circle_y[idx]);

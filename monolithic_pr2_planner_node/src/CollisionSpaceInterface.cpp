@@ -17,7 +17,7 @@ bool CollisionSpaceInterface::bindCollisionSpaceToTopic(string topic_name,
                                                         tf::TransformListener& tf,
                                                         string target_frame){
     m_collision_map_subscriber.subscribe(m_nodehandle, topic_name, 1);
-    ROS_DEBUG_NAMED(INIT_LOG, "binding collision space to topic %s "
+    ROS_INFO_NAMED(INIT_LOG, "binding collision space to topic %s "
                               "and transforming to %s!", 
                               topic_name.c_str(), target_frame.c_str());
     m_ref_frame = target_frame;
@@ -30,7 +30,7 @@ bool CollisionSpaceInterface::bindCollisionSpaceToTopic(string topic_name,
 
 void CollisionSpaceInterface::mapCallback(
         const arm_navigation_msgs::CollisionMapConstPtr &map){
-    ROS_DEBUG_NAMED(INIT_LOG, "map callback!");
+    ROS_INFO_NAMED(INIT_LOG, "map callback!");
     if(map->header.frame_id.compare(m_ref_frame) != 0)
     {
         // TODO: fix this warning

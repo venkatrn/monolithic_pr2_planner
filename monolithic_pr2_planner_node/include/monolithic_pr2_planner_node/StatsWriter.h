@@ -16,10 +16,12 @@ struct RRTData {
 class StatsWriter {
     public:
         StatsWriter();
-        void writeARA(std::vector<double> stats, 
-                      std::vector<monolithic_pr2_planner::FullBodyState> states, 
+        void writeARA(std::vector<double> &stats, 
+                      std::vector<monolithic_pr2_planner::FullBodyState> &states, 
                       int trial_id);
-        void writeMHA();
+        void writeMHA(std::vector<double> &stats, 
+                      std::vector<monolithic_pr2_planner::FullBodyState> &states, 
+                      int trial_id);
         void writeRRT(int trial_id, RRTData data);
     private:
         FILE* ara;

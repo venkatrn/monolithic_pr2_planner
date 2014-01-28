@@ -46,7 +46,7 @@ vector<FullBodyState> PathPostProcessor::reconstructPath(vector<int> soln_path,
     vector<FullBodyState> final_path = getFinalPath(soln_path, 
                                                     transition_states,
                                                     goal_state);
-    visualizeFinalPath(final_path);
+    // visualizeFinalPath(final_path);
     ROS_INFO("my reconstruct took %.3f", (clock()-temptime)/(double)CLOCKS_PER_SEC);
     return final_path;
 }

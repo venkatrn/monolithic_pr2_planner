@@ -21,7 +21,12 @@ namespace monolithic_pr2_planner_node {
             void update2DHeuristicMaps(std::vector<signed char>& data);
             void getOccupancyGridSize(int& dimX, int& dimY, int&dimZ){
                 m_cspace_mgr->getOccupancyGridSize(dimX, dimY, dimZ); };
-
+            inline void setHeuristicMgr(monolithic_pr2_planner::HeuristicMgrPtr
+                heur_mgr){
+                m_heur_mgr = heur_mgr;
+            }
+            inline monolithic_pr2_planner::CSpaceMgrPtr getCollisionSpace(){
+                return m_cspace_mgr;};
         private:
             std::string m_ref_frame;
             void mapCallback(const arm_navigation_msgs::CollisionMapConstPtr &collision_map);

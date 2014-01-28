@@ -2,7 +2,7 @@ map_type: costmap
 # resolution: 0.02
 # z_resolution: 0.02
 publish_voxel_map: true
-map_topic: projected_map
+map_topic: /projected_map
 static_map: true
 # origin_x: 0
 # origin_y: 0

@@ -29,6 +29,9 @@ namespace monolithic_pr2_planner {
                           vector<int>* costs);
             std::vector<FullBodyState> reconstructPath(std::vector<int> 
                 state_ids);
+            inline void setCollisionSpace(CSpaceMgrPtr cspace_mgr){
+                m_cspace_mgr = cspace_mgr;
+            }
         protected:
             bool setStartGoal(SearchRequestPtr search_request, 
                               int& start_id, int& goal_id);

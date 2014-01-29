@@ -45,18 +45,20 @@ int Environment::GetGoalHeuristic(int stateID, int goal_id){
     // heuristics. So, the values will be endEff, Base, Base1, Base2
     std::vector<int> values = m_heur_mgr->getGoalHeuristic(m_hash_mgr->getGraphState(stateID));
     // ROS_DEBUG_NAMED(HEUR_LOG, "Heuristic values: Arm : %d\t Base 1: %d", values[0], values[1]);
+    int heur = 0;
     switch(goal_id){
         case 0: //Anchor
             return std::max(values[0], values[1]);
         case 1: //ARA
-            return EPS2*std::max(values[0], values[1]);
-        case 2: //Inflated arm
-            return values[0];
+            heur = EPS2*std::max(values[0], values[1]);
+        case 2: // arm
+            heur = EPS2*values[0];
         case 3:
         case 4:
-            // Inflated bases
-            return values[goal_id-1];
+            // bases
+            heur = values[goal_id-1];
     }
+    return std::max(heur, std::max(values[0],values[1]));
 }
 
 void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs, 

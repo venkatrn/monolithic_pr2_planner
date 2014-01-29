@@ -89,7 +89,7 @@ int BFS2DHeuristic::getGoalHeuristic(GraphStatePtr state){
 
     // Add rotation cost
     // For inadmissible heuristic alone
-    if(!m_radius){
+    if(!m_radius && cost < 200){
         DiscObjectState goal_state = m_goal.getObjectState();
         double current_angle = normalize_angle_positive(std::atan2(goal_state.y() - state->base_y(),
             goal_state.x() - state->base_x()));

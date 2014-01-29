@@ -57,8 +57,18 @@ OMPLPR2Planner::OMPLPR2Planner(const CSpaceMgrPtr& cspace){
     
     //Define our SpaceInformation (combines the state space and collision checker)
     ompl::base::SpaceInformationPtr si(new ompl::base::SpaceInformation(fullBodySpace));
+
+    vector<double> init_l_arm(7,0);
+    init_l_arm[0] = (0.038946287971107774);
+    init_l_arm[1] = (1.2146697069025374);
+    init_l_arm[2] = (1.3963556492780154);
+    init_l_arm[3] = -1.1972269899800325;
+    init_l_arm[4] = (-4.616317135720829);
+    init_l_arm[5] = -0.9887266887318599;
+    init_l_arm[6] = 1.1755681069775656;
+
     m_collision_checker = new omplFullBodyCollisionChecker(si);
-    m_collision_checker->initialize(cspace);
+    m_collision_checker->initialize(cspace, init_l_arm);
 
     ompl::base::StateValidityChecker* temp2 = m_collision_checker;
     si->setStateValidityChecker(ompl::base::StateValidityCheckerPtr(temp2));
@@ -128,7 +138,15 @@ bool OMPLPR2Planner::convertFullState(ompl::base::State* state, RobotState& robo
                                       ContBaseState& base){
     ContObjectState obj_state;
     // fix the l_arm angles
-    LeftContArmState l_arm;
+    vector<double> init_l_arm(7,0);
+    init_l_arm[0] = (0.038946287971107774);
+    init_l_arm[1] = (1.2146697069025374);
+    init_l_arm[2] = (1.3963556492780154);
+    init_l_arm[3] = -1.1972269899800325;
+    init_l_arm[4] = (-4.616317135720829);
+    init_l_arm[5] = -0.9887266887318599;
+    init_l_arm[6] = 1.1755681069775656;
+    LeftContArmState l_arm(init_l_arm);
     RightContArmState r_arm;
     const ompl::base::CompoundState* s = dynamic_cast<const ompl::base::CompoundState*> (state);
     obj_state.x((*(s->as<VectorState>(0)))[0]);

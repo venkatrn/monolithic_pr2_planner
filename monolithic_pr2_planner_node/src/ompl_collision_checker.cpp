@@ -3,9 +3,10 @@
 #include <monolithic_pr2_planner/StateReps/ContBaseState.h>
 
 using namespace monolithic_pr2_planner;
-
-void omplFullBodyCollisionChecker::initialize(CSpaceMgrPtr cspace){
+using namespace std;
+void omplFullBodyCollisionChecker::initialize(CSpaceMgrPtr cspace, vector<double> l_arm){
     m_cspace = cspace;
+    l_arm_init = l_arm;
 }
 
 
@@ -56,9 +57,8 @@ bool omplFullBodyCollisionChecker::isValid(const ompl::base::State *state) const
     if (!RobotState::computeRobotPose(DiscObjectState(obj_state), seed_state, new_robot_state)){
         return false;
     }
-    RightContArmState new_r_arm;
-    LeftContArmState new_l_arm;
-    if ( m_cspace->isValid(base, new_r_arm, new_l_arm)){
+    RightContArmState new_r_arm = new_robot_state->right_arm();
+    if ( m_cspace->isValid(base, new_r_arm, l_arm)){
         return true;
     } else {
         return false;

@@ -1,4 +1,5 @@
 #include <monolithic_pr2_planner/MotionPrimitives/BaseAdaptiveMotionPrimitive.h>
+#include <monolithic_pr2_planner/Visualizer.h>
 #include <monolithic_pr2_planner/StateReps/RobotState.h>
 #include <monolithic_pr2_planner/StateReps/ContBaseState.h>
 #include <monolithic_pr2_planner/StateReps/ContObjectState.h>
@@ -12,6 +13,8 @@ using namespace monolithic_pr2_planner;
 using namespace boost;
 using namespace std;
 
+// TODO this entire function could be dramatically improved by just doing a
+// matrix rotation about the end effector pose. i should do this.
 GoalState BaseAdaptiveMotionPrimitive::m_goal;
 
 BaseAdaptiveMotionPrimitive::BaseAdaptiveMotionPrimitive(int direction):
@@ -176,9 +179,33 @@ void BaseAdaptiveMotionPrimitive::computeIntermSteps(const GraphState& source_st
     int num_interp_steps = static_cast<int>(del_theta / (2.0*M_PI/180));
     ROS_DEBUG_NAMED(MPRIM_LOG, "number of interpolation steps: %d", num_interp_steps);
     ROS_DEBUG_NAMED(MPRIM_LOG, "del theta is %f", del_theta);
-    vector<ContBaseState> interp_base_states =  ContBaseState::interpolate(start_base_state, 
-                                                                           end_base_state, 
-                                                                           num_interp_steps);
+
+    ContObjectState final_obj = successor.getObjectStateRelMap();
+    double zero_x = start_base_state.x() - final_obj.x();
+    double zero_y = start_base_state.y() - final_obj.y();
+    
+    vector<ContBaseState> interp_base_states;
+    for (int i=0; i <= num_interp_steps; i++){
+        ContBaseState interm_step = start_base_state;
+        double rotate_by_angle = i*del_theta/num_interp_steps;
+        double new_x = cos(rotate_by_angle) * zero_x - sin(rotate_by_angle) * zero_y;
+        double new_y = sin(rotate_by_angle) * zero_x + cos(rotate_by_angle) * zero_y;
+        interm_step.x(new_x + final_obj.x());
+        interm_step.y(new_y + final_obj.y());
+        interm_step.theta(start_base_state.theta() + rotate_by_angle);
+        interp_base_states.push_back(interm_step);
+
+
+        // for visualization
+        //vector<double> l_arm;
+        //vector<double> r_arm;
+        //source_state.robot_pose().right_arm().getAngles(&r_arm);
+        //source_state.robot_pose().left_arm().getAngles(&l_arm);
+        //BodyPose body_pose = interm_step.body_pose();
+        //Visualizer::pviz->visualizeRobot(r_arm, l_arm, body_pose, 150, 
+        //                                std::string("planner"), 0);
+    }
+
     vector<RobotState> interm_robot_steps;
     vector<ContBaseState> cont_base_state_steps;
     ROS_DEBUG_NAMED(MPRIM_LOG, "generated %lu intermediate base AMP motion primitive vectors:",

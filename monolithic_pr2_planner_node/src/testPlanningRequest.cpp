@@ -129,7 +129,7 @@ int main(int argc, char** argv){
     srv.request.pitch_tolerance = .1;
     srv.request.yaw_tolerance = .1;
 
-    srv.request.allocated_planning_time = 60;
+    srv.request.allocated_planning_time = 30;
 
     srv.request.planning_mode = monolithic_pr2_planner::PlanningModes::RIGHT_ARM_MOBILE;
 

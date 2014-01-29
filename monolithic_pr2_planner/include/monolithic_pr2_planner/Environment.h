@@ -13,6 +13,11 @@
 #include <vector>
 #include <memory>
 
+#define NUM_MHA_HEUR 5
+#define NUM_MHA_BASE_HEUR 2
+#define EPS1 25
+#define EPS2 2
+
 namespace monolithic_pr2_planner {
     /*! \brief Implements a complete environment used by the SBPL planner.
      * Contains everything from managing state IDs to collision space

@@ -1,7 +1,8 @@
-#include <monolithic_pr2_planner/ExperimentFramework/randomStartGoalGenerator.h>
+#include <monolithic_pr2_planner/StateReps/RobotState.h>
 #include <monolithic_pr2_planner/StateReps/DiscObjectState.h>
 #include <monolithic_pr2_planner/StateReps/ContBaseState.h>
 #include <monolithic_pr2_planner/LoggerNames.h>
+#include <monolithic_pr2_planner/ExperimentFramework/randomStartGoalGenerator.h>
 
 using namespace monolithic_pr2_planner;
 

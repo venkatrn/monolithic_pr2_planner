@@ -34,6 +34,7 @@ namespace monolithic_pr2_planner {
             unsigned char** m_grid;
             double m_radius;
             void visualizeRadiusAroundGoal(int x0, int y0);
+            GoalState m_goal;
             // ros::NodeHandle m_nh;
             // ros::Publisher m_circlepub;
 

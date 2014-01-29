@@ -65,6 +65,7 @@ void BFS2DHeuristic::setGoal(GoalState& goal_state){
     m_gridsearch->search(m_grid, threshold, state.x(), state.y(),
         0,0, SBPL_2DGRIDSEARCH_TERM_CONDITION_ALLCELLS);
     ROS_DEBUG_NAMED(HEUR_LOG, "[BFS2D] Setting goal %d %d", state.x(), state.y());
+    m_goal = goal_state;
 }
 
 int BFS2DHeuristic::getGoalHeuristic(GraphStatePtr state){
@@ -84,6 +85,15 @@ int BFS2DHeuristic::getGoalHeuristic(GraphStatePtr state){
     //                           (cost)<0?INFINITECOST:cost );
     if (cost < 0){
         return INFINITECOST;
+    }
+
+    // Add rotation cost
+    // For inadmissible heuristic alone
+    if(!m_radius){
+        DiscObjectState goal_state = m_goal.getObjectState();
+        double current_angle = normalize_angle_positive(std::atan2(goal_state.y() - state->base_y(),
+            goal_state.x() - state->base_x()));
+        cost += 10*shortest_angular_distance(current_angle,state->base_theta());
     }
     // if (cost < m_costmap_ros->getInscribedRadius()/0.02)
         // return 0;

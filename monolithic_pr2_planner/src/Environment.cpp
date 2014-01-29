@@ -40,9 +40,23 @@ int Environment::GetGoalHeuristic(int stateID){
 
 int Environment::GetGoalHeuristic(int stateID, int goal_id){
     // For now, return the max of all the heuristics
+    // This vector is of size NUM_MHA_BASE_HEUR + 2
+    // Eg, if NUM_MHA_BASE_HEUR is 2, that means there are 2 additional base
+    // heuristics. So, the values will be endEff, Base, Base1, Base2
     std::vector<int> values = m_heur_mgr->getGoalHeuristic(m_hash_mgr->getGraphState(stateID));
     // ROS_DEBUG_NAMED(HEUR_LOG, "Heuristic values: Arm : %d\t Base 1: %d", values[0], values[1]);
-    return std::max(values[0], values[goal_id+1]);
+    switch(goal_id){
+        case 0: //Anchor
+            return std::max(values[0], values[1]);
+        case 1: //ARA
+            return EPS2*std::max(values[0], values[1]);
+        case 2: //Inflated arm
+            return values[0];
+        case 3:
+        case 4:
+            // Inflated bases
+            return values[goal_id-1];
+    }
 }
 
 void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs, 
@@ -59,8 +73,8 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
     GraphStatePtr source_state = m_hash_mgr->getGraphState(sourceStateID);
     ROS_DEBUG_NAMED(SEARCH_LOG, "Source state is:");
     source_state->robot_pose().printToDebug(SEARCH_LOG);
-    // source_state->robot_pose().visualize();
-    // usleep(10000);
+    source_state->robot_pose().visualize();
+    usleep(10000);
     for (auto mprim : m_mprims.getMotionPrims()){
         ROS_DEBUG_NAMED(SEARCH_LOG, "Applying motion:");
         // mprim->printEndCoord();
@@ -203,7 +217,7 @@ void Environment::configurePlanningDomain(){
     m_base_heur_id = m_heur_mgr->add2DHeur(1, 0.7);//1
     // The argument is TOTAL_HEUR_NUM - 1 (TOTAL_HEUR_NUM is what you
     // entered in the MPlanner parameters)
-    m_heur_mgr->numberOfMHAHeuristics(2);
+    m_heur_mgr->numberOfMHAHeuristics(NUM_MHA_BASE_HEUR);
 
     // used for arm kinematics
     LeftContArmState::initArmModel(m_param_catalog.m_left_arm_params);

@@ -29,7 +29,7 @@ EnvInterfaces::EnvInterfaces(boost::shared_ptr<monolithic_pr2_planner::Environme
         getParams();
     bool forward_search = true;
     m_ara_planner.reset(new ARAPlanner(m_env.get(), forward_search));
-    m_mha_planner.reset(new MPlanner(m_env.get(), 3, forward_search));
+    m_mha_planner.reset(new MPlanner(m_env.get(), NUM_MHA_HEUR, forward_search));
     m_costmap_pub = m_nodehandle.advertise<nav_msgs::OccupancyGrid>("costmap_pub", 1);
     m_costmap_publisher.reset(new
         costmap_2d::Costmap2DPublisher(m_nodehandle,1,"/map"));
@@ -79,6 +79,9 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
     int counter = 0;
     for (auto& start_goal : start_goal_pairs){
         ROS_INFO("running trial %d", counter);
+        // Write envt stats to file
+        // m_stats_writer.writeEnvt(m_generator->getGoalRegions(), start_goal.first, start_goal.second,
+        //     counter);
         SearchRequestParamsPtr search_request = make_shared<SearchRequestParams>();
         search_request->initial_epsilon = req.initial_eps;
         search_request->final_epsilon = req.final_eps;
@@ -130,14 +133,14 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
         // Here starts the actual planning requests
         resetEnvironment();
         // Not sure if actually necessary
-        m_mha_planner.reset(new MPlanner(m_env.get(), 3, forward_search));
+        m_mha_planner.reset(new MPlanner(m_env.get(), NUM_MHA_HEUR, forward_search));
         total_planning_time = clock();
         if(!m_env->configureRequest(search_request, start_id, goal_id))
-            ROS_WARN("Unable to configure request for MHA! Trial ID: %d", counter);
+            ROS_ERROR("Unable to configure request for MHA! Trial ID: %d", counter);
 
         // m_mha_planner->set_initialsolution_eps(search_request->initial_epsilon);
-        m_mha_planner->set_initialsolution_eps1(25);
-        m_mha_planner->set_initialsolution_eps2(2);
+        m_mha_planner->set_initialsolution_eps1(EPS1);
+        m_mha_planner->set_initialsolution_eps2(EPS2);
         m_mha_planner->set_search_mode(return_first_soln);
         m_mha_planner->set_start(start_id);
         ROS_INFO("setting MHA goal id to %d", goal_id);
@@ -172,7 +175,7 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
         m_ara_planner.reset(new ARAPlanner(m_env.get(), forward_search));
         total_planning_time = clock();
         if(!m_env->configureRequest(search_request, start_id, goal_id))
-            ROS_WARN("Unable to configure request for ARA! Trial ID: %d", counter);
+            ROS_ERROR("Unable to configure request for ARA! Trial ID: %d", counter);
 
         m_ara_planner->set_initialsolution_eps(search_request->initial_epsilon);
         m_ara_planner->set_search_mode(return_first_soln);
@@ -207,10 +210,10 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
         resetEnvironment();
         m_ompl_planner.reset(new OMPLPR2Planner(m_env->getCollisionSpace()));
         if(!m_env->configureRequest(search_request, start_id, goal_id)){
-            ROS_WARN("Unable to configure request for OMPL! Trial ID: %d", counter);
+            ROS_ERROR("Unable to configure request for OMPL! Trial ID: %d", counter);
         } 
         if(!m_ompl_planner->checkRequest(*search_request)){
-            ROS_WARN("bad start goal for ompl");
+            ROS_ERROR("bad start goal for ompl");
         } else {
             m_ompl_planner->planPathCallback(*search_request, counter);
         }

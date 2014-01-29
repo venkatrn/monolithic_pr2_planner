@@ -2,6 +2,7 @@
 #include <monolithic_pr2_planner/StateReps/RobotState.h>
 #include <monolithic_pr2_planner/CollisionSpaceMgr.h>
 
+
 #define X_MIN 0
 #define X_MAX 9
 #define Y_MIN 0
@@ -32,6 +33,7 @@ class StartGoalGenerator {
         }
 
         void initializeRegions();
+        inline std::vector<Region> getGoalRegions(){ return m_goal_regions;};
     private:
         vector<Region> m_goal_regions;
         Region m_start_region;

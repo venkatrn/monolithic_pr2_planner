@@ -164,7 +164,7 @@ void StatsWriter::writeMHA(std::vector<double> &stats_v, std::vector<FullBodySta
 
     if (states.size()){
         if(imha == true){
-          ss2 << m_current_path.str().c_str() << "smha_" << std::setfill('0') << std::setw(2) << trial_id << ".path";
+          ss2 << m_current_path.str().c_str() << "imha_" << std::setfill('0') << std::setw(2) << trial_id << ".path";
         } else {
           ss2 << m_current_path.str().c_str() << "smha_" << std::setfill('0') << std::setw(2) << trial_id << ".path";
 

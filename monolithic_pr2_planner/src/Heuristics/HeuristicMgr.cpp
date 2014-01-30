@@ -247,6 +247,17 @@ void HeuristicMgr::initializeMHAHeuristics(const int
     m_heuristics[heur_num]->update2DHeuristicMap(m_grid_data);
     m_heuristics[heur_num]->setGoal(another_goal_state);
     m_mha_heur_ids.push_back(heur_num);
+    
+    // state.x(308);
+    // state.y(128);
+    // ROS_DEBUG_NAMED(HEUR_LOG, "[MHAHeur] Selected point: %d %d",
+    // selected_points.second.first, selected_points.second.second);
+    // GoalState another_goal_state(m_goal);
+    // another_goal_state.setGoal(state);
+    // int heur_num = add2DHeur(cost_multiplier, 0);
+    // m_heuristics[heur_num]->update2DHeuristicMap(m_grid_data);
+    // m_heuristics[heur_num]->setGoal(another_goal_state);
+    // m_mha_heur_ids.push_back(heur_num);
 
 
     // -----------------Uniform picking----------------

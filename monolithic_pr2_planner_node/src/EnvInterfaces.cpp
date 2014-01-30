@@ -32,13 +32,13 @@ EnvInterfaces::EnvInterfaces(boost::shared_ptr<monolithic_pr2_planner::Environme
         getParams();
     bool forward_search = true;
     m_ara_planner.reset(new ARAPlanner(m_env.get(), forward_search));
-    m_mha_planner.reset(new MPlanner(m_env.get(), NUM_MHA_HEUR, forward_search));
+    m_mha_planner.reset(new MPlanner(m_env.get(), NUM_SMHA_HEUR, forward_search));
     m_costmap_pub = m_nodehandle.advertise<nav_msgs::OccupancyGrid>("costmap_pub", 1);
     m_costmap_publisher.reset(new
         costmap_2d::Costmap2DPublisher(m_nodehandle,1,"/map"));
 }
 
-void EnvInterfaces::resetEnvironment(){
+void EnvInterfaces::resetEnvironment(bool is_imha){
     ROS_INFO("Resetting Environment and rebuilding...");
     m_env.reset(new Environment(m_nodehandle));
     // m_collision_space_interface.reset(new
@@ -51,6 +51,7 @@ void EnvInterfaces::resetEnvironment(){
     m_prm.reset(new OMPLPR2Planner(m_env->getCollisionSpace(), PRM_P));
     m_rrtstar.reset(new OMPLPR2Planner(m_env->getCollisionSpace(), RRTSTAR));
     m_collision_space_interface->update2DHeuristicMaps(m_final_map);
+    m_env->setIMHA(is_imha);
 }
 
 
@@ -145,14 +146,11 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
             } else {
                 // Here starts the actual planning requests
                 resetEnvironment();
-                // Not sure if actually necessary
-                m_mha_planner.reset(new MPlanner(m_env.get(), NUM_MHA_HEUR, forward_search,
+                m_mha_planner.reset(new MPlanner(m_env.get(), NUM_SMHA_HEUR, forward_search,
                     false));
                 total_planning_time = clock();
                 if(!m_env->configureRequest(search_request, start_id, goal_id))
                     ROS_ERROR("Unable to configure request for SMHA! Trial ID: %d", counter);
-
-                // m_mha_planner->set_initialsolution_eps(search_request->initial_epsilon);
                 m_mha_planner->set_initialsolution_eps1(EPS1);
                 m_mha_planner->set_initialsolution_eps2(EPS2);
                 m_mha_planner->set_search_mode(return_first_soln);
@@ -185,15 +183,12 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
 
 
                 // Run IMHA
-                resetEnvironment();
-                // Not sure if actually necessary
-                m_mha_planner.reset(new MPlanner(m_env.get(), NUM_MHA_HEUR, forward_search,
+                resetEnvironment(true);
+                m_mha_planner.reset(new MPlanner(m_env.get(), NUM_IMHA_HEUR, forward_search,
                     true));
                 total_planning_time = clock();
                 if(!m_env->configureRequest(search_request, start_id, goal_id))
                     ROS_ERROR("Unable to configure request for IMHA! Trial ID: %d", counter);
-
-                // m_mha_planner->set_initialsolution_eps(search_request->initial_epsilon);
                 m_mha_planner->set_initialsolution_eps1(EPS1);
                 m_mha_planner->set_initialsolution_eps2(EPS2);
                 m_mha_planner->set_search_mode(return_first_soln);
@@ -321,19 +316,21 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
     if(!retVal){
         return false;
     }
-
-    m_mha_planner->set_initialsolution_eps(search_request->initial_epsilon);
-    m_mha_planner->set_initialsolution_eps1(EPS1);
-    m_mha_planner->set_initialsolution_eps2(EPS2);
+    bool forward_search = true;
+    m_mha_planner.reset(new MPlanner(m_env.get(), NUM_SMHA_HEUR, forward_search,
+        false));
+    m_ara_planner->set_initialsolution_eps(search_request->initial_epsilon);
+    m_ara_planner->set_initialsolution_eps1(EPS1);
+    m_ara_planner->set_initialsolution_eps2(EPS2);
     bool return_first_soln = true;
-    m_mha_planner->set_search_mode(return_first_soln);
-    m_mha_planner->set_start(start_id);
+    m_ara_planner->set_search_mode(return_first_soln);
+    m_ara_planner->set_start(start_id);
     ROS_INFO("setting goal id to %d", goal_id);
-    m_mha_planner->set_goal(goal_id);
-    m_mha_planner->force_planning_from_scratch();
+    m_ara_planner->set_goal(goal_id);
+    m_ara_planner->force_planning_from_scratch();
     vector<int> soln;
     int soln_cost;
-    bool isPlanFound = m_mha_planner->replan(req.allocated_planning_time, 
+    bool isPlanFound = m_ara_planner->replan(req.allocated_planning_time, 
                                          &soln, &soln_cost);
 
     if (isPlanFound){

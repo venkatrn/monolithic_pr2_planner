@@ -13,7 +13,8 @@
 #include <vector>
 #include <memory>
 
-#define NUM_MHA_HEUR 5
+#define NUM_IMHA_HEUR 4
+#define NUM_SMHA_HEUR 5
 #define NUM_MHA_BASE_HEUR 2
 #define EPS1 25
 #define EPS2 2
@@ -37,6 +38,7 @@ namespace monolithic_pr2_planner {
             inline void setCollisionSpace(CSpaceMgrPtr cspace_mgr){
                 m_cspace_mgr = cspace_mgr;
             }
+            inline void setIMHA(bool is_imha){ m_is_imha = is_imha;};
         protected:
             bool setStartGoal(SearchRequestPtr search_request, 
                               int& start_id, int& goal_id);
@@ -54,6 +56,7 @@ namespace monolithic_pr2_planner {
 
             // MHA stuff
             int m_base_heur_id;
+            bool m_is_imha;
 
         // SBPL interface stuff
         public:

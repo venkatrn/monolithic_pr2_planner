@@ -67,7 +67,7 @@ void RobotState::printToDebug(char* log_level) const {
                     r_arm[Joints::ELBOW_FLEX],
                     r_arm[Joints::FOREARM_ROLL],
                     r_arm[Joints::WRIST_FLEX],
-                    r_arm[Joints::WRIST_ROLL]);
+                    r_arm[Joints::WRdIST_ROLL]);
 }
 
 void RobotState::printToInfo(char* log_level) const {

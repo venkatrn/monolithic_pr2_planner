@@ -52,7 +52,7 @@ namespace monolithic_pr2_planner_node {
             void crop2DMap(const nav_msgs::MapMetaData& map_info, const std::vector<signed char>& v,
                            double new_origin_x, double new_origin_y,
                            double width, double height);
-            void resetEnvironment();
+            void resetEnvironment(bool is_imha = false);
             ros::NodeHandle m_nodehandle;
             InterfaceParams m_params;
             boost::shared_ptr<monolithic_pr2_planner::Environment> m_env;

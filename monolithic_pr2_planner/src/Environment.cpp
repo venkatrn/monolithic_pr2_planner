@@ -21,7 +21,9 @@ Environment::Environment(ros::NodeHandle nh) :
     m_heur_mgr(new HeuristicMgr()) {
     m_param_catalog.fetch(nh);
     configurePlanningDomain();
+    m_is_imha = false;
 }
+
 
 bool Environment::configureRequest(SearchRequestParamsPtr search_request_params,
                                    int& start_id, int& goal_id){
@@ -45,17 +47,29 @@ int Environment::GetGoalHeuristic(int stateID, int goal_id){
     // heuristics. So, the values will be endEff, Base, Base1, Base2
     std::vector<int> values = m_heur_mgr->getGoalHeuristic(m_hash_mgr->getGraphState(stateID));
     // ROS_DEBUG_NAMED(HEUR_LOG, "Heuristic values: Arm : %d\t Base 1: %d", values[0], values[1]);
-    switch(goal_id){
-        case 0: //Anchor
-            return std::max(values[0], values[1]);
-        case 1: //ARA
-            return EPS2*std::max(values[0], values[1]);
-        case 2: // arm
-            return EPS2*values[0];
-        case 3:
-        case 4:
-            // bases
-            return values[goal_id-1];
+    if (!m_is_imha) {
+        switch(goal_id){
+            case 0: //Anchor
+                return std::max(values[0], values[1]);
+            case 1: //ARA
+                return EPS2*std::max(values[0], values[1]);
+            case 2: // arm
+                return EPS2*values[0];
+                // return std::max(values[0], values[2]);
+            default:
+                // bases
+                return values[goal_id-1];
+        }
+    }
+    else{
+        switch(goal_id){
+            case 0: //Anchor
+                return std::max(values[0], values[1]);
+            case 1: //ARA
+                return EPS2*std::max(values[0], values[1]);
+            default:
+                return std::max(values[0], values[goal_id]);
+        }
     }
     return std::max(values[0],values[1]);
 }

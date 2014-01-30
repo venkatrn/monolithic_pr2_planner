@@ -32,14 +32,21 @@ int main(int argc, char** argv){
     //left_arm_start[6] = angles::normalize_angle(48.100199487910714);
 
     //works
-    right_arm_start[0] = 0.337747;
-    right_arm_start[1] = 0.361561;
-    right_arm_start[2] = -2.034540;
-    right_arm_start[3] = -1.317021;
-    right_arm_start[4] = 2.922495;
-    right_arm_start[5] = -1.046692;
-    right_arm_start[6] = -1.136617;
+    // right_arm_start[0] = 0.337747;
+    // right_arm_start[1] = 0.361561;
+    // right_arm_start[2] = -2.034540;
+    // right_arm_start[3] = -1.317021;
+    // right_arm_start[4] = 2.922495;
+    // right_arm_start[5] = -1.046692;
+    // right_arm_start[6] = -1.136617;
 
+    right_arm_start[0] = -0.034127;
+    right_arm_start[1] = 0.309261;
+    right_arm_start[2] = 0.000000;
+    right_arm_start[3] = -1.614009;
+    right_arm_start[4] = 2.987015;
+    right_arm_start[5] = -1.413143;
+    right_arm_start[6] = 2.889659;
 
     left_arm_start[0] = 0.038946;
     left_arm_start[1] = 1.214670;
@@ -62,10 +69,10 @@ int main(int argc, char** argv){
     // body_start[3] = -M_PI;
 
  
-    body_start[0] = 1.340000;
-    body_start[1] = 3.740000;
+    body_start[0] = 1.440000;
+    body_start[1] = 1.740000;
     body_start[2] = 0.260000;
-    body_start[3] = 4.319690;
+    body_start[3] = -M_PI/2;
 
     srv.request.rarm_start = right_arm_start;
     srv.request.larm_start = left_arm_start;
@@ -94,8 +101,8 @@ int main(int argc, char** argv){
     // pose.pose.position.y = 4.9;
     // pose.pose.position.z = 1.0;
 
-    pose.pose.position.x = 4.840000;
-    pose.pose.position.y = 1.860000;
+    pose.pose.position.x = 5.440000;
+    pose.pose.position.y = 2.460000;
     pose.pose.position.z = 1.160000;
     pose.pose.orientation.x = qx;
     pose.pose.orientation.y = qy;

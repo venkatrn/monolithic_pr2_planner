@@ -1,0 +1,21 @@
+<launch>
+
+  <arg name="directory"/>
+  <arg name="num"/>
+  <arg name="vis"/>
+
+  <node pkg="topic_tools" type="throttle" name="throttle_joint_states" args="messages joint_states 4.0" />
+
+  <node pkg="compute_stats" type="computePaths" name="sbpl_two_arm_planner_node" output="screen" respawn="false" args="$(find compute_stats)/$(arg directory) $(arg num) $(arg vis)" required="true" >
+
+    <rosparam command="load" file="$(find sbpl_two_arm_planner)/config/pr2_both_arms.yaml" />
+    <param name="planner/motion_primitive_file" value="$(find sbpl_two_arm_planner)/config/pr2-32.mprim" />
+    <param name="planner/base_motion_primitive_file" value="$(find sbpl_two_arm_planner)/config/full_body_base.mprim" />
+    <param name="planner/left_arm_description_file" value="$(find sbpl_arm_planner)/config/pr2_left_arm.cfg" />
+    <param name="planner/right_arm_description_file" value="$(find sbpl_arm_planner)/config/pr2_right_arm.cfg" />
+    <rosparam command="load" file="$(find sbpl_two_arm_planner)/config/pr2_body.yaml" />
+    <remap from="joint_states" to="joint_states_throttle" />
+  </node>
+
+</launch>
+

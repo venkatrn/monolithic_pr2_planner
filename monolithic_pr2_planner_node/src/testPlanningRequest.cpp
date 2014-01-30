@@ -32,21 +32,22 @@ int main(int argc, char** argv){
     //left_arm_start[6] = angles::normalize_angle(48.100199487910714);
 
     //works
-    right_arm_start[0] = -0.034127;
-    right_arm_start[1] = 0.309261;
-    right_arm_start[2] = 0.000000;
-    right_arm_start[3] = -1.614009;
-    right_arm_start[4] = 2.987015;
-    right_arm_start[5] = -1.413143;
-    right_arm_start[6] = 2.889659;
+    right_arm_start[0] = 0.337747;
+    right_arm_start[1] = 0.361561;
+    right_arm_start[2] = -2.034540;
+    right_arm_start[3] = -1.317021;
+    right_arm_start[4] = 2.922495;
+    right_arm_start[5] = -1.046692;
+    right_arm_start[6] = -1.136617;
 
-    left_arm_start[0] = 0.137274;
-    left_arm_start[1] = 0.314918;
-    left_arm_start[2] = 0.185035;
-    left_arm_start[3] = -1.662954;
-    left_arm_start[4] = 2.923877;
-    left_arm_start[5] = -1.305254;
-    left_arm_start[6] = -0.370584;
+
+    left_arm_start[0] = 0.038946;
+    left_arm_start[1] = 1.214670;
+    left_arm_start[2] = 1.396356;
+    left_arm_start[3] = -1.197227;
+    left_arm_start[4] = -4.616317;
+    left_arm_start[5] = -0.988727;
+    left_arm_start[6] = 1.175568;
 
     // Config1
     // body_start[0] = 1.5;
@@ -60,10 +61,11 @@ int main(int argc, char** argv){
     // body_start[2] = 0.1;
     // body_start[3] = -M_PI;
 
-    body_start[0] = 1.5;
-    body_start[1] = 1.0;
-    body_start[2] = 0.1;
-    body_start[3] = 0;
+ 
+    body_start[0] = 1.340000;
+    body_start[1] = 3.740000;
+    body_start[2] = 0.260000;
+    body_start[3] = 4.319690;
 
     srv.request.rarm_start = right_arm_start;
     srv.request.larm_start = left_arm_start;
@@ -76,7 +78,7 @@ int main(int argc, char** argv){
     // KDL::Rotation rot = KDL::Rotation::RPY(0,0,M_PI/2);
 
 
-    KDL::Rotation rot = KDL::Rotation::RPY(0,0,0);
+    KDL::Rotation rot = KDL::Rotation::RPY(0,1.276272,1.668971);
     double qx, qy, qz, qw;
     rot.GetQuaternion(qx, qy, qz, qw);
 
@@ -92,9 +94,9 @@ int main(int argc, char** argv){
     // pose.pose.position.y = 4.9;
     // pose.pose.position.z = 1.0;
 
-    pose.pose.position.x = 5.0;
-    pose.pose.position.y = 1.0;
-    pose.pose.position.z = 1.0;
+    pose.pose.position.x = 4.840000;
+    pose.pose.position.y = 1.860000;
+    pose.pose.position.z = 1.160000;
     pose.pose.orientation.x = qx;
     pose.pose.orientation.y = qy;
     pose.pose.orientation.z = qz;

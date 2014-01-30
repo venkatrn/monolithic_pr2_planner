@@ -10,6 +10,7 @@ namespace monolithic_pr2_planner {
         std::vector<double> base;
         std::vector<double> left_arm;
         std::vector<double> right_arm;
+        std::vector<double> obj;
     };
     class PathPostProcessor {
         public:
@@ -17,13 +18,13 @@ namespace monolithic_pr2_planner {
             std::vector<FullBodyState> reconstructPath(std::vector<int> state_ids,
                                                        GoalState& goal_state,
                                                        std::vector<MotionPrimitivePtr> mprims);
+            static void visualizeFinalPath(std::vector<FullBodyState> path);
         private:
             std::vector<FullBodyState> getFinalPath(const vector<int>& state_ids,
                                             const vector<TransitionData>& transition_states,
                                             GoalState& goal_state);
             bool findBestTransition(int start_id, int end_id, TransitionData& t_data,
                                     std::vector<MotionPrimitivePtr> mprims);
-            void visualizeFinalPath(std::vector<FullBodyState> path);
             FullBodyState createFBState(const RobotState& robot);
 
             CSpaceMgrPtr m_cspace_mgr;

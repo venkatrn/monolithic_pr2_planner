@@ -13,8 +13,7 @@
 #include <costmap_2d/costmap_2d_ros.h>
 #include <costmap_2d/costmap_2d_publisher.h>
 #include <monolithic_pr2_planner_node/StatsWriter.h>
-
-
+#include <monolithic_pr2_planner/PathPostProcessor.h>
 
 #include <monolithic_pr2_planner_node/ompl_pr2_planner.h>
 #include <monolithic_pr2_planner/ExperimentFramework/randomStartGoalGenerator.h>
@@ -72,8 +71,11 @@ namespace monolithic_pr2_planner_node {
             std::unique_ptr<costmap_2d::Costmap2DROS> m_costmap_ros;
             std::unique_ptr<costmap_2d::Costmap2DPublisher> m_costmap_publisher;
 
+
             std::unique_ptr<StartGoalGenerator> m_generator;
-            std::unique_ptr<OMPLPR2Planner> m_ompl_planner;
+            std::unique_ptr<OMPLPR2Planner> m_rrt;
+            std::unique_ptr<OMPLPR2Planner> m_prm;
+            std::unique_ptr<OMPLPR2Planner> m_rrtstar;
             StatsWriter m_stats_writer;
     };
 }

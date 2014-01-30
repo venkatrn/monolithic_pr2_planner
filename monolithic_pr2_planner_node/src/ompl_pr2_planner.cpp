@@ -2,6 +2,7 @@
 #include <monolithic_pr2_planner/StateReps/DiscObjectState.h>
 #include <monolithic_pr2_planner/StateReps/ContArmState.h>
 #include <monolithic_pr2_planner/SearchRequest.h>
+#include <monolithic_pr2_planner/Visualizer.h>
 #include <tf_conversions/tf_kdl.h>
 #include <kdl/frames.hpp>
 #include <monolithic_pr2_planner/LoggerNames.h>
@@ -9,7 +10,15 @@
 
 using namespace monolithic_pr2_planner;
 using namespace monolithic_pr2_planner_node;
-OMPLPR2Planner::OMPLPR2Planner(const CSpaceMgrPtr& cspace){
+ompl::base::OptimizationObjectivePtr getThresholdPathLengthObj(const ompl::base::SpaceInformationPtr& si)
+{
+    ompl::base::OptimizationObjectivePtr obj(new ompl::base::PathLengthOptimizationObjective(si,
+        1000000.51));
+    return obj;
+}
+
+OMPLPR2Planner::OMPLPR2Planner(const CSpaceMgrPtr& cspace, int planner_id):
+    m_stats_writer(planner_id),m_planner_id(planner_id){
     //create the StateSpace (defines the dimensions and their bounds)
     ROS_INFO("initializing OMPL");
     ompl::base::SE2StateSpace* se2 = new ompl::base::SE2StateSpace();
@@ -78,12 +87,22 @@ OMPLPR2Planner::OMPLPR2Planner(const CSpaceMgrPtr& cspace){
     //Define a ProblemDefinition (a start/goal pair)
     pdef = new ompl::base::ProblemDefinition(si);
 
-    planner = new ompl::geometric::RRTConnect(si);
+    if (planner_id == RRT)
+        planner = new ompl::geometric::RRTConnect(si);
+    else if (planner_id == PRM_P)
+        planner = new ompl::geometric::PRM(si);
+    else if (planner_id == RRTSTAR)
+        planner = new ompl::geometric::RRTstar(si); 
+    else 
+        ROS_ERROR("invalid planner id!");
 
     planner->setup();
+    if (planner_id == RRTSTAR){
+        pdef->setOptimizationObjective(getThresholdPathLengthObj(si));
+    }
     planner->setProblemDefinition(ompl::base::ProblemDefinitionPtr(pdef));
     pathSimplifier = new ompl::geometric::PathSimplifier(si);
-    ROS_INFO("finished initializing RRTConnect");
+    ROS_INFO("finished initializing OMPL planner");
 }
 
 // given the start and goal from the request, create a start and goal that
@@ -175,6 +194,8 @@ bool OMPLPR2Planner::convertFullState(ompl::base::State* state, RobotState& robo
 bool OMPLPR2Planner::checkRequest(SearchRequestParams& search_request){
     planner->clear();
     planner->getProblemDefinition()->clearSolutionPaths();
+    if (m_planner_id == PRM_P)
+        planner->as<ompl::geometric::PRM>()->clearQuery();
     search_request.left_arm_start.getAngles(&m_collision_checker->l_arm_init);
     FullState ompl_start(fullBodySpace);
     FullState ompl_goal(fullBodySpace);
@@ -182,9 +203,15 @@ bool OMPLPR2Planner::checkRequest(SearchRequestParams& search_request){
 }
 
 bool OMPLPR2Planner::planPathCallback(SearchRequestParams& search_request, int trial_id){
-    ROS_INFO("running ompl planner!");
+    if (m_planner_id == PRM_P)
+        ROS_INFO("running PRM planner!");
+    if (m_planner_id == RRT)
+        ROS_INFO("running RRT planner!");
+    if (m_planner_id == RRTSTAR)
+        ROS_INFO("running RRTStar planner!");
     planner->clear();
     planner->getProblemDefinition()->clearSolutionPaths();
+    planner->as<ompl::geometric::PRM>()->clearQuery();
     search_request.left_arm_start.getAngles(&m_collision_checker->l_arm_init);
     FullState ompl_start(fullBodySpace);
     FullState ompl_goal(fullBodySpace);
@@ -214,8 +241,8 @@ bool OMPLPR2Planner::planPathCallback(SearchRequestParams& search_request, int t
         double t2 = ros::Time::now().toSec();
         bool b1 = pathSimplifier->reduceVertices(geo_path);
         bool b2 = pathSimplifier->collapseCloseVertices(geo_path);
-        ROS_ERROR("reduce:%d collapse:%d\n",b1,b2);
-        //bool b3 = pathSimplifier->shortcutPath(geo_path);
+        bool b3 = pathSimplifier->shortcutPath(geo_path);
+        geo_path.interpolate();
         //ROS_ERROR("shortcut:%d\n",b3);
         double t3 = ros::Time::now().toSec();
         double reduction_time = t3-t2;
@@ -225,8 +252,6 @@ bool OMPLPR2Planner::planPathCallback(SearchRequestParams& search_request, int t
         vector<RobotState> robot_states;
         vector<ContBaseState> base_states;
 
-        geo_path.interpolate();
-        ROS_INFO("path size of %lu", geo_path.getStateCount());
         for(unsigned int i=0; i<geo_path.getStateCount(); i++){
             ompl::base::State* state = geo_path.getState(i);
             RobotState robot_state;
@@ -234,14 +259,24 @@ bool OMPLPR2Planner::planPathCallback(SearchRequestParams& search_request, int t
             if (!convertFullState(state, robot_state, base)){
                 ROS_ERROR("ik failed on path reconstruction!");
             }
+            vector<double> l_arm, r_arm;
             robot_states.push_back(robot_state);
             base_states.push_back(base);
-            robot_state.visualize();
-            usleep(10000);
+
+            robot_state.right_arm().getAngles(&r_arm);
+            robot_state.left_arm().getAngles(&l_arm);
+            BodyPose bp = base.body_pose();
+            // Visualizer::pviz->visualizeRobot(r_arm, l_arm, bp, 150, "robot", 0);
+            // usleep(10000);
         }
-        m_stats_writer.writeRRT(trial_id, data);
+        data.robot_state = robot_states;
+        data.base = base_states;
+        data.path_length = geo_path.getStateCount();
+        m_stats_writer.write(trial_id, data);
     } else {
         data.planned = false;
+        ROS_ERROR("failed to plan");
+        return false;
     }
 
     return true;

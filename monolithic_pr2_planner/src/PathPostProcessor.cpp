@@ -46,7 +46,7 @@ vector<FullBodyState> PathPostProcessor::reconstructPath(vector<int> soln_path,
     vector<FullBodyState> final_path = getFinalPath(soln_path, 
                                                     transition_states,
                                                     goal_state);
-    visualizeFinalPath(final_path);
+    // visualizeFinalPath(final_path);
     ROS_INFO("my reconstruct took %.3f", (clock()-temptime)/(double)CLOCKS_PER_SEC);
     return final_path;
 }
@@ -107,6 +107,7 @@ bool PathPostProcessor::findBestTransition(int start_id, int end_id,
 
 FullBodyState PathPostProcessor::createFBState(const RobotState& robot){
     vector<double> l_arm, r_arm, base;
+    vector<double> obj(6,0);
     robot.right_arm().getAngles(&r_arm);
     robot.left_arm().getAngles(&l_arm);
     ContBaseState c_base = robot.base_state();
@@ -115,6 +116,14 @@ FullBodyState PathPostProcessor::createFBState(const RobotState& robot){
     state.left_arm = l_arm;
     state.right_arm = r_arm;
     state.base = base;
+    ContObjectState obj_state = robot.getObjectStateRelMap();
+    obj[0] = obj_state.x();
+    obj[1] = obj_state.y();
+    obj[2] = obj_state.z();
+    obj[3] = obj_state.roll();
+    obj[4] = obj_state.pitch();
+    obj[5] = obj_state.yaw();
+    state.obj = obj;
     return state;
 }
 

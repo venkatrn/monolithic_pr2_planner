@@ -191,7 +191,7 @@ void addStartStateRegionToParamServer(){
     // Sets the start state regions to the param server for experiments.
     // Note: Setting only one start region for now.
     ros::NodeHandle nh;
-    double X = 1.3;
+    double X = 1.4;
     double Y = 1.6;
     double Z = 0.1;
     double dimX = 0.3;
@@ -274,8 +274,10 @@ vector<Eigen::Vector3d> getVoxelsFromFile(std::string filename){
         pclCloud->points[i].y = points[i][1];
         pclCloud->points[i].z = points[i][2];
     }
+    // addCuboid(pclCloud, 4.748199056716729, 1.7879581496994748, 0.0, 0.65, 1.691942061154145, 0.8, false);
     addRandomObstacles(pclCloud, 1, 5);
     addStartStateRegionToParamServer();
+
     sensor_msgs::PointCloud2 pc;
     pcl::toROSMsg (*pclCloud, pc);
     pc.header.frame_id = "/map";

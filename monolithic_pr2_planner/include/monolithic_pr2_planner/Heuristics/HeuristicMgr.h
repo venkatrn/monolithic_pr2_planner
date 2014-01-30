@@ -51,6 +51,7 @@ namespace monolithic_pr2_planner {
             std::vector<AbstractHeuristicPtr> m_heuristics;
             
             int m_num_mha_heuristics;
+            std::vector<int> m_mha_heur_ids;
             
             // Saving the goal and the grid for MHA heuristics
             unsigned char** m_grid;

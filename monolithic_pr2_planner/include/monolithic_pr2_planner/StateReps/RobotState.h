@@ -38,6 +38,7 @@ namespace monolithic_pr2_planner {
             void visualize();
 
             ContObjectState getObjectStateRelMap() const;
+            ContObjectState getObjectStateRelMap(ContBaseState base) const;
             DiscObjectState getObjectStateRelBody() const;
 
             static bool computeRobotPose(const ContObjectState& obj_state,

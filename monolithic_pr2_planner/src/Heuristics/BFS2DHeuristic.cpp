@@ -87,14 +87,7 @@ int BFS2DHeuristic::getGoalHeuristic(GraphStatePtr state){
         return INFINITECOST;
     }
 
-    // Add rotation cost
-    // For inadmissible heuristic alone
-    if(!m_radius && cost < 200){
-        DiscObjectState goal_state = m_goal.getObjectState();
-        double current_angle = normalize_angle_positive(std::atan2(goal_state.y() - state->base_y(),
-            goal_state.x() - state->base_x()));
-        cost += 10*shortest_angular_distance(current_angle,state->base_theta());
-    }
+    
     // if (cost < m_costmap_ros->getInscribedRadius()/0.02)
         // return 0;
     return getCostMultiplier()*cost;

@@ -157,6 +157,18 @@ std::vector<int> HeuristicMgr::getGoalHeuristic(const GraphStatePtr& state){
     for (size_t i = 0; i < m_heuristics.size(); ++i){
         values[i] = m_heuristics[i]->getGoalHeuristic(state);
     }
+    
+    for (size_t i = 0; i < m_mha_heur_ids.size(); ++i)
+    {
+        DiscObjectState goal_state = m_goal.getObjectState();
+        double current_angle = normalize_angle_positive(std::atan2(goal_state.y() - state->base_y(),
+        goal_state.x() - state->base_x()));
+        // ROS_DEBUG_NAMED(HEUR_LOG, "Goal: %d %d; Base: %d %d", goal_state.x(), goal_state.y(), state->base_x(), state->base_y());
+        ContBaseState cbase = state->robot_pose().base_state();
+        // ROS_DEBUG_NAMED(HEUR_LOG, "Within Zone: current_angle: %f ; Base_angle: %f, cost added: %d", current_angle,
+        normalize_angle_positive(cbase.theta()), 10*std::abs(static_cast<int>(shortest_angular_distance(normalize_angle_positive(cbase.theta()), current_angle))));
+        values[m_mha_heur_ids[i]] += 10*std::abs(static_cast<int>(shortest_angular_distance(normalize_angle_positive(cbase.theta()), current_angle)));
+    }
     return values;
 }
 
@@ -221,7 +233,7 @@ void HeuristicMgr::initializeMHAHeuristics(const int
     int heur_num = add2DHeur(cost_multiplier, 0);
     m_heuristics[heur_num]->update2DHeuristicMap(m_grid_data);
     m_heuristics[heur_num]->setGoal(new_goal_state);
-
+    m_mha_heur_ids.push_back(heur_num);
     // Add the second one
     state.x(selected_points.second.first);
     state.y(selected_points.second.second);
@@ -232,6 +244,8 @@ void HeuristicMgr::initializeMHAHeuristics(const int
     heur_num = add2DHeur(cost_multiplier, 0);
     m_heuristics[heur_num]->update2DHeuristicMap(m_grid_data);
     m_heuristics[heur_num]->setGoal(another_goal_state);
+    m_mha_heur_ids.push_back(heur_num);
+
 
     // -----------------Uniform picking----------------
     // std::vector<double> angles_with_center(circle_x.size(), 0);

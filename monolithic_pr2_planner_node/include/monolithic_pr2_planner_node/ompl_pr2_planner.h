@@ -22,9 +22,13 @@ typedef ompl::base::RealVectorStateSpace::StateType VectorState;
 typedef ompl::base::SE2StateSpace::StateType SE2State;
 typedef ompl::base::ScopedState<ompl::base::CompoundStateSpace> FullState;
 typedef monolithic_pr2_planner_node::GetMobileArmPlan::Request NodeRequest;
+
+#define RRT 1
+#define PRM_P 2
+#define RRTSTAR 3
 class OMPLPR2Planner{
     public:
-        OMPLPR2Planner(const monolithic_pr2_planner::CSpaceMgrPtr& cspace);
+        OMPLPR2Planner(const monolithic_pr2_planner::CSpaceMgrPtr& cspace, int planner_id);
         bool planPathCallback(monolithic_pr2_planner::SearchRequestParams& search_request, int trial_id);
         bool checkRequest(monolithic_pr2_planner::SearchRequestParams& search_request);
         bool createStartGoal(FullState& start, FullState& goal, monolithic_pr2_planner::SearchRequestParams& req);
@@ -38,4 +42,5 @@ class OMPLPR2Planner{
         ompl::geometric::PathSimplifier* pathSimplifier;
         omplFullBodyCollisionChecker* m_collision_checker;
         StatsWriter m_stats_writer;
+        int m_planner_id;
 };

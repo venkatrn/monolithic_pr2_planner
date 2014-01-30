@@ -45,20 +45,19 @@ int Environment::GetGoalHeuristic(int stateID, int goal_id){
     // heuristics. So, the values will be endEff, Base, Base1, Base2
     std::vector<int> values = m_heur_mgr->getGoalHeuristic(m_hash_mgr->getGraphState(stateID));
     // ROS_DEBUG_NAMED(HEUR_LOG, "Heuristic values: Arm : %d\t Base 1: %d", values[0], values[1]);
-    int heur = 0;
     switch(goal_id){
         case 0: //Anchor
             return std::max(values[0], values[1]);
         case 1: //ARA
-            heur = EPS2*std::max(values[0], values[1]);
+            return EPS2*std::max(values[0], values[1]);
         case 2: // arm
-            heur = EPS2*values[0];
+            return EPS2*values[0];
         case 3:
         case 4:
             // bases
-            heur = values[goal_id-1];
+            return values[goal_id-1];
     }
-    return std::max(heur, std::max(values[0],values[1]));
+    return std::max(values[0],values[1]);
 }
 
 void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs, 
@@ -75,8 +74,8 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
     GraphStatePtr source_state = m_hash_mgr->getGraphState(sourceStateID);
     ROS_DEBUG_NAMED(SEARCH_LOG, "Source state is:");
     source_state->robot_pose().printToDebug(SEARCH_LOG);
-    source_state->robot_pose().visualize();
-    usleep(10000);
+    // source_state->robot_pose().visualize();
+    // usleep(10000);
     for (auto mprim : m_mprims.getMotionPrims()){
         ROS_DEBUG_NAMED(SEARCH_LOG, "Applying motion:");
         // mprim->printEndCoord();

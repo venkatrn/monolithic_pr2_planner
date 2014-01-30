@@ -160,14 +160,16 @@ std::vector<int> HeuristicMgr::getGoalHeuristic(const GraphStatePtr& state){
     
     for (size_t i = 0; i < m_mha_heur_ids.size(); ++i)
     {
-        DiscObjectState goal_state = m_goal.getObjectState();
-        double current_angle = normalize_angle_positive(std::atan2(goal_state.y() - state->base_y(),
-        goal_state.x() - state->base_x()));
-        // ROS_DEBUG_NAMED(HEUR_LOG, "Goal: %d %d; Base: %d %d", goal_state.x(), goal_state.y(), state->base_x(), state->base_y());
-        ContBaseState cbase = state->robot_pose().base_state();
-        // ROS_DEBUG_NAMED(HEUR_LOG, "Within Zone: current_angle: %f ; Base_angle: %f, cost added: %d", current_angle,
-        normalize_angle_positive(cbase.theta()), 10*std::abs(static_cast<int>(shortest_angular_distance(normalize_angle_positive(cbase.theta()), current_angle))));
-        values[m_mha_heur_ids[i]] += 10*std::abs(static_cast<int>(shortest_angular_distance(normalize_angle_positive(cbase.theta()), current_angle)));
+        if(values[m_mha_heur_ids[i]] < 200){
+            DiscObjectState goal_state = m_goal.getObjectState();
+            double current_angle = normalize_angle_positive(std::atan2(goal_state.y() - state->base_y(),
+            goal_state.x() - state->base_x()));
+            // ROS_DEBUG_NAMED(HEUR_LOG, "Goal: %d %d; Base: %d %d", goal_state.x(), goal_state.y(), state->base_x(), state->base_y());
+            ContBaseState cbase = state->robot_pose().base_state();
+            // ROS_DEBUG_NAMED(HEUR_LOG, "Within Zone: current_angle: %f ; Base_angle: %f, cost added: %d", current_angle,
+            // normalize_angle_positive(cbase.theta()), 10*std::abs(static_cast<int>(shortest_angular_distance(normalize_angle_positive(cbase.theta()), current_angle))));
+            values[m_mha_heur_ids[i]] += 10*std::abs(static_cast<int>(shortest_angular_distance(normalize_angle_positive(cbase.theta()), current_angle)));
+        }
     }
     return values;
 }

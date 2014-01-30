@@ -1,12 +1,22 @@
 #include <monolithic_pr2_planner_node/StatsWriter.h>
 #include <stdio.h>
-#include <sstream>
+#include <ctime>
+#include <sys/stat.h>
 
 using namespace std;
 using namespace monolithic_pr2_planner;
 
 StatsWriter::StatsWriter(int planner_id):m_planner_id(planner_id){
-     
+    time_t now = time(0);
+    m_current_path << "/tmp/planning_stats/" << time(&now) <<"/";
+    int status;
+    status = mkdir(m_current_path.str().c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    if(status==0){
+      ROS_INFO("Created path : %s", m_current_path.str().c_str());
+    }
+    else{
+      ROS_ERROR("Cannot create path for dumping stats!");
+    }
 }
 
 void StatsWriter::write(int trial_id, RRTData data){
@@ -18,21 +28,22 @@ void StatsWriter::write(int trial_id, RRTData data){
     //    ROS_INFO("writing RRTStar stats");
     stringstream ss;
     if (m_planner_id == PRM_P)
-        ss << "/tmp/planning_stats/prm_" << std::setfill('0') << std::setw(2) << trial_id << ".stats";
+        ss << m_current_path.str().c_str() << "prm_" << std::setfill('0') << std::setw(2) << trial_id << ".stats";
     if (m_planner_id == RRT)
-        ss << "/tmp/planning_stats/rrt_" << std::setfill('0') << std::setw(2) << trial_id << ".stats";
+        ss << m_current_path.str().c_str() << "rrt_" << std::setfill('0') << std::setw(2) << trial_id << ".stats";
     if (m_planner_id == RRTSTAR)
-        ss << "/tmp/planning_stats/rrtstar_" << std::setfill('0') << std::setw(2) << trial_id << ".stats";
+        ss << m_current_path.str().c_str() << "rrtstar_" << std::setfill('0') << std::setw(2) << trial_id << ".stats";
+    ROS_DEBUG_NAMED(HEUR_LOG, "Opening file : %s", ss.str().c_str());
     FILE* stats = fopen(ss.str().c_str(), "w");
     if (data.planned){
         fprintf(stats, "%f %f %lu\n", data.plan_time, data.shortcut_time, data.path_length);
         stringstream ss2;
         if (m_planner_id == PRM_P)
-            ss2 << "/tmp/planning_stats/prm_" << std::setfill('0') << std::setw(2) << trial_id << ".path";
+            ss2 << m_current_path.str().c_str() << "prm_" << std::setfill('0') << std::setw(2) << trial_id << ".path";
         if (m_planner_id == RRT)
-            ss2 << "/tmp/planning_stats/rrt_" << std::setfill('0') << std::setw(2) << trial_id << ".path";
+            ss2 << m_current_path.str().c_str() << "rrt_" << std::setfill('0') << std::setw(2) << trial_id << ".path";
         if (m_planner_id == RRTSTAR)
-            ss2 << "/tmp/planning_stats/rrtstar_" << std::setfill('0') << std::setw(2) << trial_id << ".path";
+            ss2 << m_current_path.str().c_str() << "rrtstar_" << std::setfill('0') << std::setw(2) << trial_id << ".path";
         FILE* path = fopen(ss2.str().c_str(), "w");
         for (size_t i=0; i < data.robot_state.size(); i++){
             vector<double> l_arm;
@@ -77,7 +88,8 @@ void StatsWriter::writeARA(std::vector<double> &stats_v, std::vector<FullBodySta
     ROS_INFO("writing ara stats");
     stringstream ss;
 
-    ss << "/tmp/planning_stats/ara_" << std::setfill('0') << std::setw(2) << trial_id << ".stats";
+    ss << m_current_path.str().c_str() << "ara_" << std::setfill('0') << std::setw(2) << trial_id << ".stats";
+    ROS_DEBUG_NAMED(HEUR_LOG, "Opening file : %s", ss.str().c_str());
     FILE* stats = fopen(ss.str().c_str(), "w");
     fprintf(stats, "%f %f %f %f %f %f %f %f %f %f\n", stats_v[0],
             stats_v[1],
@@ -92,7 +104,7 @@ void StatsWriter::writeARA(std::vector<double> &stats_v, std::vector<FullBodySta
     stringstream ss2;
 
     if (states.size()){
-        ss2 << "/tmp/planning_stats/ara_" << std::setfill('0') << std::setw(2) << trial_id << ".path";
+        ss2 << m_current_path.str().c_str() << "ara_" << std::setfill('0') << std::setw(2) << trial_id << ".path";
         FILE* path = fopen(ss2.str().c_str(), "w");
         for (size_t i=0; i < states.size(); i++){
             vector<double> l_arm = states[i].left_arm;
@@ -128,11 +140,15 @@ void StatsWriter::writeARA(std::vector<double> &stats_v, std::vector<FullBodySta
 }
 
 void StatsWriter::writeMHA(std::vector<double> &stats_v, std::vector<FullBodyState> &states, 
-                           int trial_id){
+                           int trial_id, bool imha){
     ROS_INFO("writing mha stats");
     stringstream ss;
-
-    ss << "/tmp/planning_stats/mha_" << std::setfill('0') << std::setw(2) << trial_id << ".stats";
+    if(imha == true){
+      ss << m_current_path.str().c_str() << "imha_" << std::setfill('0') << std::setw(2) << trial_id << ".stats";
+    } else {
+      ss << m_current_path.str().c_str() << "smha_" << std::setfill('0') << std::setw(2) << trial_id << ".stats";
+    }
+    ROS_DEBUG_NAMED(HEUR_LOG, "Opening file : %s", ss.str().c_str());
     FILE* stats = fopen(ss.str().c_str(), "w");
     fprintf(stats, "%f %f %f %f %f %f %f %f %f %f\n", stats_v[0],
             stats_v[1],
@@ -147,7 +163,12 @@ void StatsWriter::writeMHA(std::vector<double> &stats_v, std::vector<FullBodySta
     stringstream ss2;
 
     if (states.size()){
-        ss2 << "/tmp/planning_stats/mha_" << std::setfill('0') << std::setw(2) << trial_id << ".path";
+        if(imha == true){
+          ss2 << m_current_path.str().c_str() << "smha_" << std::setfill('0') << std::setw(2) << trial_id << ".path";
+        } else {
+          ss2 << m_current_path.str().c_str() << "smha_" << std::setfill('0') << std::setw(2) << trial_id << ".path";
+
+        }
         FILE* path = fopen(ss2.str().c_str(), "w");
         for (size_t i=0; i < states.size(); i++){
             vector<double> l_arm = states[i].left_arm;
@@ -188,7 +209,7 @@ void StatsWriter::writeMHA(std::vector<double> &stats_v, std::vector<FullBodySta
 //           int trial_id){
 //     ROS_INFO("writing Envt stats");
 //     stringstream ss;
-//     ss << "/tmp/planning_stats/envt_" << trial_id << ".stats";
+//     ss << m_current_path.str().c_str() << "envt_" << trial_id << ".stats";
 //     FILE* stats = fopen(ss.str().c_str(), "w");
 //     fprintf(stats, "%d\n", static_cast<int>(goal_regions.size()));
 //     for (size_t i = 0; i < goal_regions.size(); ++i)

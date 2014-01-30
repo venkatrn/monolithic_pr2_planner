@@ -13,12 +13,12 @@ using namespace monolithic_pr2_planner_node;
 ompl::base::OptimizationObjectivePtr getThresholdPathLengthObj(const ompl::base::SpaceInformationPtr& si)
 {
     ompl::base::OptimizationObjectivePtr obj(new ompl::base::PathLengthOptimizationObjective(si,
-        1000000.51));
+        10.51));
     return obj;
 }
 
 OMPLPR2Planner::OMPLPR2Planner(const CSpaceMgrPtr& cspace, int planner_id):
-    m_stats_writer(planner_id),m_planner_id(planner_id){
+    m_planner_id(planner_id){
     //create the StateSpace (defines the dimensions and their bounds)
     ROS_INFO("initializing OMPL");
     ompl::base::SE2StateSpace* se2 = new ompl::base::SE2StateSpace();
@@ -202,7 +202,8 @@ bool OMPLPR2Planner::checkRequest(SearchRequestParams& search_request){
     return createStartGoal(ompl_start, ompl_goal, search_request);
 }
 
-bool OMPLPR2Planner::planPathCallback(SearchRequestParams& search_request, int trial_id){
+bool OMPLPR2Planner::planPathCallback(SearchRequestParams& search_request, int trial_id,
+    StatsWriter& m_stats_writer){
     if (m_planner_id == PRM_P)
         ROS_INFO("running PRM planner!");
     if (m_planner_id == RRT)
@@ -229,7 +230,10 @@ bool OMPLPR2Planner::planPathCallback(SearchRequestParams& search_request, int t
         pdef->setGoal(temp_goal2);
     //}
     double t0 = ros::Time::now().toSec();
-    planner->solve(60.0);
+    if(m_planner_id == RRTSTAR)
+        planner->solve(30.0);
+    else
+        planner->solve(60.0);
     double t1 = ros::Time::now().toSec();
     double planning_time = t1-t0;
     ompl::base::PathPtr path = planner->getProblemDefinition()->getSolutionPath();
@@ -272,6 +276,7 @@ bool OMPLPR2Planner::planPathCallback(SearchRequestParams& search_request, int t
         data.robot_state = robot_states;
         data.base = base_states;
         data.path_length = geo_path.getStateCount();
+        m_stats_writer.setPlannerId(m_planner_id);
         m_stats_writer.write(trial_id, data);
     } else {
         data.planned = false;

@@ -151,7 +151,6 @@ bool Environment::setStartGoal(SearchRequestPtr search_request,
 
     if (m_hash_mgr->size() < 2){
         goal_id = saveFakeGoalState(start_graph_state);
-        ROS_ERROR("goal id is %d", goal_id);
     } else {
         goal_id = 1;
     }

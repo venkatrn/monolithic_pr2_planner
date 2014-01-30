@@ -1,11 +1,11 @@
 function comparison = computeStats(path)
-  num = 1;
+  num = 10;
 
   prm_stats = computeMethodStats([path '/prm_'],num,0)
   rrt_stats = computeMethodStats([path '/rrt_'],num,0)
   rrtstar_stats = computeMethodStats([path '/rrtstar_'],num,0)
   ara_stats = computeMethodStats([path '/ara_'],num,1)
-
+  keyboard
   other_methods = [prm_stats rrt_stats rrtstar_stats];
   %other_methods = [cbirrt_stats multi_ompl_stats];
 
@@ -22,8 +22,8 @@ function stats = computeMethodStats(folder_name,num,sbpl)
   arm_abs = [];
   time = [];
   for i=1:num
-    path_filename = [folder_name num2str(i-1,'%02d') '.path']
-    stat_filename = [folder_name num2str(i-1,'%02d') '.stats']
+    path_filename = [folder_name num2str(i-1,'%02d') '.path'];
+    stat_filename = [folder_name num2str(i-1,'%02d') '.stats'];
     if exist(path_filename, 'file')~=2 || exist(stat_filename, 'file')~=2
       base(i) = -1;
       spine(i) = -1;

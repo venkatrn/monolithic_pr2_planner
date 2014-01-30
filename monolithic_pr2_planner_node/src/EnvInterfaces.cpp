@@ -84,10 +84,11 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
         m_generator->generateUniformPairs(10, start_goal_pairs);
 
         for (auto& start_goal : start_goal_pairs){
-            ROS_INFO("running trial %d", counter);
+            ROS_ERROR("running trial %d", counter);
             // Write envt stats to file
             // m_stats_writer.writeEnvt(m_generator->getGoalRegions(), start_goal.first, start_goal.second,
             //     counter);
+            start_goal.first.visualize();
             SearchRequestParamsPtr search_request = make_shared<SearchRequestParams>();
             search_request->initial_epsilon = req.initial_eps;
             search_request->final_epsilon = req.final_eps;
@@ -145,17 +146,18 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
                 // Here starts the actual planning requests
                 resetEnvironment();
                 // Not sure if actually necessary
-                m_mha_planner.reset(new MPlanner(m_env.get(), NUM_MHA_HEUR, forward_search));
+                m_mha_planner.reset(new MPlanner(m_env.get(), NUM_MHA_HEUR, forward_search,
+                    false));
                 total_planning_time = clock();
                 if(!m_env->configureRequest(search_request, start_id, goal_id))
-                    ROS_ERROR("Unable to configure request for MHA! Trial ID: %d", counter);
+                    ROS_ERROR("Unable to configure request for SMHA! Trial ID: %d", counter);
 
                 // m_mha_planner->set_initialsolution_eps(search_request->initial_epsilon);
                 m_mha_planner->set_initialsolution_eps1(EPS1);
                 m_mha_planner->set_initialsolution_eps2(EPS2);
                 m_mha_planner->set_search_mode(return_first_soln);
                 m_mha_planner->set_start(start_id);
-                ROS_INFO("setting MHA goal id to %d", goal_id);
+                ROS_INFO("setting SMHA goal id to %d", goal_id);
                 m_mha_planner->set_goal(goal_id);
                 m_mha_planner->force_planning_from_scratch();
                 vector<int> soln;
@@ -167,12 +169,12 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
                 // stat_names.clear();
                 // states.clear();
                 if (isPlanFound){
-                    ROS_INFO("Plan found in MHA Planner. Moving on to reconstruction.");
+                    ROS_INFO("Plan found in SMHA Planner. Moving on to reconstruction.");
                     states =  m_env->reconstructPath(soln);
                     total_planning_time = clock() - total_planning_time;
                     packageMHAStats(stat_names, stats, soln_cost, states.size(),
                         total_planning_time);
-                    m_stats_writer.writeMHA(stats, states, counter);
+                    m_stats_writer.writeMHA(stats, states, counter, false);
                     res.stats_field_names = stat_names;
                     res.stats = stats;
                 } else {
@@ -180,6 +182,48 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
                         total_planning_time);
                     ROS_INFO("No plan found!");
                 }
+
+
+                // Run IMHA
+                resetEnvironment();
+                // Not sure if actually necessary
+                m_mha_planner.reset(new MPlanner(m_env.get(), NUM_MHA_HEUR, forward_search,
+                    true));
+                total_planning_time = clock();
+                if(!m_env->configureRequest(search_request, start_id, goal_id))
+                    ROS_ERROR("Unable to configure request for IMHA! Trial ID: %d", counter);
+
+                // m_mha_planner->set_initialsolution_eps(search_request->initial_epsilon);
+                m_mha_planner->set_initialsolution_eps1(EPS1);
+                m_mha_planner->set_initialsolution_eps2(EPS2);
+                m_mha_planner->set_search_mode(return_first_soln);
+                m_mha_planner->set_start(start_id);
+                ROS_INFO("setting IMHA goal id to %d", goal_id);
+                m_mha_planner->set_goal(goal_id);
+                m_mha_planner->force_planning_from_scratch();
+                soln.clear();
+                soln_cost = 0;
+                isPlanFound = m_mha_planner->replan(req.allocated_planning_time, 
+                                                     &soln, &soln_cost);
+
+                // stats.clear();
+                // stat_names.clear();
+                // states.clear();
+                if (isPlanFound){
+                    ROS_INFO("Plan found in IMHA Planner. Moving on to reconstruction.");
+                    states =  m_env->reconstructPath(soln);
+                    total_planning_time = clock() - total_planning_time;
+                    packageMHAStats(stat_names, stats, soln_cost, states.size(),
+                        total_planning_time);
+                    m_stats_writer.writeMHA(stats, states, counter, true);
+                    res.stats_field_names = stat_names;
+                    res.stats = stats;
+                } else {
+                    packageMHAStats(stat_names, stats, soln_cost, states.size(),
+                        total_planning_time);
+                    ROS_INFO("No plan found!");
+                }
+
 
                 // ARA Planner
                 resetEnvironment();
@@ -223,9 +267,9 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
                 // if(!m_env->configureRequest(search_request, start_id, goal_id)){
                 //     ROS_ERROR("Unable to configure request for OMPL! Trial ID: %d", counter);
                 // }
-                m_rrt->planPathCallback(*search_request, counter);
-                m_prm->planPathCallback(*search_request, counter);
-                m_rrtstar->planPathCallback(*search_request, counter);
+                m_rrt->planPathCallback(*search_request, counter, m_stats_writer);
+                m_prm->planPathCallback(*search_request, counter, m_stats_writer);
+                m_rrtstar->planPathCallback(*search_request, counter, m_stats_writer);
                 counter++;
             }
         }

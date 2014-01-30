@@ -29,7 +29,8 @@ typedef monolithic_pr2_planner_node::GetMobileArmPlan::Request NodeRequest;
 class OMPLPR2Planner{
     public:
         OMPLPR2Planner(const monolithic_pr2_planner::CSpaceMgrPtr& cspace, int planner_id);
-        bool planPathCallback(monolithic_pr2_planner::SearchRequestParams& search_request, int trial_id);
+        bool planPathCallback(monolithic_pr2_planner::SearchRequestParams& search_request, int trial_id,
+            StatsWriter& m_stats_writer);
         bool checkRequest(monolithic_pr2_planner::SearchRequestParams& search_request);
         bool createStartGoal(FullState& start, FullState& goal, monolithic_pr2_planner::SearchRequestParams& req);
     private:
@@ -41,6 +42,6 @@ class OMPLPR2Planner{
         ompl::base::Planner* planner;
         ompl::geometric::PathSimplifier* pathSimplifier;
         omplFullBodyCollisionChecker* m_collision_checker;
-        StatsWriter m_stats_writer;
+        // StatsWriter m_stats_writer;
         int m_planner_id;
 };

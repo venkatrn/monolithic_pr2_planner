@@ -6,7 +6,7 @@ function stats = computeMethodStats(folder_name,num,sbpl)
   arm_abs = [];
   time = [];
   for i=1:num
-    path_filename = [folder_name num2str(i-1,'%02d') '.path'];
+    path_filename = [folder_name num2str(i-1,'%02d') '.path']
     stat_filename = [folder_name num2str(i-1,'%02d') '.stats'];
     if exist(path_filename, 'file')~=2 || exist(stat_filename, 'file')~=2
       base(i) = -1;
@@ -23,6 +23,8 @@ function stats = computeMethodStats(folder_name,num,sbpl)
     spine_path = raw_path(:,4);
     arm_path = raw_path(:,5:11);
     obj_path = raw_path(:,12:15);
+    %figure;plot(base_path(:,1), base_path(:,2))
+    keyboard
 
     base(i) = sum(sqrt(sum(diff(base_path(:,1:2)).^2,2)));
     spine(i) = sum(sqrt(sum(diff(spine_path).^2,2)));

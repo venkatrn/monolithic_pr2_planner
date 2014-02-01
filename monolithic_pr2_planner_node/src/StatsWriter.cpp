@@ -33,6 +33,8 @@ void StatsWriter::write(int trial_id, RRTData data){
         ss << m_current_path.str().c_str() << "rrt_" << std::setfill('0') << std::setw(2) << trial_id << ".stats";
     if (m_planner_id == RRTSTAR)
         ss << m_current_path.str().c_str() << "rrtstar_" << std::setfill('0') << std::setw(2) << trial_id << ".stats";
+    if (m_planner_id == RRTSTARFIRSTSOL)
+      ss << m_current_path.str().c_str() << "rrtstarfirstsol_" << std::setfill('0') << std::setw(2) << trial_id << ".stats";
     ROS_DEBUG_NAMED(HEUR_LOG, "Opening file : %s", ss.str().c_str());
     FILE* stats = fopen(ss.str().c_str(), "w");
     if (data.planned){
@@ -44,6 +46,8 @@ void StatsWriter::write(int trial_id, RRTData data){
             ss2 << m_current_path.str().c_str() << "rrt_" << std::setfill('0') << std::setw(2) << trial_id << ".path";
         if (m_planner_id == RRTSTAR)
             ss2 << m_current_path.str().c_str() << "rrtstar_" << std::setfill('0') << std::setw(2) << trial_id << ".path";
+        if (m_planner_id == RRTSTARFIRSTSOL)
+            ss2 << m_current_path.str().c_str() << "rrtstarfirstsol_" << std::setfill('0') << std::setw(2) << trial_id << ".path";
         FILE* path = fopen(ss2.str().c_str(), "w");
         for (size_t i=0; i < data.robot_state.size(); i++){
             vector<double> l_arm;
@@ -202,61 +206,3 @@ void StatsWriter::writeMHA(std::vector<double> &stats_v, std::vector<FullBodySta
     }
     fclose(stats);
 }
-
-// void StatsWriter::writeEnvt(std::vector<monolithic_pr2_planner::Region> goal_regions,
-//           monolithic_pr2_planner::RobotState start,
-//           monolithic_pr2_planner::RobotState goal,
-//           int trial_id){
-//     ROS_INFO("writing Envt stats");
-//     stringstream ss;
-//     ss << m_current_path.str().c_str() << "envt_" << trial_id << ".stats";
-//     FILE* stats = fopen(ss.str().c_str(), "w");
-//     fprintf(stats, "%d\n", static_cast<int>(goal_regions.size()));
-//     for (size_t i = 0; i < goal_regions.size(); ++i)
-//     {
-//         fprintf(stats, "%f %f %f %f %f %f\n",
-//           goal_regions[i].x_min,
-//           goal_regions[i].x_max,
-//           goal_regions[i].y_min,
-//           goal_regions[i].y_max,
-//           goal_regions[i].z_min,
-//           goal_regions[i].z_max);
-//     }
-//     for (size_t i=0; i < 2; i++){
-//         vector<double> l_arm;
-//         vector<double> r_arm;
-//         vector<double> base;
-
-//         switch(i){
-//           case 0:
-//             start.right_arm().getAngles(&r_arm);
-//             start.left_arm().getAngles(&l_arm);
-//           case 1:
-//             goal.right_arm().getAngles(&r_arm);
-//             goal.left_arm().getAngles(&l_arm);
-//         }
-
-//         fprintf(stats, "%f %f %f %f %f %f %f\n",
-//                       r_arm[0], 
-//                       r_arm[1], 
-//                       r_arm[2], 
-//                       r_arm[3], 
-//                       r_arm[4], 
-//                       r_arm[5], 
-//                       r_arm[6]);
-//         fprintf(stats, "%f %f %f %f %f %f %f\n",
-//                       l_arm[0], 
-//                       l_arm[1], 
-//                       l_arm[2], 
-//                       l_arm[3], 
-//                       l_arm[4], 
-//                       l_arm[5], 
-//                       l_arm[6]);
-//         // fprintf(stats, "%f %f %f %f\n",
-//         //               start.base[i].x(),
-//         //               start.base[i].y(),
-//         //               start.base[i].z(),
-//         //               start.base[i].theta());
-//     }
-//     fclose(stats);
-// }

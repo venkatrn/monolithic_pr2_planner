@@ -67,7 +67,7 @@ void RobotState::printToDebug(char* log_level) const {
                     r_arm[Joints::ELBOW_FLEX],
                     r_arm[Joints::FOREARM_ROLL],
                     r_arm[Joints::WRIST_FLEX],
-                    r_arm[Joints::WRdIST_ROLL]);
+                    r_arm[Joints::WRIST_ROLL]);
 }
 
 void RobotState::printToInfo(char* log_level) const {
@@ -252,7 +252,6 @@ bool RobotState::computeRobotPose(const DiscObjectState& disc_obj_state,
     }
 #endif
 #ifdef USE_IKFAST_SOLVER
-
     if (use_right_arm){
         double r_free_angle = r_seed[Joints::UPPER_ARM_ROLL];
         if (!m_ikfast_solver.ikRightArm(r_wrist_frame, r_free_angle, &r_angles)){

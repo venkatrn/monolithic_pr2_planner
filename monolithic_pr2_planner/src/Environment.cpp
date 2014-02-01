@@ -48,17 +48,21 @@ int Environment::GetGoalHeuristic(int stateID, int goal_id){
     std::vector<int> values = m_heur_mgr->getGoalHeuristic(m_hash_mgr->getGraphState(stateID));
     // ROS_DEBUG_NAMED(HEUR_LOG, "Heuristic values: Arm : %d\t Base 1: %d", values[0], values[1]);
     if (!m_is_imha) {
+        // SMHA*
         switch(goal_id){
             case 0: //Anchor
                 return std::max(values[0], values[1]);
-            case 1: //ARA
-                return EPS2*std::max(values[0], values[1]);
-            case 2: // arm
+            // case 1: //ARA
+            //     return EPS2*std::max(values[0], values[1]);
+            case 1: // arm
                 return EPS2*values[0];
-                // return std::max(values[0], values[2]);
+            //     // return std::max(values[0], values[2]);
             default:
                 // bases
-                return values[goal_id-1];
+                // ROS_DEBUG_NAMED(HEUR_LOG, "Base heur: %d :: %d ; size of values: %d", goal_id,
+                //     values[goal_id],
+                //     values.size());
+                return values[goal_id];
         }
     }
     else{

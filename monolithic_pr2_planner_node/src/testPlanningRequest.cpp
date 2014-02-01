@@ -63,16 +63,21 @@ int main(int argc, char** argv){
     // body_start[3] = -M_PI;
     
     // Config2 - cupboard
-    // body_start[0] = 1.5;
-    // body_start[1] = 3.0;
-    // body_start[2] = 0.1;
-    // body_start[3] = -M_PI;
+    body_start[0] = 1.5;
+    body_start[1] = 3.0;
+    body_start[2] = 0.1;
+    body_start[3] = -M_PI;
 
  
-    body_start[0] = 1.440000;
-    body_start[1] = 1.740000;
-    body_start[2] = 0.260000;
-    body_start[3] = -M_PI/2;
+    // body_start[0] = 1.440000;
+    // body_start[1] = 1.740000;
+    // body_start[2] = 0.260000;
+    // body_start[3] = 0;
+
+    // body_start[0] = 7.440000;
+    // body_start[1] = 2.460000;
+    // body_start[2] = 0.260000;
+    // body_start[3] = 0;
 
     srv.request.rarm_start = right_arm_start;
     srv.request.larm_start = left_arm_start;
@@ -82,10 +87,10 @@ int main(int argc, char** argv){
     // KDL::Rotation rot = KDL::Rotation::RPY(0,0,-M_PI);
 
     // Config2 - cupboard
-    // KDL::Rotation rot = KDL::Rotation::RPY(0,0,M_PI/2);
+    KDL::Rotation rot = KDL::Rotation::RPY(0,0,M_PI/2);
 
 
-    KDL::Rotation rot = KDL::Rotation::RPY(0,1.276272,1.668971);
+    // KDL::Rotation rot = KDL::Rotation::RPY(0,0.0,-M_PI/2);
     double qx, qy, qz, qw;
     rot.GetQuaternion(qx, qy, qz, qw);
 
@@ -97,13 +102,17 @@ int main(int argc, char** argv){
     // pose.pose.position.z = 1.1;
 
     // Config2 - cupboard
-    // pose.pose.position.x = 3.0;
-    // pose.pose.position.y = 4.9;
-    // pose.pose.position.z = 1.0;
+    pose.pose.position.x = 3.0;
+    pose.pose.position.y = 4.9;
+    pose.pose.position.z = 1.0;
 
-    pose.pose.position.x = 5.440000;
-    pose.pose.position.y = 2.460000;
-    pose.pose.position.z = 1.160000;
+    // pose.pose.position.x = 6.440000;
+    // pose.pose.position.y = 2.460000;
+    // pose.pose.position.z = 1.18000;
+
+    // pose.pose.position.x = 6.440000;
+    // pose.pose.position.y = 0.460000;
+    // pose.pose.position.z = 1.18000;
     pose.pose.orientation.x = qx;
     pose.pose.orientation.y = qy;
     pose.pose.orientation.z = qz;

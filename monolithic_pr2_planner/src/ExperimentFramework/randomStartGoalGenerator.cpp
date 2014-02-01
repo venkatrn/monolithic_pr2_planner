@@ -136,7 +136,7 @@ bool StartGoalGenerator::generateRandomValidState(RobotState& generated_state,
                 }
             }
         } else {
-            ROS_ERROR("not valid: In collision");
+            // ROS_ERROR("not valid: In collision");
         }
     }
     // only reaches here if no state generated

@@ -48,15 +48,22 @@ namespace monolithic_pr2_planner {
 
             int numberOfMHAHeuristics(){ return m_num_mha_heuristics;};
         private:
+            GoalState m_goal;
             std::vector<AbstractHeuristicPtr> m_heuristics;
+
+            inline double randomDouble(double min, double max){
+                return min + (max-min) * ( double(rand()) / RAND_MAX );
+            }
             
             int m_num_mha_heuristics;
             std::vector<int> m_mha_heur_ids;
+
+            std::vector<int> m_sampled_x;
+            std::vector<int> m_sampled_y;
             
             // Saving the goal and the grid for MHA heuristics
             unsigned char** m_grid;
             std::vector<signed char> m_grid_data;
-            GoalState m_goal;
     };
     typedef boost::shared_ptr<HeuristicMgr> HeuristicMgrPtr;
 }

@@ -274,7 +274,7 @@ vector<Eigen::Vector3d> getVoxelsFromFile(std::string filename){
         pclCloud->points[i].y = points[i][1];
         pclCloud->points[i].z = points[i][2];
     }
-    // addCuboid(pclCloud, 5.248199056716729, 1.7879581496994748, 0.0, 0.4, 1.4, 0.8,true);
+    // addCuboid(pclCloud, 5.248199056716729, 1.7879581496994748, 0.0, 1.4, 1.4, 0.8,true);
     // addCuboid(pclCloud, 5.248199056716729, 2.5379581496994748, 0.8, 0.1, 0.4,
     //     0.15,true);
     // addCuboid(pclCloud, 5.348199056716729, 2.1079581496994748, 0.8, 0.1, 0.2, 0.3,true);

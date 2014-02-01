@@ -76,6 +76,7 @@ namespace monolithic_pr2_planner_node {
             std::unique_ptr<OMPLPR2Planner> m_rrt;
             std::unique_ptr<OMPLPR2Planner> m_prm;
             std::unique_ptr<OMPLPR2Planner> m_rrtstar;
+            std::unique_ptr<OMPLPR2Planner> m_rrtstar_first_sol;
             StatsWriter m_stats_writer;
     };
 }

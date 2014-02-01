@@ -14,7 +14,7 @@
 #include <memory>
 
 #define NUM_IMHA_HEUR 4
-#define NUM_SMHA_HEUR 5
+#define NUM_SMHA_HEUR 4
 #define NUM_MHA_BASE_HEUR 2
 #define EPS1 25
 #define EPS2 2

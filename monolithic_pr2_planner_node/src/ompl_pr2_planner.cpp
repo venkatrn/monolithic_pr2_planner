@@ -10,11 +10,20 @@
 
 using namespace monolithic_pr2_planner;
 using namespace monolithic_pr2_planner_node;
-ompl::base::OptimizationObjectivePtr getThresholdPathLengthObj(const ompl::base::SpaceInformationPtr& si)
+ompl::base::OptimizationObjectivePtr getThresholdPathLengthObj(const ompl::base::SpaceInformationPtr& si,
+    int planner_id)
 {
-    ompl::base::OptimizationObjectivePtr obj(new ompl::base::PathLengthOptimizationObjective(si,
+    if(planner_id == RRTSTARFIRSTSOL){
+        ompl::base::OptimizationObjectivePtr obj(new ompl::base::PathLengthOptimizationObjective(si,
+        1000000.51));
+        return obj;
+
+    }
+    else{
+        ompl::base::OptimizationObjectivePtr obj(new ompl::base::PathLengthOptimizationObjective(si,
         10.51));
-    return obj;
+        return obj;
+    }
 }
 
 OMPLPR2Planner::OMPLPR2Planner(const CSpaceMgrPtr& cspace, int planner_id):
@@ -91,14 +100,14 @@ OMPLPR2Planner::OMPLPR2Planner(const CSpaceMgrPtr& cspace, int planner_id):
         planner = new ompl::geometric::RRTConnect(si);
     else if (planner_id == PRM_P)
         planner = new ompl::geometric::PRM(si);
-    else if (planner_id == RRTSTAR)
-        planner = new ompl::geometric::RRTstar(si); 
-    else 
+    else if (planner_id == RRTSTAR || planner_id == RRTSTARFIRSTSOL)
+        planner = new ompl::geometric::RRTstar(si);
+    else
         ROS_ERROR("invalid planner id!");
 
     planner->setup();
-    if (planner_id == RRTSTAR){
-        pdef->setOptimizationObjective(getThresholdPathLengthObj(si));
+    if (planner_id == RRTSTAR || planner_id == RRTSTARFIRSTSOL){
+        pdef->setOptimizationObjective(getThresholdPathLengthObj(si, planner_id));
     }
     planner->setProblemDefinition(ompl::base::ProblemDefinitionPtr(pdef));
     pathSimplifier = new ompl::geometric::PathSimplifier(si);

@@ -4,6 +4,7 @@
 #include <monolithic_pr2_planner/Heuristics/HeuristicMgr.h>
 #include <monolithic_pr2_planner/Heuristics/BFS3DHeuristic.h>
 #include <monolithic_pr2_planner/Heuristics/BFS2DHeuristic.h>
+#include <kdl/frames.hpp>
 #include <memory>
 #include <vector>
 #include <cstdlib>
@@ -20,7 +21,8 @@ bool pairCompare(const std::pair<double, Point>& firstElem,
     return firstElem.first < secondElem.first;
 }
  
-void deletePoint(Point end_pt, vector<int>& circle_x, vector<int>& circle_y){
+void deletePoint(Point end_pt, vector<int>& circle_x, vector<int>& circle_y) 
+{
     for (size_t i=0; i < circle_x.size(); i++){
         if (circle_x[i] == end_pt.first && circle_y[i] == end_pt.second){
             circle_x.erase(circle_x.begin()+i);
@@ -31,7 +33,8 @@ void deletePoint(Point end_pt, vector<int>& circle_x, vector<int>& circle_y){
 }
  
 pair<Point, Point> sample_points(int radius, int center_x, int center_y,
-                  vector<int> circle_x, vector<int> circle_y){
+                  vector<int> circle_x, vector<int> circle_y)
+{
     double itr = 0;
     vector<Point> full_circle;
     while (itr < 2*M_PI){
@@ -149,7 +152,8 @@ void HeuristicMgr::setGoal(GoalState& goal_state){
     }
 }
 
-std::vector<int> HeuristicMgr::getGoalHeuristic(const GraphStatePtr& state){
+std::vector<int> HeuristicMgr::getGoalHeuristic(const GraphStatePtr& state)
+{
     if (!m_heuristics.size()){
         ROS_ERROR_NAMED(HEUR_LOG, "No heuristics initialized!");
     }
@@ -158,19 +162,24 @@ std::vector<int> HeuristicMgr::getGoalHeuristic(const GraphStatePtr& state){
         values[i] = m_heuristics[i]->getGoalHeuristic(state);
     }
     
-    for (size_t i = 0; i < m_mha_heur_ids.size(); ++i)
+    DiscObjectState goal_state = m_goal.getObjectState();
+     
+    // Euclidean Heuristic : only for the MHA heuristics
+    for (int i = 0; i < m_mha_heur_ids.size(); ++i)
     {
-        if(values[m_mha_heur_ids[i]] < 200){
-            DiscObjectState goal_state = m_goal.getObjectState();
-            double current_angle = normalize_angle_positive(std::atan2(goal_state.y() - state->base_y(),
-            goal_state.x() - state->base_x()));
-            // ROS_DEBUG_NAMED(HEUR_LOG, "Goal: %d %d; Base: %d %d", goal_state.x(), goal_state.y(), state->base_x(), state->base_y());
-            ContBaseState cbase = state->robot_pose().base_state();
-            // ROS_DEBUG_NAMED(HEUR_LOG, "Within Zone: current_angle: %f ; Base_angle: %f, cost added: %d", current_angle,
-            // normalize_angle_positive(cbase.theta()), 10*std::abs(static_cast<int>(shortest_angular_distance(normalize_angle_positive(cbase.theta()), current_angle))));
-            values[m_mha_heur_ids[i]] += 10*std::abs(static_cast<int>(shortest_angular_distance(normalize_angle_positive(cbase.theta()), current_angle)));
-        }
+        int center_x = m_sampled_x[i];
+        int center_y = m_sampled_y[i];
+        double goal_angle = normalize_angle_positive(std::atan2(static_cast<double>(m_goal.getObjectState().y() -
+            center_y),static_cast<double>(m_goal.getObjectState().x()
+                    - center_x)));
+        int heur =
+            static_cast<int>(1000*std::fabs(shortest_angular_distance(state->robot_pose().getContBaseState().theta(),
+            goal_angle)));
+        values[m_mha_heur_ids[i]] += heur;
+        // ROS_DEBUG_NAMED(HEUR_LOG, "Heur idd : %d Goal point : %d %d", m_mha_heur_ids[i], m_sampled_x[i],
+        //     m_sampled_y[i]);
     }
+
     return values;
 }
 
@@ -215,13 +224,8 @@ void HeuristicMgr::initializeMHAHeuristics(const int
     ROS_DEBUG_NAMED(HEUR_LOG, "[MHAHeur] Circle points cropped %d",static_cast<int>(circle_x.size()));
     // We have a list of points in circle_x and circle_y that are not on
     // obstacles. Let's sample uniformly.
-
-    // Pick symmetrically
-
-    // Get the angles that the free points describe
     int center_x = state.x();
     int center_y = state.y();
-
     pair <Point, Point> selected_points = sample_points(discrete_radius,
         center_x, center_y, circle_x, circle_y);
 
@@ -230,129 +234,65 @@ void HeuristicMgr::initializeMHAHeuristics(const int
     state.y(selected_points.first.second);
     ROS_DEBUG_NAMED(HEUR_LOG, "[MHAHeur] Selected point: %d %d",
     selected_points.first.first, selected_points.first.second);
-    GoalState new_goal_state(m_goal);
-    new_goal_state.setGoal(state);
-    int heur_num = add2DHeur(cost_multiplier, 0);
-    m_heuristics[heur_num]->update2DHeuristicMap(m_grid_data);
-    m_heuristics[heur_num]->setGoal(new_goal_state);
-    m_mha_heur_ids.push_back(heur_num);
+    {
+        GoalState new_goal_state(m_goal);
+        new_goal_state.setGoal(state);
+        int heur_num = add2DHeur(cost_multiplier, 0);
+        m_heuristics[heur_num]->update2DHeuristicMap(m_grid_data);
+        m_heuristics[heur_num]->setGoal(new_goal_state);
+        m_mha_heur_ids.push_back(heur_num);
+        m_sampled_x.push_back(selected_points.first.first);
+        m_sampled_y.push_back(selected_points.first.second);
+    }
     // Add the second one
     state.x(selected_points.second.first);
     state.y(selected_points.second.second);
     ROS_DEBUG_NAMED(HEUR_LOG, "[MHAHeur] Selected point: %d %d",
     selected_points.second.first, selected_points.second.second);
-    GoalState another_goal_state(m_goal);
-    another_goal_state.setGoal(state);
-    heur_num = add2DHeur(cost_multiplier, 0);
-    m_heuristics[heur_num]->update2DHeuristicMap(m_grid_data);
-    m_heuristics[heur_num]->setGoal(another_goal_state);
-    m_mha_heur_ids.push_back(heur_num);
-    
-    // state.x(308);
-    // state.y(128);
-    // ROS_DEBUG_NAMED(HEUR_LOG, "[MHAHeur] Selected point: %d %d",
-    // selected_points.second.first, selected_points.second.second);
-    // GoalState another_goal_state(m_goal);
-    // another_goal_state.setGoal(state);
-    // int heur_num = add2DHeur(cost_multiplier, 0);
-    // m_heuristics[heur_num]->update2DHeuristicMap(m_grid_data);
-    // m_heuristics[heur_num]->setGoal(another_goal_state);
-    // m_mha_heur_ids.push_back(heur_num);
-
-
-    // -----------------Uniform picking----------------
-    // std::vector<double> angles_with_center(circle_x.size(), 0);
-    // for (size_t i = 0; i < angles_with_center.size(); ++i)
-    // {
-    //     // angles_with_center[i] = (circle_x[i] == center_x)?((circle_y[i] < center_y)?normalize_angle_positive(-M_PI/2):normalize_angle_positive(M_PI/2)):normalize_angle_positive(static_cast<double>(circle_y[i] -
-    //     //     center_y)/(circle_x[i] - center_x));
-    //     angles_with_center[i] = normalize_angle(std::atan2(static_cast<double>(circle_y[i] -
-    //         center_y),static_cast<double>(circle_x[i]
-    //                 - center_x)));
-    //     ROS_DEBUG_NAMED(HEUR_LOG, "Angle with center %d:: %d %d : %f",
-    //         static_cast<int>(i), circle_x[i], circle_y[i],
-    //         angles_with_center[i]);
-    // }
-    // double max_angle = *std::max_element(angles_with_center.begin(),
-    //     angles_with_center.end());
-    // double min_angle = *std::min_element(angles_with_center.begin(),
-    //     angles_with_center.end());
-    // double increment = (max_angle - min_angle)/(m_num_mha_heuristics+1);
-    // ROS_DEBUG_NAMED(HEUR_LOG,"Min angle: %f, Max angle: %f, increment : %f",
-    //     min_angle, max_angle, increment);
-    // double current_angle = min_angle;
+    {
+        GoalState new_goal_state(m_goal);
+        new_goal_state.setGoal(state);
+        int heur_num = add2DHeur(cost_multiplier, 0);
+        m_heuristics[heur_num]->update2DHeuristicMap(m_grid_data);
+        m_heuristics[heur_num]->setGoal(new_goal_state);
+        m_mha_heur_ids.push_back(heur_num);
+        m_sampled_x.push_back(selected_points.second.first);
+        m_sampled_y.push_back(selected_points.second.second);
+    }
+    // Random selection
+    // int number_of_points = circle_x.size();
     // int num_selected = 0;
-    // int direction = 1;
     // while(num_selected < m_num_mha_heuristics) {
-    //     current_angle += direction*increment;
-    //     ROS_DEBUG_NAMED(HEUR_LOG, "current_angle : %f", current_angle);
-    //     int idx = 0;
-    //     double min_difference = std::fabs(min_angle - max_angle);
-    //     for (size_t i = 0; i < circle_x.size(); ++i)
-    //     {
-    //         if(std::fabs(current_angle - angles_with_center[i]) <= min_difference){
-    //             min_difference = std::fabs(current_angle - angles_with_center[i]);
-    //             idx = i;
-    //         }
-    //     }
-    //     if(idx == 0 || idx == circle_x.size() -1){
-    //         // Go the other way
-    //         direction = -1;
-    //         current_angle += direction*increment;
-    //         continue;
-    //     }
-
-    //     ROS_DEBUG_NAMED(HEUR_LOG,"Selected point: %d :: %d %d",
-    //         static_cast<int>(idx),
-    //         circle_x[idx], circle_y[idx]);
-    //     state.x(circle_x[idx]);
-    //     state.y(circle_y[idx]);
+    //     int p = rand()%number_of_points;
+    //     ++num_selected;
+    //     state.x(circle_x[p]);
+    //     state.y(circle_y[p]);
+    //     m_sampled_x.push_back(circle_x[p]);
+    //     m_sampled_y.push_back(circle_y[p]);
     //     ROS_DEBUG_NAMED(HEUR_LOG, "[MHAHeur] Selected point: %d %d",
-    //     circle_x[idx], circle_y[idx]);
+    //         circle_x[p], circle_y[p]);
     //     GoalState new_goal_state(m_goal);
     //     new_goal_state.setGoal(state);
     //     int heur_num = add2DHeur(cost_multiplier, 0);
     //     m_heuristics[heur_num]->update2DHeuristicMap(m_grid_data);
     //     m_heuristics[heur_num]->setGoal(new_goal_state);
-    //     num_selected++;
-    // }
-    
-    // Random selection
-    // int num_selected = 0;
-    // while(num_selected < m_num_mha_heuristics) {
-    //     int p = rand()%number_of_points;
-    //     if(selected[p])
-    //         continue;
-    //     else{
-    //         selected[p] = 1;
-    //         ++num_selected;
-    //         state.x(circle_x[p]);
-    //         state.y(circle_y[p]);
-    //         ROS_DEBUG_NAMED(HEUR_LOG, "[MHAHeur] Selected point: %d %d",
-    //             circle_x[p], circle_y[p]);
-    //         GoalState new_goal_state(m_goal);
-    //         new_goal_state.setGoal(state);
-    //         int heur_num = add2DHeur(cost_multiplier, 0);
-    //         m_heuristics[heur_num]->update2DHeuristicMap(m_grid_data);
-    //         m_heuristics[heur_num]->setGoal(new_goal_state);
+    //     m_mha_heur_ids.push_back(heur_num);
 
-    //         // Temporary, to make sure points are selected on opposing sides.
-    //         // int side = (circle_x[p] - m_goal.getObjectState().x() < 0)?-1:1;
-    //         // for (size_t i = 0; i < circle_x.size();)
-    //         // {
-    //         //     if((circle_x[i] - m_goal.getObjectState().x())*side > 0){
-    //         //         // erase
-    //         //         ROS_DEBUG_NAMED(HEUR_LOG, "Removing %d %d", circle_x[i],
-    //         //             circle_y[i]);
-    //         //         circle_x.erase(circle_x.begin() + i);
-    //         //         circle_y.erase(circle_y.begin() + i);
-    //         //         selected.erase(selected.begin() + i);
-    //         //     }
-    //         //     else
-    //         //         ++i;
-    //         // }
-    //         // number_of_points = circle_x.size();
+    //     // Temporary, to make sure points are selected on opposing sides.
+    //     int side = (circle_x[p] - m_goal.getObjectState().x() < 0)?-1:1;
+    //     for (size_t i = 0; i < circle_x.size();)
+    //     {
+    //         if((circle_x[i] - m_goal.getObjectState().x())*side > 0){
+    //             // erase
+    //             ROS_DEBUG_NAMED(HEUR_LOG, "Removing %d %d", circle_x[i],
+    //                 circle_y[i]);
+    //             circle_x.erase(circle_x.begin() + i);
+    //             circle_y.erase(circle_y.begin() + i);
+    //         }
+    //         else
+    //             ++i;
     //     }
+    //     number_of_points = circle_x.size();
     // }
     // GoalState new_goal_state = boost::make_shared<GoalState>(goal_state);
 }

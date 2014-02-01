@@ -26,6 +26,7 @@ typedef monolithic_pr2_planner_node::GetMobileArmPlan::Request NodeRequest;
 #define RRT 1
 #define PRM_P 2
 #define RRTSTAR 3
+#define RRTSTARFIRSTSOL 4
 class OMPLPR2Planner{
     public:
         OMPLPR2Planner(const monolithic_pr2_planner::CSpaceMgrPtr& cspace, int planner_id);

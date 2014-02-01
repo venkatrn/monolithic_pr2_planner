@@ -69,11 +69,11 @@ for idx=range
     %    other(i).time.ratio_mean = 0;
     %end
 
-    %if ~isfield(success_rate, planner_name)
-    %    success_rate.(planner_name) = sum(smha_stats.base>0);
-    %else
-    %    success_rate.(planner_name) = success_rate.(planner_name) + sum(smha_stats.base>0);
-    %end
+    if ~isfield(success_rate, planner_name)
+        success_rate.(planner_name) = sum(smha_stats.base>0);
+    else
+        success_rate.(planner_name) = success_rate.(planner_name) + sum(smha_stats.base>0);
+    end
 
     other = smha_comparison.other;
     for i=1:length(other_methods)

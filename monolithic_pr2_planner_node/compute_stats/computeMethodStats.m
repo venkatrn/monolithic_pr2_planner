@@ -24,7 +24,6 @@ function stats = computeMethodStats(folder_name,num,sbpl)
     arm_path = raw_path(:,5:11);
     obj_path = raw_path(:,12:15);
     %figure;plot(base_path(:,1), base_path(:,2))
-    keyboard
 
     base(i) = sum(sqrt(sum(diff(base_path(:,1:2)).^2,2)));
     spine(i) = sum(sqrt(sum(diff(spine_path).^2,2)));

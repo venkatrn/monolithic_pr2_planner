@@ -224,6 +224,119 @@ void HeuristicMgr::initializeMHAHeuristics(const int
     ROS_DEBUG_NAMED(HEUR_LOG, "[MHAHeur] Circle points cropped %d",static_cast<int>(circle_x.size()));
     // We have a list of points in circle_x and circle_y that are not on
     // obstacles. Let's sample uniformly.
+
+    // Pick symmetrically
+
+    // Get the angles that the free points describe
+    // std::vector<double> angles_with_center(circle_x.size(),0);
+
+    // for (size_t i = 0; i < angles_with_center.size(); ++i)
+    // {
+    //     angles_with_center[i] = normalize_angle_positive(std::atan2(static_cast<double>(circle_y[i] -
+    //         center_y),static_cast<double>(circle_x[i]
+    //                 - center_x)) - M_PI);
+    //     RobotState seed_robot_pose;
+    //     int theta = DiscBaseState::convertContTheta(angles_with_center[i]);
+    //     DiscBaseState seed_base_state(circle_x[i],circle_y[i],0.1,
+    //         theta);
+    //     seed_robot_pose.base_state(seed_base_state);
+    //     ROS_DEBUG_NAMED(HEUR_LOG, "Visualizing the robot for IK: Theta %d",
+    //         theta);
+    //     RobotPosePtr final_pose;
+        
+    //     KDL::Vector v;
+    //     ContBaseState seed_base_c(seed_base_state);
+    //     v.x(seed_base_c.x() - 0.05);
+    //     v.y(seed_base_c.y());
+    //     v.z(0.739675 + 0.051 + 0.3);
+    //     KDL::Rotation rot = KDL::Rotation::RPY(0,0,angles_with_center[i]);
+    //     KDL::Frame robot_tf(rot, v);
+    //     KDL::Vector v_g;
+    //     ContObjectState goal_c = m_goal.getObjectState();
+    //     v_g.x(goal_c.x());
+    //     v_g.y(goal_c.y());
+    //     v_g.z(goal_c.z());
+    //     KDL::Rotation rot_g = KDL::Rotation::RPY(goal_c.roll(),goal_c.pitch(),
+    //         goal_c.yaw());
+    //     double qx,qy,qz,qw;
+    //     rot_g.GetQuaternion(qx,qy,qz,qw);
+    //     KDL::Frame goal_frame(rot_g, v_g);
+
+    //     KDL::Frame displacement = robot_tf.Inverse()*goal_frame;
+    //     double r,p,y;
+    //     displacement.M.GetRPY(r,p,y);
+
+    //     seed_base_c.printToDebug(HEUR_LOG);
+    //     ContObjectState goal_base_frame(displacement.p.x(),
+    //                                     displacement.p.y(),
+    //                                     displacement.p.z(),
+    //                                     r,p,y);
+    //     ROS_INFO("displacement Z: %f", displacement.p.z());
+    //     ROS_INFO("goal base");
+    //     goal_base_frame.printToDebug(HEUR_LOG);
+    //     DiscObjectState d_goal_base(goal_base_frame);
+    //     ROS_INFO("seed robot pose");
+    //     std::vector<double> right_arm_start(7,0);
+    //     right_arm_start[0] = -0.034127;
+    //     right_arm_start[1] = 0.309261;
+    //     right_arm_start[2] = 0.000000;
+    //     right_arm_start[3] = -1.614009;
+    //     right_arm_start[4] = 2.987015;
+    //     right_arm_start[5] = -1.413143;
+    //     right_arm_start[6] = 2.889659;
+    //     RightContArmState r_arm_seed(right_arm_start);
+
+    //     LeftContArmState l_arm;
+    //     l_arm.setShoulderPan(0.038946287971107774);
+    //     l_arm.setShoulderLift(1.2146697069025374);
+    //     l_arm.setUpperArmRoll(1.3963556492780154);
+    //     l_arm.setElbowFlex(-1.1972269899800325);
+    //     l_arm.setForearmRoll(-4.616317135720829);
+    //     l_arm.setWristFlex(-0.9887266887318599);
+    //     l_arm.setWristRoll(1.1755681069775656);
+    //     r_arm_seed.setUpperArmRoll(randomDouble(-3.75, .65));
+    //     seed_robot_pose.right_arm(r_arm_seed);
+    //     seed_robot_pose.left_arm(l_arm);
+    //     seed_robot_pose.printToInfo(HEUR_LOG);
+    //     seed_robot_pose.visualize();
+    //     std::vector<double> obj_new_ik(7,0);
+    //     obj_new_ik[0] = (displacement.p.x());
+    //     obj_new_ik[1] = (displacement.p.y());
+    //     obj_new_ik[2] = (displacement.p.z());
+    //     obj_new_ik[3] = qx;
+    //     obj_new_ik[4] = qy;
+    //     obj_new_ik[5] = qz;
+    //     obj_new_ik[6] = qz;
+
+    //     std::vector<double> seed_new_ik(7,0);
+    //     std::vector<double> joint_angles_new_ik(7,0);
+    //     bool ik_success = getRightIK(obj_new_ik, seed_new_ik, joint_angles_new_ik);
+    //     // bool ik_success = RobotState::computeRobotPose(d_goal_base, seed_robot_pose,
+    //         // final_pose);
+    //     ROS_INFO("ik success is %d", ik_success);
+    //     if(ik_success){
+    //         state.x(circle_x[i]);
+    //         state.y(circle_y[i]);
+    //         ROS_DEBUG_NAMED(HEUR_LOG, "[MHAHeur] Selected point: %d %d",
+    //         circle_x[i], circle_y[i]);
+    //         GoalState another_goal_state(m_goal);
+    //         another_goal_state.setGoal(state);
+    //         int heur_num = add2DHeur(cost_multiplier, 0);
+    //         m_heuristics[heur_num]->update2DHeuristicMap(m_grid_data);
+    //         m_heuristics[heur_num]->setGoal(another_goal_state);
+    //         m_mha_heur_ids.push_back(heur_num);
+    //         break;
+    //     }
+    //     ROS_ERROR("at cin");
+    //     std::cin.get();
+
+    // }
+
+    // RobotState computeRobotPose(const DiscObjectState& disc_obj_state,
+    //                              const RobotState& seed_robot_pose,
+    //                              RobotPosePtr& new_robot_pose,
+    //                              bool free_angle_search){
+
     int center_x = state.x();
     int center_y = state.y();
     pair <Point, Point> selected_points = sample_points(discrete_radius,
@@ -259,6 +372,7 @@ void HeuristicMgr::initializeMHAHeuristics(const int
         m_sampled_x.push_back(selected_points.second.first);
         m_sampled_y.push_back(selected_points.second.second);
     }
+    
     // Random selection
     // int number_of_points = circle_x.size();
     // int num_selected = 0;

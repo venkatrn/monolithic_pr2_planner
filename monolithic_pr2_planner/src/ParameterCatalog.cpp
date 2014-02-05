@@ -23,6 +23,7 @@ void ParameterCatalog::fetch(ros::NodeHandle nh){
     setOccupancyGridParams(m_occupancy_grid_params);
     setLeftArmParams(m_left_arm_params);
     setRightArmParams(m_right_arm_params);
+    setVisualizationParams(m_visualization_params);
     
 }
 
@@ -91,6 +92,17 @@ void ParameterCatalog::setOccupancyGridParams(OccupancyGridParams& params){
                           params.origin.z);
     ROS_DEBUG_NAMED(CONFIG_LOG, "\treference frame: %s", 
                     params.reference_frame.c_str());
+}
+
+void ParameterCatalog::setVisualizationParams(VisualizationParams& params){
+    m_nodehandle.param("visualizations/expansions", params.expansions, false);
+    m_nodehandle.param("visualizations/final_path", params.final_path, false);
+    
+    ROS_DEBUG_NAMED(CONFIG_LOG, "Setting VisualizationParams");
+    ROS_DEBUG_NAMED(CONFIG_LOG, "\texpansions: %d", 
+                    params.expansions);
+    ROS_DEBUG_NAMED(CONFIG_LOG, "\tfinal_path: %d", 
+                    params.final_path);
 }
 
 // currently just hard code these...maybe someone will want to retrieve them

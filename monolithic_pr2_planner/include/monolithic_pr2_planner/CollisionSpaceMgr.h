@@ -29,6 +29,8 @@ namespace monolithic_pr2_planner {
             bool isValidSuccessor(const GraphState& successor,
                                   const TransitionData& t_data);
             bool isValidTransitionStates(const TransitionData& t_data);
+            bool isValidContState(std::vector<double>& l_arm,std::vector<double>&
+                r_arm, const std::vector<double> body);
 
             void updateMap(const arm_navigation_msgs::CollisionMap& map);
             bool loadMap(const std::vector<Eigen::Vector3d>& points);

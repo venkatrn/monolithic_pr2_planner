@@ -192,7 +192,7 @@ bool RobotState::computeRobotPose(const ContObjectState& obj_state,
 
 
 // this is a bit weird at the moment, but we use the arm angles as seed angles
-// disc_obj_state is in body frame
+// disc_obj_state is in body frame : Torso_lift_link?
 bool RobotState::computeRobotPose(const DiscObjectState& disc_obj_state,
                                  const RobotState& seed_robot_pose,
                                  RobotPosePtr& new_robot_pose,
@@ -274,6 +274,68 @@ bool RobotState::computeRobotPose(const DiscObjectState& disc_obj_state,
                                             LeftContArmState(l_angles));
 
     return true;
+}
+
+/*! \brief Gets the pose of the object in map frame.
+ */
+ContObjectState RobotState::getObjectStateRelMap() const {
+    std::vector<double> angles;
+    SBPLArmModelPtr arm_model;
+    KDL::Frame offset;
+    bool left_arm_dominant = (m_planning_mode == PlanningModes::LEFT_ARM ||
+                              m_planning_mode == PlanningModes::LEFT_ARM_MOBILE);
+    if (left_arm_dominant){
+        m_left_arm.getAngles(&angles);
+        arm_model = m_left_arm.getArmModel();
+        offset = m_left_arm.getObjectOffset().Inverse();
+    } else {
+        m_right_arm.getAngles(&angles);
+        arm_model = m_right_arm.getArmModel();
+        offset = m_right_arm.getObjectOffset().Inverse();
+    }
+
+    // 10 is the link number for the wrist
+    KDL::Frame to_wrist;
+    arm_model->computeFK(angles, m_base_state.getBodyPose(), 10, &to_wrist);
+    KDL::Frame f = to_wrist * offset;
+
+    double wr,wp,wy;
+    f.M.GetRPY(wr,wp,wy);
+
+    return ContObjectState(f.p.x(), f.p.y(), f.p.z(), wr, wp, wy);
+}
+
+ContObjectState RobotState::getObjectStateRelMap(ContBaseState base) const {
+    std::vector<double> angles;
+    SBPLArmModelPtr arm_model;
+    KDL::Frame offset;
+    bool left_arm_dominant = (m_planning_mode == PlanningModes::LEFT_ARM ||
+                              m_planning_mode == PlanningModes::LEFT_ARM_MOBILE);
+    if (left_arm_dominant){
+        m_left_arm.getAngles(&angles);
+        arm_model = m_left_arm.getArmModel();
+        offset = m_left_arm.getObjectOffset().Inverse();
+    } else {
+        m_right_arm.getAngles(&angles);
+        arm_model = m_right_arm.getArmModel();
+        offset = m_right_arm.getObjectOffset().Inverse();
+    }
+
+    // 10 is the link number for the wrist
+    KDL::Frame to_wrist;
+    arm_model->computeFK(angles, base.body_pose(), 10, &to_wrist);
+    KDL::Frame f = to_wrist * offset;
+
+    double wr,wp,wy;
+    f.M.GetRPY(wr,wp,wy);
+
+    return ContObjectState(f.p.x(), f.p.y(), f.p.z(), wr, wp, wy);
+}
+
+/*! \brief Gets the pose of the object in base link frame.
+ */
+DiscObjectState RobotState::getObjectStateRelBody() const {
+    return m_obj_state;
 }
 
 /*! \brief Given two robot states, determine how many interpolation steps there
@@ -362,66 +424,3 @@ bool RobotState::workspaceInterpolate(const RobotState& start, const RobotState&
 
     return true;
 }
-
-/*! \brief Gets the pose of the object in map frame.
- */
-ContObjectState RobotState::getObjectStateRelMap() const {
-    std::vector<double> angles;
-    SBPLArmModelPtr arm_model;
-    KDL::Frame offset;
-    bool left_arm_dominant = (m_planning_mode == PlanningModes::LEFT_ARM ||
-                              m_planning_mode == PlanningModes::LEFT_ARM_MOBILE);
-    if (left_arm_dominant){
-        m_left_arm.getAngles(&angles);
-        arm_model = m_left_arm.getArmModel();
-        offset = m_left_arm.getObjectOffset().Inverse();
-    } else {
-        m_right_arm.getAngles(&angles);
-        arm_model = m_right_arm.getArmModel();
-        offset = m_right_arm.getObjectOffset().Inverse();
-    }
-
-    // 10 is the link number for the wrist
-    KDL::Frame to_wrist;
-    arm_model->computeFK(angles, m_base_state.getBodyPose(), 10, &to_wrist);
-    KDL::Frame f = to_wrist * offset;
-
-    double wr,wp,wy;
-    f.M.GetRPY(wr,wp,wy);
-
-    return ContObjectState(f.p.x(), f.p.y(), f.p.z(), wr, wp, wy);
-}
-
-ContObjectState RobotState::getObjectStateRelMap(ContBaseState base) const {
-    std::vector<double> angles;
-    SBPLArmModelPtr arm_model;
-    KDL::Frame offset;
-    bool left_arm_dominant = (m_planning_mode == PlanningModes::LEFT_ARM ||
-                              m_planning_mode == PlanningModes::LEFT_ARM_MOBILE);
-    if (left_arm_dominant){
-        m_left_arm.getAngles(&angles);
-        arm_model = m_left_arm.getArmModel();
-        offset = m_left_arm.getObjectOffset().Inverse();
-    } else {
-        m_right_arm.getAngles(&angles);
-        arm_model = m_right_arm.getArmModel();
-        offset = m_right_arm.getObjectOffset().Inverse();
-    }
-
-    // 10 is the link number for the wrist
-    KDL::Frame to_wrist;
-    arm_model->computeFK(angles, base.body_pose(), 10, &to_wrist);
-    KDL::Frame f = to_wrist * offset;
-
-    double wr,wp,wy;
-    f.M.GetRPY(wr,wp,wy);
-
-    return ContObjectState(f.p.x(), f.p.y(), f.p.z(), wr, wp, wy);
-}
-
-/*! \brief Gets the pose of the object in base link frame.
- */
-DiscObjectState RobotState::getObjectStateRelBody() const {
-    return m_obj_state;
-}
-

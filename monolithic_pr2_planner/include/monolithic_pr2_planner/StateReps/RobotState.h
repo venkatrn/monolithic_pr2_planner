@@ -53,8 +53,8 @@ namespace monolithic_pr2_planner {
                                          bool free_angle_search=false);
             static bool workspaceInterpolate(const RobotState& start, const RobotState& end,
                                              std::vector<RobotState>* interp_steps);
-        private:
             static int numInterpSteps(const RobotState& start, const RobotState& end);
+        private:
             static IKFastPR2 m_ikfast_solver;
             static int ik_calls;
             static int ik_time;

@@ -7,6 +7,9 @@
 #include <memory>
 #include <vector>
 #include <boost/shared_ptr.hpp>
+#include <monolithic_pr2_planner/Visualizer.h>
+#include <monolithic_pr2_planner/CollisionSpaceMgr.h>
+
 
 namespace monolithic_pr2_planner {
     /*! \brief The manager class that handles all the heuristics.
@@ -14,6 +17,7 @@ namespace monolithic_pr2_planner {
     class HeuristicMgr : public OccupancyGridUser{
         public:
             HeuristicMgr();
+            HeuristicMgr(CSpaceMgrPtr cspace_mgr);
 
             // Add methods for all possible kinds of heuristics. Whenever a new
             // heuristic type is added, a corresponding add<type>Heur() method
@@ -47,7 +51,13 @@ namespace monolithic_pr2_planner {
                 = num_mha_heuristics;};
 
             int numberOfMHAHeuristics(){ return m_num_mha_heuristics;};
+	    inline void setCollisionSpaceMgr(CSpaceMgrPtr cspace_mgr){ m_cspace_mgr = cspace_mgr;};
+ 
         private:
+            bool isValidIKForGoalState(int g_x, int g_y);
+            void initNewMHAHeur(int g_x, int g_y, const int
+                cost_multiplier);
+
             GoalState m_goal;
             std::vector<AbstractHeuristicPtr> m_heuristics;
 
@@ -64,6 +74,8 @@ namespace monolithic_pr2_planner {
             // Saving the goal and the grid for MHA heuristics
             unsigned char** m_grid;
             std::vector<signed char> m_grid_data;
+
+            CSpaceMgrPtr m_cspace_mgr;
     };
     typedef boost::shared_ptr<HeuristicMgr> HeuristicMgrPtr;
 }

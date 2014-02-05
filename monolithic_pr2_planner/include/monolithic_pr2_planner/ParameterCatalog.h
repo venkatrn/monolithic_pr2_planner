@@ -60,6 +60,11 @@ namespace monolithic_pr2_planner {
         int num_base_prims;
     } RobotResolutionParams;
 
+    typedef struct {
+        bool expansions;
+        bool final_path;
+    } VisualizationParams;
+
     /*! \brief Used to grab all parameters used by the planner and organize them
      * into various structs. 
      *
@@ -84,12 +89,14 @@ namespace monolithic_pr2_planner {
                                           RobotResolutionParams& params);
             void setLeftArmParams(ArmDescriptionParams& params);
             void setRightArmParams(ArmDescriptionParams& params);
+            void setVisualizationParams(VisualizationParams& params);
 
             RobotResolutionParams m_robot_resolution_params;
             MotionPrimitiveParams m_motion_primitive_params;
             OccupancyGridParams m_occupancy_grid_params;
             ArmDescriptionParams m_left_arm_params;
             ArmDescriptionParams m_right_arm_params;
+            VisualizationParams m_visualization_params;
 
         private:
             void parseArmMPrimFileHeader(const std::string& mprim_file, 

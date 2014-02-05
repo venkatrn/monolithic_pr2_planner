@@ -55,7 +55,7 @@ int Environment::GetGoalHeuristic(int stateID, int goal_id){
             // case 1: //ARA
             //     return EPS2*std::max(values[0], values[1]);
             case 1: // arm
-                return EPS2*values[0];
+                return values[0];
             //     // return std::max(values[0], values[2]);
             default:
                 // bases
@@ -92,8 +92,10 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
     GraphStatePtr source_state = m_hash_mgr->getGraphState(sourceStateID);
     ROS_DEBUG_NAMED(SEARCH_LOG, "Source state is:");
     source_state->robot_pose().printToDebug(SEARCH_LOG);
-    // source_state->robot_pose().visualize();
-    // usleep(10000);
+    if(m_param_catalog.m_visualization_params.expansions){
+        source_state->robot_pose().visualize();
+        usleep(5000);
+    }
     for (auto mprim : m_mprims.getMotionPrims()){
         ROS_DEBUG_NAMED(SEARCH_LOG, "Applying motion:");
         // mprim->printEndCoord();
@@ -276,5 +278,8 @@ void Environment::configureQuerySpecificParams(SearchRequestPtr search_request){
  */
 vector<FullBodyState> Environment::reconstructPath(vector<int> soln_path){
     PathPostProcessor postprocessor(m_hash_mgr, m_cspace_mgr);
-    return postprocessor.reconstructPath(soln_path, *m_goal, m_mprims.getMotionPrims());
+    std::vector<FullBodyState> final_path = postprocessor.reconstructPath(soln_path, *m_goal, m_mprims.getMotionPrims());
+    if(m_param_catalog.m_visualization_params.final_path)
+        postprocessor.visualizeFinalPath(final_path);
+    return final_path;
 }

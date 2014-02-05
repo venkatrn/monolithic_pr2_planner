@@ -15,7 +15,7 @@ ompl::base::OptimizationObjectivePtr getThresholdPathLengthObj(const ompl::base:
 {
     if(planner_id == RRTSTARFIRSTSOL){
         ompl::base::OptimizationObjectivePtr obj(new ompl::base::PathLengthOptimizationObjective(si,
-        1000000.51));
+        10000000.51));
         return obj;
 
     }
@@ -118,7 +118,7 @@ OMPLPR2Planner::OMPLPR2Planner(const CSpaceMgrPtr& cspace, int planner_id):
 // conform to the ompl types
 bool OMPLPR2Planner::createStartGoal(FullState& ompl_start, FullState& ompl_goal, 
                                      SearchRequestParams& req){
-    ROS_INFO("createStartGoal received a start of ");
+    // ROS_INFO("createStartGoal received a start of ");
     LeftContArmState left_arm_start = req.left_arm_start;
     RightContArmState right_arm_start = req.right_arm_start;
     ContBaseState base_start = req.base_start;
@@ -138,9 +138,9 @@ bool OMPLPR2Planner::createStartGoal(FullState& ompl_start, FullState& ompl_goal
     // may need to normalize the theta?
     double normalized_theta = angles::normalize_angle(base_start.theta());
     ompl_start->as<SE2State>(1)->setYaw(normalized_theta);
-    ROS_INFO("obj xyz (%f %f %f) base xytheta (%f %f %f)",
-             obj_state.x(), obj_state.y(), obj_state.z(),
-             base_start.x(), base_start.y(), normalized_theta);
+    // ROS_INFO("obj xyz (%f %f %f) base xytheta (%f %f %f)",
+    //          obj_state.x(), obj_state.y(), obj_state.z(),
+    //          base_start.x(), base_start.y(), normalized_theta);
 
     ContObjectState goal_obj_state = req.right_arm_goal.getObjectStateRelBody();
     (*(ompl_goal->as<VectorState>(0)))[0] = goal_obj_state.x();
@@ -239,7 +239,7 @@ bool OMPLPR2Planner::planPathCallback(SearchRequestParams& search_request, int t
         pdef->setGoal(temp_goal2);
     //}
     double t0 = ros::Time::now().toSec();
-    if(m_planner_id == RRTSTAR)
+    if(m_planner_id == RRTSTAR || m_planner_id == RRTSTARFIRSTSOL)
         planner->solve(30.0);
     else
         planner->solve(60.0);
@@ -279,8 +279,8 @@ bool OMPLPR2Planner::planPathCallback(SearchRequestParams& search_request, int t
             robot_state.right_arm().getAngles(&r_arm);
             robot_state.left_arm().getAngles(&l_arm);
             BodyPose bp = base.body_pose();
-            // Visualizer::pviz->visualizeRobot(r_arm, l_arm, bp, 150, "robot", 0);
-            // usleep(10000);
+            Visualizer::pviz->visualizeRobot(r_arm, l_arm, bp, 150, "robot", 0);
+            usleep(5000);
         }
         data.robot_state = robot_states;
         data.base = base_states;

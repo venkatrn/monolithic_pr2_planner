@@ -47,6 +47,7 @@ void EnvInterfaces::resetEnvironment(bool is_imha){
     //     CollisionSpaceInterface(m_env->getCollisionSpace(),
     //         m_env->getHeuristicMgr()));
     m_env->setCollisionSpace(m_collision_space_interface->getCollisionSpace());
+    m_env->getHeuristicMgr()->setCollisionSpaceMgr(m_collision_space_interface->getCollisionSpace());
     m_collision_space_interface->setHeuristicMgr(m_env->getHeuristicMgr());
     m_generator.reset(new StartGoalGenerator(m_env->getCollisionSpace()));
     m_rrt.reset(new OMPLPR2Planner(m_env->getCollisionSpace(), RRT));
@@ -316,26 +317,28 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
     res.stats_field_names.resize(18);
     res.stats.resize(18);
     int start_id, goal_id;
+    resetEnvironment();
     double total_planning_time = clock();
     bool retVal = m_env->configureRequest(search_request, start_id, goal_id);
     if(!retVal){
         return false;
     }
-    bool forward_search = true;
-    m_mha_planner.reset(new MPlanner(m_env.get(), NUM_SMHA_HEUR, forward_search,
-        false));
-    m_mha_planner->set_initialsolution_eps(search_request->initial_epsilon);
-    m_mha_planner->set_initialsolution_eps1(EPS1);
-    m_mha_planner->set_initialsolution_eps2(EPS2);
+    bool forward_search = true;    
+    // m_ara_planner.reset(new MPlanner(m_env.get(), NUM_SMHA_HEUR, forward_search,
+    //     false));
+    m_ara_planner.reset(new ARAPlanner(m_env.get(), forward_search));
+    m_ara_planner->set_initialsolution_eps(search_request->initial_epsilon);
+    m_ara_planner->set_initialsolution_eps1(EPS1);
+    m_ara_planner->set_initialsolution_eps2(EPS2);
     bool return_first_soln = true;
-    m_mha_planner->set_search_mode(return_first_soln);
-    m_mha_planner->set_start(start_id);
+    m_ara_planner->set_search_mode(return_first_soln);
+    m_ara_planner->set_start(start_id);
     ROS_INFO("setting goal id to %d", goal_id);
-    m_mha_planner->set_goal(goal_id);
-    m_mha_planner->force_planning_from_scratch();
+    m_ara_planner->set_goal(goal_id);
+    m_ara_planner->force_planning_from_scratch();
     vector<int> soln;
     int soln_cost;
-    bool isPlanFound = m_mha_planner->replan(req.allocated_planning_time, 
+    bool isPlanFound = m_ara_planner->replan(req.allocated_planning_time, 
                                          &soln, &soln_cost);
 
     if (isPlanFound){

@@ -21,12 +21,14 @@ debug:
   print_out_path: true
 
 visualizations:
-  heuristic: true
-  goal: true
-  expanded_states: false
-  trajectory: false
-  collision_model_trajectory: false
-  trajectory_throttle: 1
+  # heuristic: true
+  # goal: true
+  # expanded_states: false
+  # trajectory: false
+  # collision_model_trajectory: false
+  # trajectory_throttle: 1
+  expansions: true
+  final_path: true
 
 collision_space:
   reference_frame: map  # only used in OccupancyGrid to determine frame of red visualization

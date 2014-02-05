@@ -164,3 +164,18 @@ bool CollisionSpaceMgr::isValidTransitionStates(const TransitionData& t_data){
     }
     return true;
 }
+
+bool CollisionSpaceMgr::isValidContState(std::vector<double>& l_arm, std::vector<double>&
+    r_arm, const std::vector<double> body){
+    BodyPose body_pose;
+    body_pose.x = body[BodyDOF::X];
+    body_pose.y = body[BodyDOF::Y];
+    body_pose.z = body[BodyDOF::Z];
+    body_pose.theta = body[BodyDOF::THETA];
+    bool verbose = false;
+    int debug;
+    double dist;
+    if(!m_cspace->checkBaseMotion(l_arm, r_arm, body_pose, verbose, dist, debug))
+        return false;
+    return true;
+}

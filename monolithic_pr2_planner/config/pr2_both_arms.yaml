@@ -38,14 +38,16 @@ debug:
     solution: info
 
 visualizations:
-  heuristic: false
-  heuristic_grid: false
-  goal: true
-  expanded_states: false
-  trajectory: false
-  end_effector_path: false
-  collision_model_trajectory: false
-  trajectory_throttle: 50
+  # heuristic: false
+  # heuristic_grid: false
+  # goal: true
+  # expanded_states: false
+  # trajectory: false
+  # end_effector_path: false
+  # collision_model_trajectory: false
+  # trajectory_throttle: 50
+  final_path: true
+  expansions: false
 
 collision_space:
   reference_frame: map

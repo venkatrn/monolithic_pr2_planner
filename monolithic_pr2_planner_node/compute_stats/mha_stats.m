@@ -22,6 +22,7 @@ for idx=range
     smha_stats = computeMethodStats([path '/smha_'],num,1);
     prm_stats = computeMethodStats([path '/prm_'],num,0);
     rrtstar_stats = computeMethodStats([path '/rrtstar_'],num,0);
+    rrtstarfirstsol_stats = computeMethodStats([path '/rrtstarfirstsol_'],num,0);
     ara_stats = computeMethodStats([path '/ara_'],num,1);
     imha_stats = computeMethodStats([path '/imha_'],num,1);
 
@@ -30,7 +31,7 @@ for idx=range
 
 
     %other_methods = [prm_stats rrt_stats rrtstar_stats ara_stats smha_stats];
-    other_methods = [prm_stats rrt_stats rrtstar_stats imha_stats ara_stats ];
+    other_methods = [prm_stats rrt_stats rrtstar_stats imha_stats ara_stats rrtstarfirstsol_stats];
     smha_comparison = compareMethods(smha_stats,other_methods);
 
     % for each 'other' planner

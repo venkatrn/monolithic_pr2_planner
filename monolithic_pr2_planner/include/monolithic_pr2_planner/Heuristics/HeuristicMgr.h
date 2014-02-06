@@ -11,6 +11,9 @@
 #include <monolithic_pr2_planner/CollisionSpaceMgr.h>
 
 
+#define NUM_MHA_BASE_HEUR 2
+
+
 namespace monolithic_pr2_planner {
     /*! \brief The manager class that handles all the heuristics.
      */
@@ -19,12 +22,17 @@ namespace monolithic_pr2_planner {
             HeuristicMgr();
             HeuristicMgr(CSpaceMgrPtr cspace_mgr);
 
+            // The master function that initializes all the heuristics you
+            // want.
+            void initializeHeuristics();
+
             // Add methods for all possible kinds of heuristics. Whenever a new
             // heuristic type is added, a corresponding add<type>Heur() method
             // needs to be added here. Returns the id of the heuristic in the
             // internal m_heuristics vector.
             int add3DHeur(const int cost_multiplier=1);
             int add2DHeur(const int cost_multiplier=1, const double radius_m = 0);
+            int addEndEffHeur(const int cost_multiplier=1);
 
             // Updates the collision map for the heuristics that need them.
             // Doesn't take in an argument because each 3D heuristic shares the
@@ -65,8 +73,10 @@ namespace monolithic_pr2_planner {
                 return min + (max-min) * ( double(rand()) / RAND_MAX );
             }
             
+            // MHA stuff
             int m_num_mha_heuristics;
             std::vector<int> m_mha_heur_ids;
+            int m_base_heur_id;
 
             std::vector<int> m_sampled_x;
             std::vector<int> m_sampled_y;

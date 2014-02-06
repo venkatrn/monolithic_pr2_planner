@@ -15,9 +15,6 @@ BFS2DHeuristic::BFS2DHeuristic(){
     ROS_DEBUG_NAMED(HEUR_LOG, "[BFS2D] initialized BFS2D of size %d %d", 
                               m_size_col, m_size_row);
 
-    // 0.7710 is the arm's length in meters when extended fully.
-    // Set it to something slightly smaller so that we underestimate it just a
-    // little.
     m_gridsearch.reset(new SBPL2DGridSearch(m_size_col, m_size_row,
         m_occupancy_grid->getResolution()));
     
@@ -59,9 +56,9 @@ void BFS2DHeuristic::loadMap(const std::vector<signed char>& data){
 void BFS2DHeuristic::setGoal(GoalState& goal_state){
     unsigned char threshold = 80;
     DiscObjectState state = goal_state.getObjectState(); 
-    // Set the goal state to 0,0 - just make sure it's not the start state.
     visualizeRadiusAroundGoal(state.x(), state.y());
     visualizeCenter(state.x(), state.y());
+    // Set the goal state to 0,0 - just make sure it's not the start state.
     m_gridsearch->search(m_grid, threshold, state.x(), state.y(),
         0,0, SBPL_2DGRIDSEARCH_TERM_CONDITION_ALLCELLS);
     ROS_DEBUG_NAMED(HEUR_LOG, "[BFS2D] Setting goal %d %d", state.x(), state.y());

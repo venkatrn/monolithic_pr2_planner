@@ -17,8 +17,8 @@ namespace monolithic_pr2_planner {
 
             RobotState(){};
             RobotState(ContBaseState base_state, RightContArmState r_arm, LeftContArmState l_arm);
-            DiscBaseState base_state() const { return m_base_state; };
-            ContBaseState getContBaseState();
+            DiscBaseState base_state() const;
+            ContBaseState getContBaseState() const { return m_base_state; };
             RightContArmState right_arm() const { return m_right_arm; };
             LeftContArmState left_arm() const { return m_left_arm; };
 
@@ -26,7 +26,7 @@ namespace monolithic_pr2_planner {
             unsigned int right_free_angle() const { return m_right_arm.getDiscFreeAngle(); };
             void left_free_angle(int value) { m_left_arm.setDiscFreeAngle(value); };
             void right_free_angle(int value) { m_right_arm.setDiscFreeAngle(value); };
-            void base_state(const DiscBaseState& base_state) { m_base_state = base_state; };
+            void base_state(const DiscBaseState& base_state);
             void right_arm(const RightContArmState& arm) { m_right_arm = arm; };
             void left_arm(const LeftContArmState& arm){ m_left_arm = arm; };
 
@@ -59,7 +59,7 @@ namespace monolithic_pr2_planner {
             static int ik_calls;
             static int ik_time;
             static int m_planning_mode;
-            DiscBaseState m_base_state;
+            ContBaseState m_base_state;
             RightContArmState m_right_arm;
             LeftContArmState m_left_arm;
             DiscObjectState m_obj_state; // this is in BODY frame!

@@ -11,7 +11,7 @@ namespace monolithic_pr2_planner {
      */
     class AbstractHeuristic{
         public:
-            AbstractHeuristic();
+            AbstractHeuristic() : m_cost_multiplier(1) {};
 
             // The function that has to return the heuristic value at the queried graph state
             virtual int getGoalHeuristic(GraphStatePtr state) = 0;
@@ -24,10 +24,11 @@ namespace monolithic_pr2_planner {
             virtual void update2DHeuristicMap(const std::vector<signed char>& data) {};
 
             // Set the cost_multiplier
-            void setCostMultiplier(const int cost_multiplier);
+            virtual inline void setCostMultiplier(const int cost_multiplier) { m_cost_multiplier
+                = cost_multiplier; };
 
             // Get the cost multiplier
-            int getCostMultiplier();
+            virtual inline int getCostMultiplier(){ return m_cost_multiplier; };
 
             // Add all the virtual stuff that may or may not be implemented
             // For the 2DHeuristic

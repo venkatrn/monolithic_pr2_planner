@@ -55,7 +55,7 @@ int Environment::GetGoalHeuristic(int stateID, int goal_id){
             // case 1: //ARA
             //     return EPS2*std::max(values[0], values[1]);
             case 1: // arm
-                return values[0];
+                return EPS2*values[0];
             //     // return std::max(values[0], values[2]);
             default:
                 // bases
@@ -187,9 +187,6 @@ bool Environment::setStartGoal(SearchRequestPtr search_request,
     // informs the heuristic about the goal
     m_heur_mgr->setGoal(*m_goal);
 
-    // Create additional heuristics for MHA planner
-    m_heur_mgr->initializeMHAHeuristics(m_base_heur_id, 1);
-
     return true;
 }
 
@@ -226,18 +223,8 @@ void Environment::configurePlanningDomain(){
 #endif
 
     // Initialize the heuristics. The (optional) parameter defines the cost multiplier.
-    // TODO: It's 40 for now, until the actual cost for arm costs are computed.
 
-    // 3DHeur is unit costs - multiply by whatever you want.
-    // To get them in terms of mm distance
-    m_heur_mgr->add3DHeur(20);  //0 - multiply by 20 : grid resolution in mm :
-    // underestimated
-    
-    // Already in mm.
-    m_base_heur_id = m_heur_mgr->add2DHeur(1, 0.7);//1
-    // The argument is TOTAL_HEUR_NUM - 1 (TOTAL_HEUR_NUM is what you
-    // entered in the MPlanner parameters)
-    m_heur_mgr->numberOfMHAHeuristics(NUM_MHA_BASE_HEUR);
+    m_heur_mgr->initializeHeuristics();
 
     // used for arm kinematics
     LeftContArmState::initArmModel(m_param_catalog.m_left_arm_params);

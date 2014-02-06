@@ -38,17 +38,21 @@ RobotState::RobotState(ContBaseState base_state, RightContArmState r_arm,
     }
 }
 
-ContBaseState RobotState::getContBaseState(){
-    return ContBaseState(m_base_state);    
+DiscBaseState RobotState::base_state() const{
+    return DiscBaseState(m_base_state);
 }
 
+void RobotState::base_state(const DiscBaseState& base_state) {
+    m_base_state = ContBaseState(base_state); 
+};
+
 void RobotState::printToDebug(char* log_level) const {
-    ContBaseState base_state = m_base_state.getContBaseState();
+    // ContBaseState base_state = m_base_state.getContBaseState();
     ROS_DEBUG_NAMED(log_level, "\tbase: %f %f %f %f", 
-                   base_state.x(),
-                   base_state.y(),
-                   base_state.z(),
-                   base_state.theta());
+                   m_base_state.x(),
+                   m_base_state.y(),
+                   m_base_state.z(),
+                   m_base_state.theta());
     std::vector<double> l_arm, r_arm;
     m_right_arm.getAngles(&r_arm);
     m_left_arm.getAngles(&l_arm);
@@ -71,12 +75,12 @@ void RobotState::printToDebug(char* log_level) const {
 }
 
 void RobotState::printToInfo(char* log_level) const {
-    ContBaseState base_state = m_base_state.getContBaseState();
+    // ContBaseState base_state = m_base_state.getContBaseState();
     ROS_INFO_NAMED(log_level, "\tbase: %f %f %f %f", 
-                   base_state.x(),
-                   base_state.y(),
-                   base_state.z(),
-                   base_state.theta());
+                   m_base_state.x(),
+                   m_base_state.y(),
+                   m_base_state.z(),
+                   m_base_state.theta());
     std::vector<double> l_arm, r_arm;
     m_right_arm.getAngles(&r_arm);
     m_left_arm.getAngles(&l_arm);
@@ -102,7 +106,7 @@ void RobotState::visualize(){
     std::vector<double> l_arm, r_arm;
     m_left_arm.getAngles(&l_arm);
     m_right_arm.getAngles(&r_arm);
-    BodyPose body_pose = m_base_state.getBodyPose();
+    BodyPose body_pose = m_base_state.body_pose();
     Visualizer::pviz->visualizeRobot(r_arm, l_arm, body_pose, 150, 
                                     std::string("planner"), 0);
 }
@@ -296,7 +300,7 @@ ContObjectState RobotState::getObjectStateRelMap() const {
 
     // 10 is the link number for the wrist
     KDL::Frame to_wrist;
-    arm_model->computeFK(angles, m_base_state.getBodyPose(), 10, &to_wrist);
+    arm_model->computeFK(angles, m_base_state.body_pose(), 10, &to_wrist);
     KDL::Frame f = to_wrist * offset;
 
     double wr,wp,wy;

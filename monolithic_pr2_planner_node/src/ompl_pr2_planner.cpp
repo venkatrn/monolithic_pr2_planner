@@ -279,8 +279,9 @@ bool OMPLPR2Planner::planPathCallback(SearchRequestParams& search_request, int t
             robot_state.right_arm().getAngles(&r_arm);
             robot_state.left_arm().getAngles(&l_arm);
             BodyPose bp = base.body_pose();
-            Visualizer::pviz->visualizeRobot(r_arm, l_arm, bp, 150, "robot", 0);
-            usleep(5000);
+            
+            // Visualizer::pviz->visualizeRobot(r_arm, l_arm, bp, 150, "robot", 0);
+            // usleep(5000);
         }
         data.robot_state = robot_states;
         data.base = base_states;

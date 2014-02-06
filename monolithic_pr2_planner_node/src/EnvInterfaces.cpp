@@ -94,7 +94,7 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
             // Write envt stats to file
             // m_stats_writer.writeEnvt(m_generator->getGoalRegions(), start_goal.first, start_goal.second,
             //     counter);
-            start_goal.first.visualize();
+            // start_goal.first.visualize();
             SearchRequestParamsPtr search_request = make_shared<SearchRequestParams>();
             search_request->initial_epsilon = req.initial_eps;
             search_request->final_epsilon = req.final_eps;
@@ -150,6 +150,8 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
                     ROS_WARN("bad start goal for ompl");
             } else {
                 // Here starts the actual planning requests
+
+                /****** RUN SMHA **********/
                 resetEnvironment();
                 m_mha_planner.reset(new MPlanner(m_env.get(), NUM_SMHA_HEUR, forward_search,
                     false));
@@ -185,6 +187,7 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
                         total_planning_time);
                     ROS_INFO("No plan found!");
                 }
+                /********* END SMHA ********/
 
 
                 // Run IMHA
@@ -226,6 +229,7 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
 
 
                 // ARA Planner
+                /*** BEGIN ARA PLANNER ****/
                 resetEnvironment();
                 // Not sure if actually necessary
                 m_ara_planner.reset(new ARAPlanner(m_env.get(), forward_search));
@@ -261,16 +265,21 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
                         total_planning_time);
                     ROS_INFO("No plan found!");
                 }
+                /*** END ARA PLANNER ****/
 
                 // OMPL
                 // resetEnvironment();
                 // if(!m_env->configureRequest(search_request, start_id, goal_id)){
                 //     ROS_ERROR("Unable to configure request for OMPL! Trial ID: %d", counter);
                 // }
+
+                // Run OMPL
+                /*** OMPL PLANNERS ****
                 m_rrt->planPathCallback(*search_request, counter, m_stats_writer);
                 m_prm->planPathCallback(*search_request, counter, m_stats_writer);
                 m_rrtstar->planPathCallback(*search_request, counter, m_stats_writer);
                 m_rrtstar_first_sol->planPathCallback(*search_request, counter, m_stats_writer);
+                /**** END OMPL PLANNERS ***/
                 counter++;
             }
         }

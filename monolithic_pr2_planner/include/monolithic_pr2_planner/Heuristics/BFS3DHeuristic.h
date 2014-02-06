@@ -13,7 +13,7 @@ namespace monolithic_pr2_planner {
     /*! \brief Manages heuristic computation used by the SBPL planner. Currently
      * implements a 3D breadth first search for the end effector.
      */
-    class BFS3DHeuristic : public AbstractHeuristic, public OccupancyGridUser {
+    class BFS3DHeuristic : public virtual AbstractHeuristic, public OccupancyGridUser {
         public:
             BFS3DHeuristic();
             int getGoalHeuristic(GraphStatePtr state);

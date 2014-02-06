@@ -10,7 +10,7 @@
 #include <memory>
 
 namespace monolithic_pr2_planner {
-    class BFS2DHeuristic : public AbstractHeuristic, public OccupancyGridUser{
+    class BFS2DHeuristic : public virtual AbstractHeuristic, public OccupancyGridUser{
         public:
             BFS2DHeuristic();
             // BFS2DHeuristic(boost::shared_ptr<costmap_2d::Costmap2DROS>

@@ -17,6 +17,10 @@ namespace monolithic_pr2_planner {
             ContBaseState(std::vector<double> base_pose);
             ContBaseState(const DiscBaseState& base_pose);
 
+
+            bool operator==(const ContBaseState& other) const ;
+            bool operator!=(const ContBaseState& other) const ;
+
             void getValues(std::vector<double>* values) { *values = m_pose; };
             double x() const { return m_pose[BodyDOF::X]; };
             double y() const { return m_pose[BodyDOF::Y]; };

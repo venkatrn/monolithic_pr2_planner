@@ -25,7 +25,7 @@ namespace monolithic_pr2_planner {
             std::vector<FullBodyState> getFinalPath(const vector<int>& state_ids,
                                             const vector<TransitionData>& transition_states,
                                             GoalState& goal_state);
-            std::vector<FullBodyState> shortcutPath(const vector<int>& state_ids,
+            std::vector<FullBodyState> shortcutPath(const vector<int>& state_ids, const vector<TransitionData>& transition_states,
                                             GoalState& goal_state);
             bool findBestTransition(int start_id, int end_id, TransitionData& t_data,
                                     std::vector<MotionPrimitivePtr> mprims);

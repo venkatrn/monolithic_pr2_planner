@@ -85,9 +85,9 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
     vector<pair<RobotState, RobotState> > start_goal_pairs;
     RobotState::setPlanningMode(PlanningModes::RIGHT_ARM_MOBILE);
     int counter = 0;
-    while (counter < 10){
+    while (counter < 5){
         m_generator->initializeRegions();
-        m_generator->generateUniformPairs(10, start_goal_pairs);
+        m_generator->generateUniformPairs(6, start_goal_pairs);
 
         for (auto& start_goal : start_goal_pairs){
             ROS_ERROR("running trial %d", counter);
@@ -229,7 +229,7 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
 
 
                 // ARA Planner
-                /*** BEGIN ARA PLANNER ****/
+                /*** BEGIN ARA PLANNER ****
                 resetEnvironment();
                 // Not sure if actually necessary
                 m_ara_planner.reset(new ARAPlanner(m_env.get(), forward_search));

@@ -1,6 +1,7 @@
 #pragma once
 #include <monolithic_pr2_planner/StateReps/GraphState.h>
 #include <monolithic_pr2_planner/StateReps/GoalState.h>
+#include <monolithic_pr2_planner/StateReps/ContArmState.h>
 #include <memory>
 #include <vector>
 #include <boost/shared_ptr.hpp>
@@ -34,7 +35,10 @@ namespace monolithic_pr2_planner {
             // For the 2DHeuristic
             virtual void setRadiusAroundGoal(double radius_m) {};
             virtual double getRadiusAroundGoal() {return 0;};
-
+            // For MHABaseHeur
+            virtual inline void setOriginalGoal(GoalState& original_state) {};
+            // For the ArmAnglesHeur
+            virtual void setGoalArmState(RightContArmState& soln_r_arm_state) {};
         private:
             int m_cost_multiplier;
     };

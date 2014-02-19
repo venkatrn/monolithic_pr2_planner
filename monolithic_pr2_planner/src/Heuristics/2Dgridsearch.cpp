@@ -253,6 +253,14 @@ void SBPL2DGridSearch::printvalues()
 //-----------------------------------------main functions--------------------------------------------------------------
 
 bool SBPL2DGridSearch::search(unsigned char** Grid2D, unsigned char obsthresh, int startx_c, int starty_c, int goalx_c,
+                              int goaly_c, SBPL_2DGRIDSEARCH_TERM_CONDITION termination_condition,
+                              std::vector< std::pair<int,int> > init_points){
+    init_points_ = init_points;
+    search(Grid2D, obsthresh, startx_c, starty_c, goalx_c, goaly_c,
+        termination_condition);
+}
+
+bool SBPL2DGridSearch::search(unsigned char** Grid2D, unsigned char obsthresh, int startx_c, int starty_c, int goalx_c,
                               int goaly_c, SBPL_2DGRIDSEARCH_TERM_CONDITION termination_condition)
 {
 
@@ -319,23 +327,24 @@ bool SBPL2DGridSearch::search_withheap(unsigned char** Grid2D, unsigned char obs
         //use h-values only if we are NOT computing all state values
         key = key + SBPL_2DGRIDSEARCH_HEUR2D(startX_, startY_); 
 
-    // Do not insert the center point - we will start with all the circle
-    // points
-    // OPEN2D_->insertheap(searchExpState, key);
+    // Insert the center point. If it is within an obstacle, it won't be
+    // expanded anyway.
+    OPEN2D_->insertheap(searchExpState, key);
 
     // Initialize with all the points on the circle of radius radius_
-    std::vector<int> circle_x;
-    std::vector<int> circle_y;
-    getBresenhamCirclePoints(startX_, startY_, radius, circle_x, circle_y);
-    for (size_t i = 0; i < circle_x.size(); ++i)
+    // std::vector<int> circle_x;
+    // std::vector<int> circle_y;
+    // getBresenhamCirclePoints(startX_, startY_, radius, circle_x, circle_y);
+    for (size_t i = 0; i < init_points_.size(); ++i)
     {
-        searchExpState = &searchStates2D_[circle_x[i]][circle_y[i]];
+        searchExpState =
+        &searchStates2D_[init_points_[i].first][init_points_[i].second];
         initializeSearchState2D(searchExpState);
         searchExpState->g = 0;
         key = searchExpState->g;
         if (termination_condition == SBPL_2DGRIDSEARCH_TERM_CONDITION_OPTPATHFOUND)
             //use h-values only if we are NOT computing all state values
-            key = key + SBPL_2DGRIDSEARCH_HEUR2D(circle_x[i], circle_y[i]); 
+            key = key + SBPL_2DGRIDSEARCH_HEUR2D(init_points_[i].first, init_points_[i].second); 
         OPEN2D_->insertheap(searchExpState, key);
     }
     //set the termination condition
@@ -858,40 +867,3 @@ bool SBPL2DGridSearch::search_withslidingbuckets(unsigned char** Grid2D, unsigne
 }
 
 //----------------------------------------------------------------------------------------------------------------------
-
-// ------------- Bresenham circle points -------------------//
-void getBresenhamCirclePoints(int x0, int y0, int radius, std::vector<int>&
-    ret_x,
-    std::vector<int>& ret_y){
-    int x = 0;
-    int y = radius;
-    int delta = 2 - 2 * radius;
-    int err = 0;
-    ret_x.clear();
-    ret_y.clear();
-    while(y >= 0){
-        ret_x.push_back(x0 + x);
-        ret_x.push_back(x0 - x);
-        ret_x.push_back(x0 + x);
-        ret_x.push_back(x0 - x);
-        ret_y.push_back(y0 - y);
-        ret_y.push_back(y0 - y);
-        ret_y.push_back(y0 + y);
-        ret_y.push_back(y0 + y);
-        err = 2 * (delta + y) - 1;
-        if(delta < 0 && err <= 0){
-                x = x + 1;
-                delta = delta + 2 * x + 1;
-                continue;
-        }
-        err = 2 * (delta - x) - 1;
-        if(delta > 0 && err > 0){
-                y = y - 1;
-                delta = delta + 1 - 2 * y;
-                continue;
-        }
-        x = x + 1;
-        delta = delta + 2 * (x - y);
-        y = y - 1;
-    }
-}

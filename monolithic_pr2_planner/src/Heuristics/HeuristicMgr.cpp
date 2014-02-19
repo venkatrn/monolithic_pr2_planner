@@ -5,6 +5,8 @@
 #include <monolithic_pr2_planner/Heuristics/BFS3DHeuristic.h>
 #include <monolithic_pr2_planner/Heuristics/BFS2DHeuristic.h>
 #include <monolithic_pr2_planner/Heuristics/EndEffectorHeuristic.h>
+#include <monolithic_pr2_planner/Heuristics/MHABaseHeuristic.h>
+#include <monolithic_pr2_planner/Heuristics/ArmAnglesHeuristic.h>
 #include <kdl/frames.hpp>
 #include <memory>
 #include <vector>
@@ -33,8 +35,8 @@ void deletePoint(Point end_pt, vector<int>& circle_x, vector<int>& circle_y)
     }
 }
  
-pair<Point, Point> sample_points(int radius, int center_x, int center_y,
-                  vector<int> circle_x, vector<int> circle_y)
+std::vector<Point> sample_points(int radius, int center_x, int center_y,
+                  vector<int> circle_x, vector<int> circle_y, int num_p = 2)
 {
     double itr = 0;
     vector<Point> full_circle;
@@ -82,12 +84,17 @@ pair<Point, Point> sample_points(int radius, int center_x, int center_y,
         pt = Point(circle_x[delete_id], circle_y[delete_id]);
         deletePoint(pt, circle_x, circle_y);
     }
-    int i = sorted_pts.size()/3;
-    return pair<Point, Point>(sorted_pts[i], sorted_pts[2*i]);
+    int i = sorted_pts.size()/(num_p + 1);
+    std::vector<Point> final_points;
+    for (int k = 1; final_points.size() < num_p; ++k)
+    {
+        final_points.push_back(sorted_pts[k*i]);
+    }
+    return final_points;
 }
 
-HeuristicMgr::HeuristicMgr(){
-    m_num_mha_heuristics = 0;
+HeuristicMgr::HeuristicMgr() : 
+    m_num_mha_heuristics(NUM_MHA_BASE_HEUR) {
 }
 
 HeuristicMgr::HeuristicMgr(CSpaceMgrPtr cspace_mgr){
@@ -99,6 +106,8 @@ void HeuristicMgr::initializeHeuristics(){
     // TODO: It's 40 for now, until the actual cost for arm costs are computed.
     // 3DHeur is unit costs - multiply by whatever you want.
     // To get them in terms of mm distance
+    // add3DHeur(20);  //0 - multiply by 20 : grid resolution in mm :
+    // underestimated
     add3DHeur(20);  //0 - multiply by 20 : grid resolution in mm :
     // underestimated
     
@@ -106,7 +115,8 @@ void HeuristicMgr::initializeHeuristics(){
     m_base_heur_id = add2DHeur(1, 0.7);//1
     // The argument is TOTAL_HEUR_NUM - 1 (TOTAL_HEUR_NUM is what you
     // entered in the MPlanner parameters)
-    numberOfMHAHeuristics(NUM_MHA_BASE_HEUR);
+
+    // m_arm_angles_heur_id = addArmAnglesHeur(1);
 }
 
 int HeuristicMgr::add3DHeur(const int cost_multiplier){
@@ -142,6 +152,27 @@ int HeuristicMgr::add2DHeur(const int cost_multiplier, const double radius_m){
     return m_heuristics.size() - 1;
 }
 
+int HeuristicMgr::addMHABaseHeur(const int cost_multiplier){
+    // Initialize the new heuristic
+    AbstractHeuristicPtr new_mha_base_heur = make_shared<MHABaseHeuristic>();
+    // Set cost multiplier here.
+    new_mha_base_heur->setCostMultiplier(cost_multiplier);
+    // Add to the list of heuristics
+    m_heuristics.push_back(new_mha_base_heur);
+    return m_heuristics.size() - 1;
+}
+
+int HeuristicMgr::addArmAnglesHeur(const int cost_multiplier){
+    // Initialize the new heuristic
+    AbstractHeuristicPtr new_arm_angles_heur =
+    make_shared<ArmAnglesHeuristic>(m_cspace_mgr);
+    // Set cost multiplier here.
+    new_arm_angles_heur->setCostMultiplier(cost_multiplier);
+    // Add to the list of heuristics
+    m_heuristics.push_back(new_arm_angles_heur);
+    return m_heuristics.size() - 1;
+}
+
 // most heuristics won't need both 2d and 3d maps. however, the abstract
 // heuristic type has function stubs for both of them so we don't need to pick
 // and choose who to update. it is up to the implementor to implement a derived
@@ -162,6 +193,7 @@ void HeuristicMgr::update2DHeuristicMaps(const std::vector<signed char>& data){
     for (size_t i = 0; i < m_heuristics.size(); ++i){
         m_heuristics[i]->update2DHeuristicMap(data);
     }
+    ROS_DEBUG_NAMED(HEUR_LOG, "Size of m_heuristics: %d", m_heuristics.size());
 }
 
 void HeuristicMgr::update3DHeuristicMaps(){
@@ -194,42 +226,11 @@ std::vector<int> HeuristicMgr::getGoalHeuristic(const GraphStatePtr& state)
     for (size_t i = 0; i < m_heuristics.size(); ++i){
         values[i] = m_heuristics[i]->getGoalHeuristic(state);
     }
-    
-    DiscObjectState goal_state = m_goal.getObjectState();
-     
-    // Euclidean Heuristic : only for the MHA heuristics
-    for (size_t i = 0; i < m_mha_heur_ids.size(); ++i)
-    {
-        int center_x = m_sampled_x[i];
-        int center_y = m_sampled_y[i];
-        double goal_angle = normalize_angle_positive(std::atan2(static_cast<double>(m_goal.getObjectState().y() -
-            center_y),static_cast<double>(m_goal.getObjectState().x()
-                    - center_x)));
-        int heur =
-            static_cast<int>(1000*std::fabs(shortest_angular_distance(state->robot_pose().getContBaseState().theta(),
-            goal_angle)));
-        values[m_mha_heur_ids[i]] += heur;
-
-        // int current_x = state->base_x();
-        // int current_y = state->base_y();
-        // if(std::abs(current_x - center_x) < 2 && std::abs(current_y - center_y)
-        //     < 2){
-        //     // ROS_DEBUG_NAMED(HEUR_LOG, "Current : %d %d ; Sampled: %d %d; Heur:%d",
-        //     //     current_x, current_y, center_x, center_y, values[0]);
-        //     // Add the arm heuristic if it is within one cell of the sampled
-        //     // goal base state
-        //     // ROS_DEBUG_NAMED(HEUR_LOG, "Setting to arm heuristic: %d, %d", m_mha_heur_ids[i], values[0]);
-        //     values[m_mha_heur_ids[i]] += values[0];
-        //     // ROS_DEBUG_NAMED(HEUR_LOG, "Heur:%d: %d",m_mha_heur_ids[i], values[m_mha_heur_ids[i]]);
-        // }
-        // ROS_DEBUG_NAMED(HEUR_LOG, "Heur idd : %d Goal point : %d %d", m_mha_heur_ids[i], m_sampled_x[i],
-        //     m_sampled_y[i]);
-    }
 
     return values;
 }
 
-bool HeuristicMgr::isValidIKForGoalState(int g_x, int g_y){
+bool HeuristicMgr::checkIKAtPose(int g_x, int g_y, RobotPosePtr& final_pose){
     DiscObjectState state = m_goal.getObjectState(); 
     int center_x = state.x();
     int center_y = state.y();
@@ -265,7 +266,6 @@ bool HeuristicMgr::isValidIKForGoalState(int g_x, int g_y){
 
         ContBaseState cont_seed_base_state = seed_base_state.getContBaseState();
         
-        RobotPosePtr final_pose;
         KDL::Frame to_robot_frame;
         Visualizer::pviz->getMaptoRobotTransform(cont_seed_base_state.x(),
             cont_seed_base_state.y(), cont_seed_base_state.theta(), to_robot_frame);
@@ -292,26 +292,54 @@ bool HeuristicMgr::isValidIKForGoalState(int g_x, int g_y){
         DiscObjectState d_goal_torso_frame(goal_torso_frame);
         bool ik_success = RobotState::computeRobotPose(d_goal_torso_frame, seed_robot_pose,
             final_pose);
-        if(ik_success)
-            return m_cspace_mgr->isValid(*final_pose);
-        else
-            return false;
+        return ik_success;
 }
 
-void HeuristicMgr::initNewMHAHeur(int g_x, int g_y, const int cost_multiplier){
+bool HeuristicMgr::isValidIKForGoalState(int g_x, int g_y){
+    RobotPosePtr final_pose;
+    bool ik_success = checkIKAtPose(g_x, g_y, final_pose);
+    if(ik_success)
+        return m_cspace_mgr->isValid(*final_pose);
+    else
+        return false;
+}
+
+RightContArmState HeuristicMgr::getRightArmIKSol(int g_x, int g_y){
+    RobotPosePtr final_pose;
+    bool ik_success = checkIKAtPose(g_x, g_y, final_pose);
+    bool collision_free = false;
+    if(ik_success)
+        if(m_cspace_mgr->isValid(*final_pose))
+            collision_free = true;
+    if(collision_free)
+        return final_pose->right_arm();
+    else {
+        return RightContArmState();
+    }
+}
+
+
+void HeuristicMgr::initNewMHABaseHeur(int g_x, int g_y, RightContArmState& r_arm_state, const int cost_multiplier){
         // ROS_DEBUG_NAMED(HEUR_LOG, "IK was a success! Wooohoooo!");
         // Valid - push the state
+        ROS_DEBUG_NAMED(HEUR_LOG, "New MHA Base Heuristic initialized : %d %d", g_x,
+            g_y);
         DiscObjectState state = m_goal.getObjectState(); 
         state.x(g_x);
         state.y(g_y);
         GoalState new_goal_state(m_goal);
         new_goal_state.setGoal(state);
-        int heur_num = add2DHeur(cost_multiplier, 0);
+
+        // Create the new heuristic
+        int heur_num = addMHABaseHeur(cost_multiplier);
+        // Update its costmap
         m_heuristics[heur_num]->update2DHeuristicMap(m_grid_data);
+
+
+        m_heuristics[heur_num]->setOriginalGoal(m_goal);
         m_heuristics[heur_num]->setGoal(new_goal_state);
+        // m_heuristics[heur_num]->setGoalArmState(r_arm_state);
         m_mha_heur_ids.push_back(heur_num);
-        m_sampled_x.push_back(g_x);
-        m_sampled_y.push_back(g_y);
 }
 
 void HeuristicMgr::initializeMHAHeuristics(const int
@@ -328,14 +356,14 @@ void HeuristicMgr::initializeMHAHeuristics(const int
     std::vector<int> circle_y;
     double res = m_occupancy_grid->getResolution();
     int discrete_radius = radius_around_goal/res;
-    getBresenhamCirclePoints(state.x(), state.y(), discrete_radius, circle_x, circle_y);
+    BFS2DHeuristic::getBresenhamCirclePoints(state.x(), state.y(), discrete_radius, circle_x, circle_y);
     
-    ROS_DEBUG_NAMED(HEUR_LOG, "[MHAHeur] Radius around goal: %f, resolution: %f, discrete radius: %d", radius_around_goal, res, discrete_radius);
+    // ROS_DEBUG_NAMED(HEUR_LOG, "[MHAHeur] Radius around goal: %f, resolution: %f, discrete radius: %d", radius_around_goal, res, discrete_radius);
     // No, we cannot have more number of heuristics than there are points on
     // the cirlce. That's just redundant.
     assert(circle_x.size() > m_num_mha_heuristics);
     
-    ROS_DEBUG_NAMED(HEUR_LOG, "[MHAHeur] Circle points %d", static_cast<int>(circle_x.size()));
+    // ROS_DEBUG_NAMED(HEUR_LOG, "[MHAHeur] Circle points %d", static_cast<int>(circle_x.size()));
     // Sample along the circle.
     /* Get the list of points that are not on an obstacle.
      * Get the size of this list. Sample from a uniform distribution. 
@@ -352,7 +380,7 @@ void HeuristicMgr::initializeMHAHeuristics(const int
             i++;
     }
 
-    ROS_DEBUG_NAMED(HEUR_LOG, "[MHAHeur] Circle points cropped %d",static_cast<int>(circle_x.size()));
+    // ROS_DEBUG_NAMED(HEUR_LOG, "[MHAHeur] Circle points cropped %d",static_cast<int>(circle_x.size()));
 
     int center_x = state.x();
     int center_y = state.y();
@@ -360,28 +388,30 @@ void HeuristicMgr::initializeMHAHeuristics(const int
     std::vector<int> ik_circle_x;
     std::vector<int> ik_circle_y;
 
-    std::vector<double> angles_with_center(circle_x.size(),0);
-
     for (size_t i = 0; i < circle_x.size(); ++i)
     {
         if(isValidIKForGoalState(circle_x[i], circle_y[i])){
-            // circle_x.erase(circle_x.begin() + i);
-            // circle_y.erase(circle_y.begin() + i);
             ik_circle_x.push_back(circle_x[i]);
             ik_circle_y.push_back(circle_y[i]);
         }
     }
 
-    pair <Point, Point> selected_points;
-    if(ik_circle_x.size() < m_num_mha_heuristics){
+    std::vector<Point> selected_points;
+    if(static_cast<int>(ik_circle_x.size()) < m_num_mha_heuristics){
         selected_points = sample_points(discrete_radius,
-                center_x, center_y, circle_x, circle_y);
+                center_x, center_y, circle_x, circle_y, m_num_mha_heuristics);
     } else {
         selected_points = sample_points(discrete_radius,
-                center_x, center_y, ik_circle_x, ik_circle_y);
+                center_x, center_y, ik_circle_x, ik_circle_y, m_num_mha_heuristics);
     }
 
     // assert(static_cast<int>(circle_x.size()) >= m_num_mha_heuristics);
-    initNewMHAHeur(selected_points.first.first, selected_points.first.second, cost_multiplier);
-    initNewMHAHeur(selected_points.second.first, selected_points.second.second, cost_multiplier);
+    for (int i = 0; i < selected_points.size(); ++i)
+    {
+        RightContArmState r_arm_state =
+        getRightArmIKSol(selected_points[i].first, selected_points[i].second);
+        initNewMHABaseHeur(selected_points[i].first, selected_points[i].second,
+            r_arm_state, 
+            cost_multiplier);
+    }
 }

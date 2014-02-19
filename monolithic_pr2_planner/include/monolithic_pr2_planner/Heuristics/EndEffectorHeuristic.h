@@ -13,26 +13,17 @@
 #include <boost/shared_ptr.hpp>
 
 
-
-
 namespace monolithic_pr2_planner {
-    /*! \brief Manages heuristic computation used by the SBPL planner. Currently
-     * implements a 3D breadth first search for the end effector.
+    /*! \brief implements a 3D breadth first search for the end effector.
+        Returns the 3DBFS value for the end effector, and takes into account
+        the collision for the base -> returns INFINITECOST if the base cannot
+        be in that location (as dictated by the costmap)
      */
     class EndEffectorHeuristic : public BFS2DHeuristic, public BFS3DHeuristic {
         public:
             EndEffectorHeuristic();
             int getGoalHeuristic(GraphStatePtr state);
             void setGoal(GoalState& state);
-        //     void loadObstaclesFromOccupGrid();
-        //     void visualize();
-        //     void update3DHeuristicMap();
-            // Set the cost_multiplier
-            // inline void setCostMultiplier(const int cost_multiplier) { m_cost_multiplier
-            //     = cost_multiplier; };
-
-            // // Get the cost multiplier
-            // inline int getCostMultiplier(){ return m_cost_multiplier; };
         private:
             unsigned int m_size_col;
             unsigned int m_size_row;

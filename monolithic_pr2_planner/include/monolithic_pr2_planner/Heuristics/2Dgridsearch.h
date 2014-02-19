@@ -122,6 +122,9 @@ public:
      */
     bool search(unsigned char** Grid2D, unsigned char obsthresh, int startx_c, int starty_c, int goalx_c, int goaly_c,
                 SBPL_2DGRIDSEARCH_TERM_CONDITION termination_condition);
+    bool search(unsigned char** Grid2D, unsigned char obsthresh, int startx_c, int starty_c, int goalx_c, int goaly_c,
+                SBPL_2DGRIDSEARCH_TERM_CONDITION termination_condition,
+                std::vector< std::pair<int,int> > init_points);
 
     /**
      * \brief print all the values
@@ -213,12 +216,12 @@ private:
     // For the circle of zero cost
     double radius_;
 
+    // Initial points
+    std::vector< std::pair<int,int> > init_points_;
+
     //termination criterion used in the search
     SBPL_2DGRIDSEARCH_TERM_CONDITION term_condition_usedlast;
 };
-
-void getBresenhamCirclePoints(int x0, int y0, int radius, std::vector<int>& x,
-    std::vector<int>& y);
 
 #endif
 

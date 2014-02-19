@@ -15,7 +15,7 @@ range = 3:size(directories,1);
 
 for idx=range
     cur_dir = directories(idx).name
-    num = 10;
+    num = 5;
     %path = ['/home/victor/ros/mpp_groovy/mpp/monolithic_pr2_planner_node/compute_stats/imha_all_set/' cur_dir ]
     path = ['/tmp/planning_stats/' cur_dir ]
     rrt_stats = computeMethodStats([path '/rrt_'],num,0);

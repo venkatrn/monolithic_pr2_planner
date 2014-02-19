@@ -46,26 +46,21 @@ int Environment::GetGoalHeuristic(int stateID, int goal_id){
     // Eg, if NUM_MHA_BASE_HEUR is 2, that means there are 2 additional base
     // heuristics. So, the values will be endEff, Base, Base1, Base2
     std::vector<int> values = m_heur_mgr->getGoalHeuristic(m_hash_mgr->getGraphState(stateID));
-    // ROS_DEBUG_NAMED(HEUR_LOG, "Heuristic values: Arm : %d\t Base 1: %d", values[0], values[1]);
     if (!m_is_imha) {
         // SMHA*
+        // ROS_DEBUG_NAMED(HEUR_LOG, "Heuristic values: Base : %d\t Base + arm : %d", values[2], values[2]
+        //     + values[0]);
         switch(goal_id){
             case 0: //Anchor
                 return std::max(values[0], values[1]);
-            // case 1: //ARA
-            //     return EPS2*std::max(values[0], values[1]);
-            case 1: // arm
-                return EPS2*values[0];
-            //     // return std::max(values[0], values[2]);
-            default:
-                // bases
-                // ROS_DEBUG_NAMED(HEUR_LOG, "Base heur: %d :: %d ; size of values: %d", goal_id,
-                //     values[goal_id],
-                //     values.size());
-                return values[goal_id];
+            case 1: // base
+                return values[2];
+            case 2: // Base + arm
+                return static_cast<int>(0.5f*values[2] + 0.5f*values[0]);
         }
     }
     else{
+        // IMHA*
         switch(goal_id){
             case 0: //Anchor
                 return std::max(values[0], values[1]);
@@ -154,7 +149,7 @@ bool Environment::setStartGoal(SearchRequestPtr search_request,
     ROS_INFO_NAMED(SEARCH_LOG, "Start state set to:");
     start_pose.printToInfo(SEARCH_LOG);
     obj_state.printToInfo(SEARCH_LOG);
-    start_pose.visualize();
+    // start_pose.visualize();
 
     // Compute the arm's reach
     // double basex,basey;
@@ -266,7 +261,8 @@ void Environment::configureQuerySpecificParams(SearchRequestPtr search_request){
 vector<FullBodyState> Environment::reconstructPath(vector<int> soln_path){
     PathPostProcessor postprocessor(m_hash_mgr, m_cspace_mgr);
     std::vector<FullBodyState> final_path = postprocessor.reconstructPath(soln_path, *m_goal, m_mprims.getMotionPrims());
-    if(m_param_catalog.m_visualization_params.final_path)
+    if(m_param_catalog.m_visualization_params.final_path){
         postprocessor.visualizeFinalPath(final_path);
+    }
     return final_path;
 }

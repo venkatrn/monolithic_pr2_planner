@@ -88,17 +88,17 @@ void addRandomObstacles(pcl::PointCloud<pcl::PointXYZ>::Ptr pclCloud, int
     ros::NodeHandle nh;
 
     // Add the surface - these are generated only within these bounds.
-    double surfaceBoundsXMin = 4.5;
-    double surfaceBoundsXMax = 6;
+    double surfaceBoundsXMin = 6.2;
+    double surfaceBoundsXMax = 7;
     
-    double surfaceBoundsYMin = 1;
+    double surfaceBoundsYMin = 0;
     double surfaceBoundsYMax = 3.5;
 
     double surfaceSizeXMax = 0.65;
     double surfaceSizeXMin = 0.65;
 
-    double surfaceSizeYMax = 2.0;
-    double surfaceSizeYMin = 1.0;
+    double surfaceSizeYMax = 1.3;
+    double surfaceSizeYMin = 0.65;
 
     double surfaceSizeZ = 0.8;
     
@@ -121,14 +121,14 @@ void addRandomObstacles(pcl::PointCloud<pcl::PointXYZ>::Ptr pclCloud, int
     nh.setParam("/monolithic_pr2_planner_node/experiments/number_of_regions",
         numSurfaces);
 
-    for (int i = 0; i < numSurfaces; ++i){
+    for (int i = 0, j = 0; i < numSurfaces; ++i, j+=2){
         srand(clock());
         
         // Generate position
         double X = surfaceBoundsXMin + static_cast<double>(rand())/RAND_MAX *
         (surfaceBoundsXMax - surfaceBoundsXMin);
-        double Y = surfaceBoundsYMin + static_cast<double>(rand())/RAND_MAX *
-        (surfaceBoundsYMax - surfaceBoundsYMin);
+        double Y = surfaceBoundsYMin + j*(surfaceBoundsYMax - surfaceBoundsYMin)/(numSurfaces+1) + static_cast<double>(rand())/RAND_MAX *
+        (surfaceBoundsYMax - surfaceBoundsYMin)/(numSurfaces+1);
 
         double Z = 0.0;
         
@@ -278,7 +278,14 @@ vector<Eigen::Vector3d> getVoxelsFromFile(std::string filename){
     // addCuboid(pclCloud, 5.248199056716729, 2.5379581496994748, 0.8, 0.1, 0.4,
     //     0.15,true);
     // addCuboid(pclCloud, 5.348199056716729, 2.1079581496994748, 0.8, 0.1, 0.2, 0.3,true);
-    addRandomObstacles(pclCloud, 1, 5);
+    
+    // Doorway
+    addCuboid(pclCloud, 5, 0, 0, 0.05, 2, 1.8, true);
+    addCuboid(pclCloud, 5, 3.05, 0, 0.05, 2.2, 1.8, true);
+    // addCuboid(pclCloud, 5, 2, 1.6, 0.05, 1, 1.8, true);
+    
+
+    addRandomObstacles(pclCloud, 2, 5);
     addStartStateRegionToParamServer();
 
     sensor_msgs::PointCloud2 pc;

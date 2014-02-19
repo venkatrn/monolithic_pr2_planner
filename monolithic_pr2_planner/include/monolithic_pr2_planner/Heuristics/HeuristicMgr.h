@@ -1,5 +1,6 @@
 #pragma once
 #include <monolithic_pr2_planner/StateReps/GraphState.h>
+#include <monolithic_pr2_planner/StateReps/ContArmState.h>
 #include <monolithic_pr2_planner/OccupancyGridUser.h>
 #include <monolithic_pr2_planner/StateReps/GoalState.h>
 #include <monolithic_pr2_planner/Heuristics/AbstractHeuristic.h>
@@ -11,7 +12,7 @@
 #include <monolithic_pr2_planner/CollisionSpaceMgr.h>
 
 
-#define NUM_MHA_BASE_HEUR 2
+#define NUM_MHA_BASE_HEUR 1
 
 
 namespace monolithic_pr2_planner {
@@ -32,7 +33,9 @@ namespace monolithic_pr2_planner {
             // internal m_heuristics vector.
             int add3DHeur(const int cost_multiplier=1);
             int add2DHeur(const int cost_multiplier=1, const double radius_m = 0);
+            int addMHABaseHeur(const int cost_multiplier=1);
             int addEndEffHeur(const int cost_multiplier=1);
+            int addArmAnglesHeur(const int cost_multiplier=1);
 
             // Updates the collision map for the heuristics that need them.
             // Doesn't take in an argument because each 3D heuristic shares the
@@ -55,15 +58,18 @@ namespace monolithic_pr2_planner {
             // radius
             void initializeMHAHeuristics(const int base_heur_id, const int cost_multiplier = 1); // No radius support as of now
 
-            void numberOfMHAHeuristics(int num_mha_heuristics){ m_num_mha_heuristics
-                = num_mha_heuristics;};
+            // void numberOfMHAHeuristics(int num_mha_heuristics){ m_num_mha_heuristics
+            //     = num_mha_heuristics;};
 
-            int numberOfMHAHeuristics(){ return m_num_mha_heuristics;};
+            // int numberOfMHAHeuristics(){ return m_num_mha_heuristics;};
 	    inline void setCollisionSpaceMgr(CSpaceMgrPtr cspace_mgr){ m_cspace_mgr = cspace_mgr;};
  
         private:
             bool isValidIKForGoalState(int g_x, int g_y);
-            void initNewMHAHeur(int g_x, int g_y, const int
+            bool checkIKAtPose(int g_x, int g_y, RobotPosePtr&
+                final_pose);
+            RightContArmState getRightArmIKSol(int g_x, int g_y);
+            void initNewMHABaseHeur(int g_x, int g_y, RightContArmState& r_arm_state, const int
                 cost_multiplier);
 
             GoalState m_goal;
@@ -77,9 +83,7 @@ namespace monolithic_pr2_planner {
             int m_num_mha_heuristics;
             std::vector<int> m_mha_heur_ids;
             int m_base_heur_id;
-
-            std::vector<int> m_sampled_x;
-            std::vector<int> m_sampled_y;
+            int m_arm_angles_heur_id;
             
             // Saving the goal and the grid for MHA heuristics
             unsigned char** m_grid;

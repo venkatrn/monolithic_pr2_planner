@@ -13,10 +13,9 @@
 #include <vector>
 #include <memory>
 
-#define NUM_IMHA_HEUR 4
-#define NUM_SMHA_HEUR 4
+#define NUM_SMHA_HEUR 3
 #define EPS1 25
-#define EPS2 2
+#define EPS2 3
 
 namespace monolithic_pr2_planner {
     /*! \brief Implements a complete environment used by the SBPL planner.

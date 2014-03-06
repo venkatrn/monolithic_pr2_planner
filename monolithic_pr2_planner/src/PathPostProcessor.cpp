@@ -49,9 +49,11 @@ vector<FullBodyState> PathPostProcessor::reconstructPath(vector<int> soln_path,
 
 
 
+    ROS_INFO("Finding best transition took %.3f", (clock()-temptime)/(double)CLOCKS_PER_SEC);
+    temptime = clock();
     std::vector<FullBodyState> final_path = shortcutPath(soln_path,
         transition_states, goal_state);
-    ROS_INFO("Reconstruct took %.3f", (clock()-temptime)/(double)CLOCKS_PER_SEC);
+    ROS_INFO("Shortcutting took %.3f", (clock()-temptime)/(double)CLOCKS_PER_SEC);
     return final_path;
 }
 
@@ -212,15 +214,23 @@ bool PathPostProcessor::findBestTransition(int start_id, int end_id,
         if (!mprim->apply(*source_state, successor, t_data)){
             continue;
         }
+        int successor_id;
+        if(!m_hash_mgr->exists(successor, successor_id))
+            continue;
+        successor->id(successor_id);
+        bool matchesEndID = successor->id() == end_id;
+        if(!matchesEndID)
+            continue;
         
-        if (!(m_cspace_mgr->isValidSuccessor(*successor, t_data) && 
-                m_cspace_mgr->isValidTransitionStates(t_data))){
+        if (!(m_cspace_mgr->isValidSuccessor(*successor, t_data))){
             continue;
         }
-
-        successor->id(m_hash_mgr->getStateID(successor));
-        bool matchesEndID = successor->id() == end_id;
+        if(!(m_cspace_mgr->isValidTransitionStates(t_data))){
+            continue;
+        }
+        
         bool isCheaperAction = t_data.cost() < best_cost;
+
         if (matchesEndID && isCheaperAction){
             best_cost = t_data.cost();
             best_transition = t_data;

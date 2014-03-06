@@ -97,9 +97,20 @@ HeuristicMgr::HeuristicMgr() :
     m_num_mha_heuristics(NUM_MHA_BASE_HEUR) {
 }
 
-HeuristicMgr::HeuristicMgr(CSpaceMgrPtr cspace_mgr){
-    m_num_mha_heuristics = 0;
-    m_cspace_mgr = cspace_mgr;
+// HeuristicMgr::HeuristicMgr(CSpaceMgrPtr cspace_mgr){
+//     m_num_mha_heuristics = 0;
+//     m_cspace_mgr = cspace_mgr;
+// }
+
+/**
+ * @brief Resets the heuristic manager.
+ */
+void HeuristicMgr::reset(){
+    ROS_DEBUG_NAMED(CONFIG_LOG, "Resetting the heuristic manager.");
+    m_heuristics.clear();
+    m_mha_heur_ids.clear();
+    initializeHeuristics();
+    update2DHeuristicMaps(m_grid_data);
 }
 
 void HeuristicMgr::initializeHeuristics(){
@@ -196,6 +207,9 @@ void HeuristicMgr::update2DHeuristicMaps(const std::vector<signed char>& data){
     ROS_DEBUG_NAMED(HEUR_LOG, "Size of m_heuristics: %d", m_heuristics.size());
 }
 
+/**
+ * @brief Updates the 3D Heuristic map for heuristics
+ */
 void HeuristicMgr::update3DHeuristicMaps(){
     for (size_t i = 0; i < m_heuristics.size(); ++i){
         m_heuristics[i]->update3DHeuristicMap();

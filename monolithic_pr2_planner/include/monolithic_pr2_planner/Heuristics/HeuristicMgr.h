@@ -21,7 +21,7 @@ namespace monolithic_pr2_planner {
     class HeuristicMgr : public OccupancyGridUser{
         public:
             HeuristicMgr();
-            HeuristicMgr(CSpaceMgrPtr cspace_mgr);
+            // HeuristicMgr(CSpaceMgrPtr cspace_mgr);
 
             // The master function that initializes all the heuristics you
             // want.
@@ -60,6 +60,8 @@ namespace monolithic_pr2_planner {
 
             // void numberOfMHAHeuristics(int num_mha_heuristics){ m_num_mha_heuristics
             //     = num_mha_heuristics;};
+
+            void reset();
 
             // int numberOfMHAHeuristics(){ return m_num_mha_heuristics;};
 	    inline void setCollisionSpaceMgr(CSpaceMgrPtr cspace_mgr){ m_cspace_mgr = cspace_mgr;};

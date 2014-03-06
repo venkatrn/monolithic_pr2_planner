@@ -40,25 +40,6 @@ EnvInterfaces::EnvInterfaces(boost::shared_ptr<monolithic_pr2_planner::Environme
         costmap_2d::Costmap2DPublisher(m_nodehandle,1,"/map"));
 }
 
-void EnvInterfaces::resetEnvironment(bool is_imha){
-    ROS_INFO("Resetting Environment and rebuilding...");
-    m_env.reset(new Environment(m_nodehandle));
-    // m_collision_space_interface.reset(new
-    //     CollisionSpaceInterface(m_env->getCollisionSpace(),
-    //         m_env->getHeuristicMgr()));
-    m_env->setCollisionSpace(m_collision_space_interface->getCollisionSpace());
-    m_env->getHeuristicMgr()->setCollisionSpaceMgr(m_collision_space_interface->getCollisionSpace());
-    m_collision_space_interface->setHeuristicMgr(m_env->getHeuristicMgr());
-    m_generator.reset(new StartGoalGenerator(m_env->getCollisionSpace()));
-    m_rrt.reset(new OMPLPR2Planner(m_env->getCollisionSpace(), RRT));
-    m_prm.reset(new OMPLPR2Planner(m_env->getCollisionSpace(), PRM_P));
-    m_rrtstar.reset(new OMPLPR2Planner(m_env->getCollisionSpace(), RRTSTAR));
-    m_rrtstar_first_sol.reset(new OMPLPR2Planner(m_env->getCollisionSpace(),
-        RRTSTARFIRSTSOL));
-    m_collision_space_interface->update2DHeuristicMaps(m_final_map);
-    m_env->setIMHA(is_imha);
-}
-
 
 void EnvInterfaces::getParams(){
     m_nodehandle.param<string>("reference_frame", m_params.ref_frame, 
@@ -152,7 +133,7 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
                 // Here starts the actual planning requests
 
                 /****** RUN SMHA **********/
-                resetEnvironment();
+                m_env->reset();
                 m_mha_planner.reset(new MPlanner(m_env.get(), NUM_SMHA_HEUR, forward_search,
                     false));
                 total_planning_time = clock();
@@ -230,7 +211,7 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
 
                 // ARA Planner
                 /*** BEGIN ARA PLANNER ****
-                resetEnvironment();
+                m_env->reset();
                 // Not sure if actually necessary
                 m_ara_planner.reset(new ARAPlanner(m_env.get(), forward_search));
                 total_planning_time = clock();
@@ -268,7 +249,7 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
                 /*** END ARA PLANNER ****/
 
                 // OMPL
-                // resetEnvironment();
+                // m_env->reset();
                 // if(!m_env->configureRequest(search_request, start_id, goal_id)){
                 //     ROS_ERROR("Unable to configure request for OMPL! Trial ID: %d", counter);
                 // }
@@ -326,7 +307,7 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
     res.stats_field_names.resize(18);
     res.stats.resize(18);
     int start_id, goal_id;
-    resetEnvironment();
+    m_env->reset();
     double total_planning_time = clock();
     bool retVal = m_env->configureRequest(search_request, start_id, goal_id);
     if(!retVal){

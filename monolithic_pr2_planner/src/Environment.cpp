@@ -21,9 +21,21 @@ Environment::Environment(ros::NodeHandle nh) :
     m_heur_mgr(new HeuristicMgr()) {
     m_param_catalog.fetch(nh);
     configurePlanningDomain();
-    m_is_imha = false;
 }
 
+/**
+ * @brief Resets the environment.
+ * @details Intended to be used between calls to subsequent planning
+ * requests.
+ */
+void Environment::reset(){
+    m_heur_mgr->reset();
+    // m_heur_mgr->setCollisionSpaceMgr(m_cspace_mgr);
+    m_hash_mgr.reset(new HashManager(&StateID2IndexMapping));
+
+    // Fetch params again, in case they're being modified between calls.
+    // m_param_catalog.fetch(m_nodehandle);
+}
 
 bool Environment::configureRequest(SearchRequestParamsPtr search_request_params,
                                    int& start_id, int& goal_id){
@@ -46,30 +58,18 @@ int Environment::GetGoalHeuristic(int stateID, int goal_id){
     // Eg, if NUM_MHA_BASE_HEUR is 2, that means there are 2 additional base
     // heuristics. So, the values will be endEff, Base, Base1, Base2
     std::vector<int> values = m_heur_mgr->getGoalHeuristic(m_hash_mgr->getGraphState(stateID));
-    if (!m_is_imha) {
-        // SMHA*
-        // ROS_DEBUG_NAMED(HEUR_LOG, "Heuristic values: Base : %d\t Base + arm : %d", values[2], values[2]
-        //     + values[0]);
-        switch(goal_id){
-            case 0: //Anchor
-                return std::max(values[0], values[1]);
-            case 1: // base
-                return values[2];
-            case 2: // Base + arm
-                return static_cast<int>(0.5f*values[2] + 0.5f*values[0]);
-        }
+    // SMHA*
+    ROS_DEBUG_NAMED(HEUR_LOG, "Heuristic values: Arm: %d\t Base : %d\t", values[0], values[2]);
+    switch(goal_id){
+        case 0: //Anchor
+            return std::max(values[0], values[1]);
+        case 1: // base
+            return values[2];
+        case 2: // Base + arm
+            return static_cast<int>(0.5f*values[2] +
+                0.5f*values[0]);
     }
-    else{
-        // IMHA*
-        switch(goal_id){
-            case 0: //Anchor
-                return std::max(values[0], values[1]);
-            case 1: //ARA
-                return EPS2*std::max(values[0], values[1]);
-            default:
-                return std::max(values[0], values[goal_id]);
-        }
-    }
+
     return std::max(values[0],values[1]);
 }
 
@@ -151,16 +151,6 @@ bool Environment::setStartGoal(SearchRequestPtr search_request,
     obj_state.printToInfo(SEARCH_LOG);
     // start_pose.visualize();
 
-    // Compute the arm's reach
-    // double basex,basey;
-    // basex = start_pose.getContBaseState().x();
-    // basey = start_pose.getContBaseState().y();
-    // double armx, army;
-    // armx = obj_state.x();
-    // army = obj_state.y();
-    // ROS_DEBUG_NAMED(HEUR_LOG, "(arm's reach: %f, %f)\n", sqrt((basex-armx)*(basex-armx)),
-    //     sqrt((basey-army)*(basey-army)));
-
 
     m_goal = search_request->createGoalState();
 
@@ -232,7 +222,7 @@ void Environment::configurePlanningDomain(){
     RightContArmState r_arm;
     m_cspace_mgr = make_shared<CollisionSpaceMgr>(r_arm.getArmModel(),
                                                   l_arm.getArmModel());
-
+    m_heur_mgr->setCollisionSpaceMgr(m_cspace_mgr);
     // load up motion primitives
     m_mprims.loadMPrims(m_param_catalog.m_motion_primitive_params);
 

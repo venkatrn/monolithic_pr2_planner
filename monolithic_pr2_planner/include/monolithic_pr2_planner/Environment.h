@@ -33,10 +33,8 @@ namespace monolithic_pr2_planner {
                           vector<int>* costs);
             std::vector<FullBodyState> reconstructPath(std::vector<int> 
                 state_ids);
-            inline void setCollisionSpace(CSpaceMgrPtr cspace_mgr){
-                m_cspace_mgr = cspace_mgr;
-            }
-            inline void setIMHA(bool is_imha){ m_is_imha = is_imha;};
+            void reset();
+
         protected:
             bool setStartGoal(SearchRequestPtr search_request, 
                               int& start_id, int& goal_id);
@@ -51,9 +49,6 @@ namespace monolithic_pr2_planner {
             GoalStatePtr m_goal;
             MotionPrimitivesMgr m_mprims;
             HeuristicMgrPtr m_heur_mgr;
-
-            // MHA stuff
-            bool m_is_imha;
 
         // SBPL interface stuff
         public:

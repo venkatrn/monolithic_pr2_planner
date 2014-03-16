@@ -21,6 +21,8 @@ namespace monolithic_pr2_planner {
             static void visualizeFinalPath(std::vector<FullBodyState> path);
             bool stateInterpolate(const RobotState& start, const RobotState& end,
                                              std::vector<FullBodyState>* interp_steps);
+            static bool isBasePathBetter(std::vector<FullBodyState> &new_path,
+                std::vector<FullBodyState> &original_path);
         private:
             std::vector<FullBodyState> getFinalPath(const vector<int>& state_ids,
                                             const vector<TransitionData>& transition_states,

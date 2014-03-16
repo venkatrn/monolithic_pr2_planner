@@ -75,7 +75,7 @@ std::vector<FullBodyState> PathPostProcessor::shortcutPath(const vector<int>&
     std::vector<FullBodyState> interp_states;
     while(j < state_ids.size()){
         assert(i<j);
-        ROS_DEBUG_NAMED(SEARCH_LOG, "Shortcutting : %d %d; size of final_path %d", i, j,
+        ROS_DEBUG_NAMED(HEUR_LOG, "Shortcutting : %d %d; size of final_path %d", i, j,
             final_path.size());
         GraphStatePtr source_state = m_hash_mgr->getGraphState(state_ids[i]);
         GraphStatePtr end_state = m_hash_mgr->getGraphState(state_ids[j]);
@@ -85,11 +85,11 @@ std::vector<FullBodyState> PathPostProcessor::shortcutPath(const vector<int>&
             interp_states.end());
         interp_states.clear();
         bool interpolate = stateInterpolate(first_pose, second_pose, &interp_states);
-        ROS_DEBUG_NAMED(SEARCH_LOG, "Interpolated states size: %d; Interp prev size: %d",
+        ROS_DEBUG_NAMED(HEUR_LOG, "Interpolated states size: %d; Interp prev size: %d",
             static_cast<int>(interp_states.size()),
             static_cast<int>(interp_states_prev.size()));
+        bool no_collision = true;
         if(interpolate) {
-            bool no_collision = true;
             for (size_t k = 0; k < interp_states.size(); ++k)
             {
                 if(!m_cspace_mgr->isValidContState(interp_states[k].left_arm,interp_states[k].right_arm,
@@ -97,55 +97,15 @@ std::vector<FullBodyState> PathPostProcessor::shortcutPath(const vector<int>&
                     no_collision = false;
                 }
             }
-            if(no_collision){
-                j++;
-            }
-            else{
-                ROS_DEBUG_NAMED(SEARCH_LOG, "Collision here; %d %d", i, j);
-                // Check if it is a consecutive state
-                if(i == (j - 1)){
-                    ROS_DEBUG_NAMED(SEARCH_LOG, "Already, i (%d) is j (%d) - 1",
-                        i, j);
-                    int motion_type = transition_states[i].motion_type();
-                    bool isInterpBaseMotion = (motion_type == MPrim_Types::BASE || 
-                                               motion_type == MPrim_Types::BASE_ADAPTIVE);
-                    for (size_t t=0; t < transition_states[i].interm_robot_steps().size(); t++){
-                        RobotState robot = transition_states[i].interm_robot_steps()[t];
-                        FullBodyState state = createFBState(robot);
-                        if(isInterpBaseMotion){
-                            assert(transition_states[i].interm_robot_steps().size() == 
-                                   transition_states[i].cont_base_interm_steps().size());
-                            ContBaseState cont_base = transition_states[i].cont_base_interm_steps()[t];
-                            std::vector<double> base;
-                            cont_base.getValues(&base);
-                            state.base = base;
-                        }
-                        final_path.push_back(state);
-                    }
-                    ++i;
-                    ++j;
-                } else {
-                    // Shove things in.
-                    // [) format. We'll shove the last point in the end or in the
-                    // next cycle
-                    final_path.insert(final_path.end(), interp_states_prev.begin(),
-                        interp_states_prev.end() - 1);
-                    i = j - 1;
-                    // first_pose.visualize();
-                    // second_pose.visualize();
-                    // std::cin.get();
-                }
-            }
         }
-        else{
-            ROS_DEBUG_NAMED(SEARCH_LOG ,"The interpolation function failed for %d %d; Using transition data instead.", i, j);
-            // Insert till whatever worked till now.
-            if( i != j -1){
-                final_path.insert(final_path.end(), interp_states_prev.begin(),
-                            interp_states_prev.end() - 1);
-                i = j - 1;
-            } else {
-                // Move i and j forward.
+        if(interpolate && no_collision){
+            j++;            
+        } else {
+            ROS_DEBUG_NAMED(HEUR_LOG, "Collision here; %d %d", i, j);
+            // Check if it is a consecutive state
+            if(i == (j - 1)){
+                ROS_DEBUG_NAMED(HEUR_LOG, "Already, i (%d) is j (%d) - 1",
+                    i, j);
                 int motion_type = transition_states[i].motion_type();
                 bool isInterpBaseMotion = (motion_type == MPrim_Types::BASE || 
                                            motion_type == MPrim_Types::BASE_ADAPTIVE);
@@ -162,8 +122,19 @@ std::vector<FullBodyState> PathPostProcessor::shortcutPath(const vector<int>&
                     }
                     final_path.push_back(state);
                 }
+                if(!isInterpBaseMotion){
+                    GraphStatePtr arm_state = m_hash_mgr->getGraphState(state_ids[i]);
+                    final_path.push_back(createFBState(arm_state->robot_pose()));
+                }
                 ++i;
                 ++j;
+            } else {
+                // Shove things in.
+                // [) format. We'll shove the last point in the end or in the
+                // next cycle
+                final_path.insert(final_path.end(), interp_states_prev.begin(),
+                    interp_states_prev.end() - 1);
+                i = j - 1;
             }
         }
     }
@@ -179,6 +150,7 @@ std::vector<FullBodyState> PathPostProcessor::shortcutPath(const vector<int>&
     }
     return final_path;
 }
+
 void PathPostProcessor::visualizeFinalPath(vector<FullBodyState> path){
     for (auto& state : path){
         vector<double> l_arm, r_arm, base;
@@ -194,6 +166,38 @@ void PathPostProcessor::visualizeFinalPath(vector<FullBodyState> path){
         usleep(50000);
         // std::cin.get();
     }
+}
+
+/**
+ * @brief compares two paths for the base path length
+ * @details If the distance covered by the base is lower in the new path,
+ * the value that is returned is True.
+ * @param new_path The path to compare
+ * @param original_path The path to compare against
+ */
+bool PathPostProcessor::isBasePathBetter(std::vector<FullBodyState> &new_path,
+    std::vector<FullBodyState> &original_path){
+    double new_dist = 0;
+    for (int i = 0; i < new_path.size()-1; ++i)
+    {
+        new_dist += (new_path[i].base[BodyDOF::X] -
+        new_path[i+1].base[BodyDOF::X])*(new_path[i].base[BodyDOF::X] -
+        new_path[i+1].base[BodyDOF::X]) + 
+                    (new_path[i].base[BodyDOF::Y] -
+        new_path[i+1].base[BodyDOF::Y])*(new_path[i].base[BodyDOF::Y] -
+        new_path[i+1].base[BodyDOF::Y]);
+    }
+    double original_dist = 0;
+    for (int i = 0; i < original_path.size()-1; ++i)
+    {
+        original_dist += (original_path[i].base[BodyDOF::X] -
+        original_path[i+1].base[BodyDOF::X])*(original_path[i].base[BodyDOF::X] -
+        original_path[i+1].base[BodyDOF::X]) + 
+                    (original_path[i].base[BodyDOF::Y] -
+        original_path[i+1].base[BodyDOF::Y])*(original_path[i].base[BodyDOF::Y] -
+        original_path[i+1].base[BodyDOF::Y]);
+    }
+    return (new_dist < original_dist);
 }
 
 /*! \brief Given a start and end state id, find the motion primitive with the

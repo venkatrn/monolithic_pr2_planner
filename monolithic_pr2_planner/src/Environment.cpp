@@ -59,7 +59,7 @@ int Environment::GetGoalHeuristic(int stateID, int goal_id){
     // heuristics. So, the values will be endEff, Base, Base1, Base2
     std::vector<int> values = m_heur_mgr->getGoalHeuristic(m_hash_mgr->getGraphState(stateID));
     // SMHA*
-    ROS_DEBUG_NAMED(HEUR_LOG, "Heuristic values: Arm: %d\t Base : %d\t", values[0], values[2]);
+    // ROS_DEBUG_NAMED(HEUR_LOG, "Heuristic values: Arm: %d\t Base : %d\t", values[0], values[2]);
     switch(goal_id){
         case 0: //Anchor
             return std::max(values[0], values[1]);

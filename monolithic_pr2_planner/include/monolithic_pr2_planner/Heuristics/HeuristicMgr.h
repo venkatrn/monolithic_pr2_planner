@@ -34,6 +34,9 @@ namespace monolithic_pr2_planner {
             int add3DHeur(const int cost_multiplier=1);
             int add2DHeur(const int cost_multiplier=1, const double radius_m = 0);
             int addMHABaseHeur(const int cost_multiplier=1);
+            int addUniformCost2DHeur(const int cost_multiplier=1, const double
+                radius_m = 0);
+            int addUniformCost3DHeur();
             int addEndEffHeur(const int cost_multiplier=1);
             int addArmAnglesHeur(const int cost_multiplier=1);
 

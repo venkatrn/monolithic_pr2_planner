@@ -69,10 +69,10 @@ int main(int argc, char** argv){
     // body_start[3] = -M_PI;
 
  
-    body_start[0] = 1.440000;
-    body_start[1] = 1.740000;
+    body_start[0] = 4.000000;
+    body_start[1] = 1.00000;
     body_start[2] = 0.260000;
-    body_start[3] = -M_PI;
+    body_start[3] = -M_PI/2;
 
     // body_start[0] = 7.440000;
     // body_start[1] = 2.460000;
@@ -90,7 +90,7 @@ int main(int argc, char** argv){
     // KDL::Rotation rot = KDL::Rotation::RPY(0,0,M_PI/2);
 
 
-    KDL::Rotation rot = KDL::Rotation::RPY(-0.145,0.321,-M_PI);
+    KDL::Rotation rot = KDL::Rotation::RPY(0,0.0,M_PI/2);
     double qx, qy, qz, qw;
     rot.GetQuaternion(qx, qy, qz, qw);
 
@@ -106,8 +106,8 @@ int main(int argc, char** argv){
     // pose.pose.position.y = 4.9;
     // pose.pose.position.z = 1.0;
 
-    pose.pose.position.x = 3.240000;
-    pose.pose.position.y = 2.00000;
+    pose.pose.position.x = 4.00000;
+    pose.pose.position.y = 4.00000;
     pose.pose.position.z = 1.18000;
 
     // pose.pose.position.x = 6.440000;

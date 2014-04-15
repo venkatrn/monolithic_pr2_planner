@@ -119,6 +119,7 @@ int MHABaseHeuristic::getArmAnglesHeuristic(RightContArmState& current_state){
             m_soln_arm_angles[Joints::SHOULDER_LIFT])));
     // }
     // ROS_DEBUG_NAMED(HEUR_LOG, "Arm angles heur: %d", heur);
+    return heur;
 }
 
 

@@ -107,8 +107,8 @@ void RobotState::visualize(){
     m_left_arm.getAngles(&l_arm);
     m_right_arm.getAngles(&r_arm);
     BodyPose body_pose = m_base_state.body_pose();
-    Visualizer::pviz->visualizeRobot(r_arm, l_arm, body_pose, 150, 
-                                    std::string("planner"), 0);
+    Visualizer::pviz->visualizeRobot(r_arm, l_arm, body_pose, 250, 
+                                    std::string("planner"), 1);
 }
 
 
@@ -192,6 +192,7 @@ bool RobotState::computeRobotPose(const ContObjectState& obj_state,
 
     output_r_arm = RightContArmState(r_angles);
     output_r_arm = RightContArmState(r_angles);
+    return true;
 }
 
 

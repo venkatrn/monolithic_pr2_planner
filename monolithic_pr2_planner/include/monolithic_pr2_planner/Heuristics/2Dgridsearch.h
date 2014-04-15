@@ -162,6 +162,8 @@ public:
      */
     int getlargestcomputedoptimalf_inmm() { return largestcomputedoptf_; }
 
+    void setUniformCostSearch(bool ucs = false) { m_uniform_cost_search = ucs; }
+
 private:
     inline bool withinMap(int x, int y)
     {
@@ -215,6 +217,9 @@ private:
 
     // For the circle of zero cost
     double radius_;
+
+    // Turn this on to get a uniform cost search (discard diagonal distances)
+    bool m_uniform_cost_search;
 
     // Initial points
     std::vector< std::pair<int,int> > init_points_;

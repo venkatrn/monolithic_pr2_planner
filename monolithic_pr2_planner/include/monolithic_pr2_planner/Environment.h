@@ -13,9 +13,10 @@
 #include <vector>
 #include <memory>
 
-#define NUM_SMHA_HEUR 3
+#define NUM_SMHA_HEUR 3 // Used in EnvInterfaces to initialize the planner.
+// This should include the Anchor search -> Total number of searches.
 #define EPS1 25
-#define EPS2 3
+#define EPS2 2
 
 namespace monolithic_pr2_planner {
     /*! \brief Implements a complete environment used by the SBPL planner.

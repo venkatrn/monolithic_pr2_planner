@@ -12,25 +12,26 @@ int main(int argc, char** argv){
     ros::ServiceClient client = n.serviceClient<monolithic_pr2_planner_node::GetMobileArmPlan>("/sbpl_planning/run_simulation");
     monolithic_pr2_planner_node::GetMobileArmPlan srv;
 
-    std::vector<double> right_arm_start(7,0), left_arm_start(7,0), body_start(4,0);
+    std::vector<double> right_arm_start(7, 0), left_arm_start(7, 0),
+     body_start(4, 0);
 
-    //right_arm_start[0] = -0.852858395281043;
-    //right_arm_start[1] = 0.075369128335531;
-    //right_arm_start[2] = 0.569623788333581;
-    //right_arm_start[3] = -0.54373199879478;
-    //right_arm_start[4] = angles::normalize_angle(-22.4372417947492);
-    //right_arm_start[5] = -1.86517790099345;
-    //right_arm_start[6] = angles::normalize_angle(8.571527760711906);
+    // right_arm_start[0] = -0.852858395281043;
+    // right_arm_start[1] = 0.075369128335531;
+    // right_arm_start[2] = 0.569623788333581;
+    // right_arm_start[3] = -0.54373199879478;
+    // right_arm_start[4] = angles::normalize_angle(-22.4372417947492);
+    // right_arm_start[5] = -1.86517790099345;
+    // right_arm_start[6] = angles::normalize_angle(8.571527760711906);
 
-    //left_arm_start[0] = (0.8202582499433417);
-    //left_arm_start[1] = (0.8174119480040183);
-    //left_arm_start[2] = (1.175226343713942);
-    //left_arm_start[3] = (-0.9897705605674373);
-    //left_arm_start[4] = angles::normalize_angle(-4.586757274289091);
-    //left_arm_start[5] = (-1.2633349113604524);
-    //left_arm_start[6] = angles::normalize_angle(48.100199487910714);
+    // left_arm_start[0] = (0.8202582499433417);
+    // left_arm_start[1] = (0.8174119480040183);
+    // left_arm_start[2] = (1.175226343713942);
+    // left_arm_start[3] = (-0.9897705605674373);
+    // left_arm_start[4] = angles::normalize_angle(-4.586757274289091);
+    // left_arm_start[5] = (-1.2633349113604524);
+    // left_arm_start[6] = angles::normalize_angle(48.100199487910714);
 
-    //works
+    // works
     right_arm_start[0] = -0.034127;
     right_arm_start[1] = 0.309261;
     right_arm_start[2] = 0.000000;

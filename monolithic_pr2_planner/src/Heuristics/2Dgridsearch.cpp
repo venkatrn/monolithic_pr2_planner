@@ -71,6 +71,8 @@ SBPL2DGridSearch::SBPL2DGridSearch(int width_x, int height_y, float cellsize_m,
     //by default, OPEN is implemented as heap
     OPEN2DBLIST_ = NULL;
     OPENtype_ = SBPL_2DGRIDSEARCH_OPENTYPE_HEAP;
+
+    m_uniform_cost_search = false;
 }
 
 bool SBPL2DGridSearch::setOPENdatastructure(SBPL_2DGRIDSEARCH_OPENTYPE OPENtype)
@@ -256,7 +258,7 @@ bool SBPL2DGridSearch::search(unsigned char** Grid2D, unsigned char obsthresh, i
                               int goaly_c, SBPL_2DGRIDSEARCH_TERM_CONDITION termination_condition,
                               std::vector< std::pair<int,int> > init_points){
     init_points_ = init_points;
-    search(Grid2D, obsthresh, startx_c, starty_c, goalx_c, goaly_c,
+    return search(Grid2D, obsthresh, startx_c, starty_c, goalx_c, goaly_c,
         termination_condition);
 }
 
@@ -299,7 +301,7 @@ bool SBPL2DGridSearch::search_withheap(unsigned char** Grid2D, unsigned char obs
     startY_ = starty_c;
     goalX_ = goalx_c;
     goalY_ = goaly_c;
-    int radius = floor(radius_/cellSize_m_);
+    // int radius = floor(radius_/cellSize_m_);
 
     //clear the heap
     OPEN2D_->makeemptyheap();
@@ -410,7 +412,7 @@ bool SBPL2DGridSearch::search_withheap(unsigned char** Grid2D, unsigned char obs
 
             if (mapcost >= obsthresh) //obstacle encountered
             continue;
-            int cost = (mapcost + 1) * dxy_distance_mm_[dir];
+            int cost = (mapcost + 1) * m_uniform_cost_search?1:dxy_distance_mm_[dir];
 
             //get the predecessor
             searchPredState = &searchStates2D_[newx][newy];

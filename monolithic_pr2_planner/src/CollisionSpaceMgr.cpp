@@ -59,8 +59,8 @@ bool CollisionSpaceMgr::isValid(RobotState& robot_pose){
     ROS_DEBUG_NAMED(CSPACE_LOG, "body pose is %f %f %f", body_pose.x, 
                                 body_pose.y, body_pose.z);
     robot_pose.printToDebug(CSPACE_LOG);
-    Visualizer::pviz->visualizeRobot(r_arm, l_arm, body_pose, 150, 
-                                    std::string("planner"), 0);
+    // Visualizer::pviz->visualizeRobot(r_arm, l_arm, body_pose, 150, 
+                                    // std::string("planner"), 0);
     return m_cspace->checkAllMotion(l_arm, r_arm, body_pose, false, dist_temp, 
                                     debug_code);
 }

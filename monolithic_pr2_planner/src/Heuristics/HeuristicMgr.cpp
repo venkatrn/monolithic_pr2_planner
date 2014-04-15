@@ -86,7 +86,7 @@ std::vector<Point> sample_points(int radius, int center_x, int center_y,
     }
     int i = sorted_pts.size()/(num_p + 1);
     std::vector<Point> final_points;
-    for (int k = 1; final_points.size() < num_p; ++k)
+    for (size_t k = 1; static_cast<int>(final_points.size()) < num_p; ++k)
     {
         final_points.push_back(sorted_pts[k*i]);
     }
@@ -126,6 +126,8 @@ void HeuristicMgr::initializeHeuristics(){
     m_base_heur_id = add2DHeur(1, 0.7);//1
     // The argument is TOTAL_HEUR_NUM - 1 (TOTAL_HEUR_NUM is what you
     // entered in the MPlanner parameters)
+    addUniformCost3DHeur();
+    addUniformCost2DHeur(1, 0.7);
 
     // m_arm_angles_heur_id = addArmAnglesHeur(1);
 }
@@ -136,6 +138,17 @@ int HeuristicMgr::add3DHeur(const int cost_multiplier){
     AbstractHeuristicPtr new_3d_heur = make_shared<BFS3DHeuristic>();
     // MUST set the cost multiplier here. If not, it is taken as 1.
     new_3d_heur->setCostMultiplier(cost_multiplier);
+    // Add it to the list of heuristics
+    m_heuristics.push_back(new_3d_heur);
+    return m_heuristics.size() - 1;
+}
+
+int HeuristicMgr::addUniformCost3DHeur(){
+
+    // Initialize the new heuristic.
+    BFS3DHeuristicPtr new_3d_heur = make_shared<BFS3DHeuristic>();
+    // MUST set the cost multiplier here. If not, it is taken as 1.
+    new_3d_heur->setCostMultiplier(1);
     // Add it to the list of heuristics
     m_heuristics.push_back(new_3d_heur);
     return m_heuristics.size() - 1;
@@ -160,6 +173,18 @@ int HeuristicMgr::add2DHeur(const int cost_multiplier, const double radius_m){
     new_2d_heur->setRadiusAroundGoal(radius_m);
     // Add to the list of heuristics
     m_heuristics.push_back(new_2d_heur);
+    return m_heuristics.size() - 1;
+}
+
+int HeuristicMgr::addUniformCost2DHeur(const int cost_multiplier, const double radius_m){
+    // Initialize the new heuristic
+    BFS2DHeuristicPtr new_ucs_heur = make_shared<BFS2DHeuristic>();
+    // Set cost multiplier here.
+    new_ucs_heur->setCostMultiplier(cost_multiplier);
+    new_ucs_heur->setRadiusAroundGoal(radius_m);
+    new_ucs_heur->setUniformCostSearch(true);
+    // Add to the list of heuristics
+    m_heuristics.push_back(new_ucs_heur);
     return m_heuristics.size() - 1;
 }
 
@@ -204,7 +229,7 @@ void HeuristicMgr::update2DHeuristicMaps(const std::vector<signed char>& data){
     for (size_t i = 0; i < m_heuristics.size(); ++i){
         m_heuristics[i]->update2DHeuristicMap(data);
     }
-    ROS_DEBUG_NAMED(HEUR_LOG, "Size of m_heuristics: %d", m_heuristics.size());
+    ROS_DEBUG_NAMED(HEUR_LOG, "Size of m_heuristics: %ld", m_heuristics.size());
 }
 
 /**
@@ -345,12 +370,12 @@ void HeuristicMgr::initNewMHABaseHeur(int g_x, int g_y, RightContArmState& r_arm
         new_goal_state.setGoal(state);
 
         // Create the new heuristic
-        int heur_num = addMHABaseHeur(cost_multiplier);
+        int heur_num = add2DHeur(cost_multiplier);
         // Update its costmap
         m_heuristics[heur_num]->update2DHeuristicMap(m_grid_data);
 
 
-        m_heuristics[heur_num]->setOriginalGoal(m_goal);
+        // m_heuristics[heur_num]->setOriginalGoal(m_goal);
         m_heuristics[heur_num]->setGoal(new_goal_state);
         // m_heuristics[heur_num]->setGoalArmState(r_arm_state);
         m_mha_heur_ids.push_back(heur_num);
@@ -420,7 +445,7 @@ void HeuristicMgr::initializeMHAHeuristics(const int
     }
 
     // assert(static_cast<int>(circle_x.size()) >= m_num_mha_heuristics);
-    for (int i = 0; i < selected_points.size(); ++i)
+    for (size_t i = 0; i < selected_points.size(); ++i)
     {
         RightContArmState r_arm_state =
         getRightArmIKSol(selected_points[i].first, selected_points[i].second);

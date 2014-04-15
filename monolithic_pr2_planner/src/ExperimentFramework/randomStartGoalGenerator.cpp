@@ -103,8 +103,10 @@ bool StartGoalGenerator::generateRandomValidState(RobotState& generated_state,
             generated_state = generateRandomState(NULL);
         else if(is_start_state)  //If we're generating a start state within region bounds
             generated_state = generateRandomState(&m_start_region);
-        else
+        else{
             generated_state = generateRandomState(&m_goal_regions[region_id]);
+            generated_state.visualize();
+        }
 
         if (m_cspace->isValid(generated_state)){
             ContObjectState obj = generated_state.getObjectStateRelMap();

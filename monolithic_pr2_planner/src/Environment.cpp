@@ -8,19 +8,20 @@
 #include <monolithic_pr2_planner/Constants.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
-#include <assert.h>
+#include <algorithm>
+#include <cassert>
 
 #define GOAL_STATE 1
 using namespace monolithic_pr2_planner;
 using namespace boost;
 
 // stateid2mapping pointer inherited from sbpl interface. needed for planner.
-Environment::Environment(ros::NodeHandle nh) : 
-    m_hash_mgr(new HashManager(&StateID2IndexMapping)), 
-    m_nodehandle(nh), m_mprims(m_goal), 
-    m_heur_mgr(new HeuristicMgr()) {
-    m_param_catalog.fetch(nh);
-    configurePlanningDomain();
+Environment::Environment(ros::NodeHandle nh)
+    :   m_hash_mgr(new HashManager(&StateID2IndexMapping)),
+        m_nodehandle(nh), m_mprims(m_goal),
+        m_heur_mgr(new HeuristicMgr()) {
+        m_param_catalog.fetch(nh);
+        configurePlanningDomain();
 }
 
 /**
@@ -28,7 +29,7 @@ Environment::Environment(ros::NodeHandle nh) :
  * @details Intended to be used between calls to subsequent planning
  * requests.
  */
-void Environment::reset(){
+void Environment::reset() {
     m_heur_mgr->reset();
     // m_heur_mgr->setCollisionSpaceMgr(m_cspace_mgr);
     m_hash_mgr.reset(new HashManager(&StateID2IndexMapping));
@@ -38,7 +39,7 @@ void Environment::reset(){
 }
 
 bool Environment::configureRequest(SearchRequestParamsPtr search_request_params,
-                                   int& start_id, int& goal_id){
+                                   int& start_id, int& goal_id) {
     SearchRequestPtr search_request = SearchRequestPtr(new SearchRequest(search_request_params));
     configureQuerySpecificParams(search_request);
     if (!setStartGoal(search_request, start_id, goal_id)){
@@ -52,25 +53,48 @@ int Environment::GetGoalHeuristic(int stateID){
     return GetGoalHeuristic(stateID, 0);
 }
 
-int Environment::GetGoalHeuristic(int stateID, int goal_id){
-    // For now, return the max of all the heuristics
+int Environment::GetGoalHeuristic (int stateID, int goal_id) {
     // This vector is of size NUM_MHA_BASE_HEUR + 2
     // Eg, if NUM_MHA_BASE_HEUR is 2, that means there are 2 additional base
     // heuristics. So, the values will be endEff, Base, Base1, Base2
-    std::vector<int> values = m_heur_mgr->getGoalHeuristic(m_hash_mgr->getGraphState(stateID));
-    // SMHA*
-    // ROS_DEBUG_NAMED(HEUR_LOG, "Heuristic values: Arm: %d\t Base : %d\t", values[0], values[2]);
-    switch(goal_id){
-        case 0: //Anchor
+    std::vector <int> values = m_heur_mgr->getGoalHeuristic(
+        m_hash_mgr->getGraphState(stateID));
+
+    // switch(goal_id){
+    //     case 0: //Anchor
+    //         return std::max(values[0], values[1]);
+    //     case 1: // base
+    //         return values[2];
+    //     case 2: // Base + arm
+    //         return static_cast<int>(0.5f*values[2] +
+    //             0.5f*values[0]);
+    // }
+
+    // switch(goal_id){
+    //     case 0: // Anchor
+    //         return std::max(values[0], values[1]);
+    //     case 1: // ARA Heur
+    //         return EPS2*std::max(values[0], values[1]);
+    //     case 2: //Just arm, inflated
+    //         return EPS2*values[0];
+    //     case 3: // Base1, Base2 heur
+    //     case 4:
+    //         return values[goal_id-1];
+    // }
+
+    // ROS_DEBUG_NAMED(HEUR_LOG, "2: %d,\t 3: %d", values[2],
+    //     values[3]);
+    switch (goal_id) {
+        case 0:  // Anchor
             return std::max(values[0], values[1]);
-        case 1: // base
-            return values[2];
-        case 2: // Base + arm
-            return static_cast<int>(0.5f*values[2] +
-                0.5f*values[0]);
+        case 1:  // Inadmissible
+            return values[4];
+        case 2:  // Distance function
+            // return values[2];
+            return values[2] + values[3];
     }
 
-    return std::max(values[0],values[1]);
+    return std::max(values[0], values[1]);
 }
 
 void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs, 
@@ -87,16 +111,16 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
     GraphStatePtr source_state = m_hash_mgr->getGraphState(sourceStateID);
     ROS_DEBUG_NAMED(SEARCH_LOG, "Source state is:");
     source_state->robot_pose().printToDebug(SEARCH_LOG);
-    if(m_param_catalog.m_visualization_params.expansions){
+    if (m_param_catalog.m_visualization_params.expansions) {
         source_state->robot_pose().visualize();
         usleep(5000);
     }
-    for (auto mprim : m_mprims.getMotionPrims()){
+    for (auto mprim : m_mprims.getMotionPrims()) {
         ROS_DEBUG_NAMED(SEARCH_LOG, "Applying motion:");
         // mprim->printEndCoord();
         GraphStatePtr successor;
         TransitionData t_data;
-        if (!mprim->apply(*source_state, successor, t_data)){
+        if (!mprim->apply(*source_state, successor, t_data)) {
             ROS_DEBUG_NAMED(MPRIM_LOG, "couldn't apply mprim");
             continue;
         }
@@ -112,7 +136,7 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
 
             if (m_goal->isSatisfiedBy(successor)){
                 m_goal->storeAsSolnState(successor);
-                ROS_INFO_NAMED(SEARCH_LOG, "Found potential goal at state %d %d", successor->id(),
+                ROS_DEBUG_NAMED(SEARCH_LOG, "Found potential goal at state %d %d", successor->id(),
                     mprim->cost());
                 succIDs->push_back(GOAL_STATE);
             } else {

@@ -100,10 +100,10 @@ int BFS2DHeuristic::getGoalHeuristic(GraphStatePtr state){
     return getCostMultiplier()*cost;
 }
 
-void BFS2DHeuristic::visualizeCenter(int x, int y){
+void BFS2DHeuristic::visualizeCenter(int x, int y) {
     ROS_DEBUG_NAMED(HEUR_LOG, "[BFS2DHeuristic] Visualizing %d %d,", x, y);
-    vector<vector<double> > startpoint; 
-    std::vector<double> color(4,1);
+    vector <vector <double> > startpoint;
+    std::vector <double> color(4, 1);
     color[1] = color[2] = 0;
     vector<double> point;
     point.push_back(x*m_occupancy_grid->getResolution());
@@ -111,37 +111,36 @@ void BFS2DHeuristic::visualizeCenter(int x, int y){
     point.push_back(0.0);
     startpoint.push_back(point);
     std::stringstream ss;
-    ss<<"start_point"<<x<<y;
-    Visualizer::pviz->visualizeBasicStates(startpoint, color,ss.str(), 0.02);
+    ss << "start_point";
+    Visualizer::pviz->visualizeBasicStates(startpoint, color, ss.str(), 0.02);
 }
 
-void BFS2DHeuristic::setRadiusAroundGoal(double radius_m){
+void BFS2DHeuristic::setRadiusAroundGoal(double radius_m) {
     m_radius = radius_m;
     m_gridsearch.reset(new SBPL2DGridSearch(m_size_col, m_size_row,
         m_occupancy_grid->getResolution(), radius_m));
 }
 
-void BFS2DHeuristic::visualizeRadiusAroundGoal(int x0, int y0){
-    if(!m_radius)
+void BFS2DHeuristic::visualizeRadiusAroundGoal(int x0, int y0) {
+    if (!m_radius)
         return;
     std::vector<int> circle_x;
     std::vector<int> circle_y;
     double res = m_occupancy_grid->getResolution();
     int discrete_radius = m_radius/res;
     getBresenhamCirclePoints(x0, y0, discrete_radius, circle_x, circle_y);
-    
+
     // geometry_msgs::PolygonStamped circle;
-    
+
     // circle.header.frame_id = "/map";
     // circle.header.stamp = ros::Time::now();
     unsigned char threshold = 80;
     std::vector<geometry_msgs::Point> circle_points;
-    
-    for (size_t i = 0; i < circle_x.size(); ++i)
-    {
+
+    for (size_t i = 0; i < circle_x.size(); ++i) {
         // Prune the points to display only the ones that are within the
         // threshold
-        if(m_grid[circle_x[i]][circle_y[i]] <= threshold){
+        if (m_grid[circle_x[i]][circle_y[i]] <= threshold) {
             geometry_msgs::Point out_pt;
             out_pt.x = circle_x[i]*res;
             out_pt.y = circle_y[i]*res;
@@ -150,14 +149,15 @@ void BFS2DHeuristic::visualizeRadiusAroundGoal(int x0, int y0){
         }
     }
     std::stringstream ss;
-    ss<<"radius_around_goal"<<x0<<y0;
-    Visualizer::pviz->visualizeLine(circle_points, ss.str(), x0 + y0, 114, 0.01);
+    ss<< "radius_around_goal";
+    Visualizer::pviz->visualizeLine(
+        circle_points, ss.str(), x0 + y0, 114, 0.01);
 }
 
 // ------------- Bresenham circle points -------------------//
 void BFS2DHeuristic::getBresenhamCirclePoints(int x0, int y0, int radius, std::vector<int>&
     ret_x,
-    std::vector<int>& ret_y){
+    std::vector<int>& ret_y) {
     int x = 0;
     int y = radius;
     int delta = 2 - 2 * radius;
@@ -197,7 +197,7 @@ void BFS2DHeuristic::getBresenhamCirclePoints(int x0, int y0, int radius, std::v
     std::vector<int> ret_x;
     std::vector<int> ret_y;
     getBresenhamCirclePoints(x0, y0, radius, ret_x, ret_y);
-    for (int i = 0; i < ret_x.size(); ++i)
+    for (size_t i = 0; i < ret_x.size(); ++i)
     {
         points.push_back(std::make_pair(ret_x[i], ret_y[i]));
     }
@@ -210,7 +210,7 @@ void BFS2DHeuristic::getBresenhamLinePoints(int x1, int y1, int x2, int y2, std:
     std::vector<int> pts_x;
     std::vector<int> pts_y;
     getBresenhamLinePoints(x1, y1, x2, y2, pts_x, pts_y);
-    for (int i = 0; i < pts_x.size(); ++i)
+    for (size_t i = 0; i < pts_x.size(); ++i)
     {
         points.push_back(std::make_pair(pts_x[i], pts_y[i]));
     }

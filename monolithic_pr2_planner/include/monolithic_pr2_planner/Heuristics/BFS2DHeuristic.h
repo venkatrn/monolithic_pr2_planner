@@ -33,6 +33,8 @@ namespace monolithic_pr2_planner {
                 std::vector<std::pair<int,int> >& points);
             static void getBresenhamLinePoints(int x1, int y1, int x2, int y2, std::vector<std::pair<int, int> >& points);
             static void getBresenhamLinePoints(int x1, int y1, int x2, int y2, std::vector<int>& pts_x, std::vector<int>& pts_y);
+            void setUniformCostSearch(bool ucs = false) {
+                m_gridsearch->setUniformCostSearch(ucs); }
         private:
             std::unique_ptr<SBPL2DGridSearch> m_gridsearch;
             unsigned int m_size_col;
@@ -45,5 +47,5 @@ namespace monolithic_pr2_planner {
             // ros::Publisher m_circlepub;
 
     };
-    typedef boost::shared_ptr<BFS2DHeuristic> BaseHeuristicPtr;
+    typedef boost::shared_ptr<BFS2DHeuristic> BFS2DHeuristicPtr;
 }

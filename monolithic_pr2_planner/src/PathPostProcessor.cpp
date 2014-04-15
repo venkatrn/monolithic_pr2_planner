@@ -43,24 +43,24 @@ vector<FullBodyState> PathPostProcessor::reconstructPath(vector<int> soln_path,
         }
     }
     
-    // vector<FullBodyState> unshortcut_path = getFinalPath(soln_path, 
-    //                                                 transition_states,
-    //                                                 goal_state);
-
-
-
     ROS_INFO("Finding best transition took %.3f", (clock()-temptime)/(double)CLOCKS_PER_SEC);
-    temptime = clock();
-    std::vector<FullBodyState> final_path = shortcutPath(soln_path,
-        transition_states, goal_state);
-    ROS_INFO("Shortcutting took %.3f", (clock()-temptime)/(double)CLOCKS_PER_SEC);
+    vector<FullBodyState> final_path = getFinalPath(soln_path, 
+                                                    transition_states,
+                                                    goal_state);
+
+
+
+    // temptime = clock();
+    // std::vector<FullBodyState> final_path = shortcutPath(soln_path,
+    //     transition_states, goal_state);
+    // ROS_INFO("Shortcutting took %.3f", (clock()-temptime)/(double)CLOCKS_PER_SEC);
     return final_path;
 }
 
 std::vector<FullBodyState> PathPostProcessor::shortcutPath(const vector<int>&
     state_ids, const vector<TransitionData>& transition_states, GoalState& goal_state){
-    ROS_DEBUG_NAMED(HEUR_LOG, "Original request : States : %d, transition data : %d",
-        state_ids.size(), transition_states.size());
+    // ROS_DEBUG_NAMED(HEUR_LOG, "Original request : States : %d, transition data : %d",
+    //     state_ids.size(), transition_states.size());
     std::vector<FullBodyState> final_path;
     size_t i = 0;
     size_t j = 1;
@@ -75,8 +75,8 @@ std::vector<FullBodyState> PathPostProcessor::shortcutPath(const vector<int>&
     std::vector<FullBodyState> interp_states;
     while(j < state_ids.size()){
         assert(i<j);
-        ROS_DEBUG_NAMED(HEUR_LOG, "Shortcutting : %d %d; size of final_path %d", i, j,
-            final_path.size());
+        // ROS_DEBUG_NAMED(HEUR_LOG, "Shortcutting : %d %d; size of final_path %d", i, j,
+        //     final_path.size());
         GraphStatePtr source_state = m_hash_mgr->getGraphState(state_ids[i]);
         GraphStatePtr end_state = m_hash_mgr->getGraphState(state_ids[j]);
         RobotState first_pose = source_state->robot_pose();
@@ -85,9 +85,9 @@ std::vector<FullBodyState> PathPostProcessor::shortcutPath(const vector<int>&
             interp_states.end());
         interp_states.clear();
         bool interpolate = stateInterpolate(first_pose, second_pose, &interp_states);
-        ROS_DEBUG_NAMED(HEUR_LOG, "Interpolated states size: %d; Interp prev size: %d",
-            static_cast<int>(interp_states.size()),
-            static_cast<int>(interp_states_prev.size()));
+        // ROS_DEBUG_NAMED(HEUR_LOG, "Interpolated states size: %d; Interp prev size: %d",
+        //     static_cast<int>(interp_states.size()),
+        //     static_cast<int>(interp_states_prev.size()));
         bool no_collision = true;
         if(interpolate) {
             for (size_t k = 0; k < interp_states.size(); ++k)
@@ -101,11 +101,11 @@ std::vector<FullBodyState> PathPostProcessor::shortcutPath(const vector<int>&
         if(interpolate && no_collision){
             j++;            
         } else {
-            ROS_DEBUG_NAMED(HEUR_LOG, "Collision here; %d %d", i, j);
+            // ROS_DEBUG_NAMED(HEUR_LOG, "Collision here; %d %d", i, j);
             // Check if it is a consecutive state
             if(i == (j - 1)){
-                ROS_DEBUG_NAMED(HEUR_LOG, "Already, i (%d) is j (%d) - 1",
-                    i, j);
+                // ROS_DEBUG_NAMED(HEUR_LOG, "Already, i (%d) is j (%d) - 1",
+                    // i, j);
                 int motion_type = transition_states[i].motion_type();
                 bool isInterpBaseMotion = (motion_type == MPrim_Types::BASE || 
                                            motion_type == MPrim_Types::BASE_ADAPTIVE);
@@ -178,7 +178,7 @@ void PathPostProcessor::visualizeFinalPath(vector<FullBodyState> path){
 bool PathPostProcessor::isBasePathBetter(std::vector<FullBodyState> &new_path,
     std::vector<FullBodyState> &original_path){
     double new_dist = 0;
-    for (int i = 0; i < new_path.size()-1; ++i)
+    for (size_t i = 0; i < new_path.size()-1; ++i)
     {
         new_dist += (new_path[i].base[BodyDOF::X] -
         new_path[i+1].base[BodyDOF::X])*(new_path[i].base[BodyDOF::X] -
@@ -188,7 +188,7 @@ bool PathPostProcessor::isBasePathBetter(std::vector<FullBodyState> &new_path,
         new_path[i+1].base[BodyDOF::Y]);
     }
     double original_dist = 0;
-    for (int i = 0; i < original_path.size()-1; ++i)
+    for (size_t i = 0; i < original_path.size()-1; ++i)
     {
         original_dist += (original_path[i].base[BodyDOF::X] -
         original_path[i+1].base[BodyDOF::X])*(original_path[i].base[BodyDOF::X] -
@@ -244,6 +244,15 @@ bool PathPostProcessor::findBestTransition(int start_id, int end_id,
     }
     return (best_cost != 1000000);
 }
+
+/**
+ * @brief Creates a fullBodyState given a RobotState
+ * @details fullBodyState is the type used by all functions that deal with the
+ * final path. This function converts a RobotState to a FBState
+ * 
+ * @param robot a RobotState object
+ * @return a FullBodyState
+ */
 
 FullBodyState PathPostProcessor::createFBState(const RobotState& robot){
     vector<double> l_arm, r_arm, base;

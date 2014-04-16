@@ -87,6 +87,7 @@ void StatsWriter::write(int trial_id, RRTData data){
     fclose(stats);
 }
 
+
 void StatsWriter::writeARA(std::vector<double> &stats_v, std::vector<FullBodyState> &states, 
                            int trial_id){
     ROS_INFO("writing ara stats");
@@ -143,15 +144,15 @@ void StatsWriter::writeARA(std::vector<double> &stats_v, std::vector<FullBodySta
     fclose(stats);
 }
 
-void StatsWriter::writeMHA(std::vector<double> &stats_v, std::vector<FullBodyState> &states, 
-                           int trial_id, bool imha){
-    ROS_INFO("writing mha stats");
+void StatsWriter::writeSBPL(std::vector<double> &stats_v, std::vector<FullBodyState> &states,
+                           int trial_id, std::string file_prefix){
+    ROS_INFO("writing %s stats", file_prefix.c_str());
     stringstream ss;
-    if(imha == true){
-      ss << m_current_path.str().c_str() << "imha_" << std::setfill('0') << std::setw(2) << trial_id << ".stats";
-    } else {
-      ss << m_current_path.str().c_str() << "smha_" << std::setfill('0') << std::setw(2) << trial_id << ".stats";
-    }
+    // if(imha == true){
+      ss << m_current_path.str().c_str() << file_prefix.c_str() << std::setfill('0') << std::setw(2) << trial_id << ".stats";
+    // } else {
+      // ss << m_current_path.str().c_str() << "smha_" << std::setfill('0') << std::setw(2) << trial_id << ".stats";
+    // }
     ROS_DEBUG_NAMED(HEUR_LOG, "Opening file : %s", ss.str().c_str());
     FILE* stats = fopen(ss.str().c_str(), "w");
     fprintf(stats, "%f %f %f %f %f %f %f %f %f %f\n", stats_v[0],
@@ -167,12 +168,11 @@ void StatsWriter::writeMHA(std::vector<double> &stats_v, std::vector<FullBodySta
     stringstream ss2;
 
     if (states.size()){
-        if(imha == true){
-          ss2 << m_current_path.str().c_str() << "imha_" << std::setfill('0') << std::setw(2) << trial_id << ".path";
-        } else {
-          ss2 << m_current_path.str().c_str() << "smha_" << std::setfill('0') << std::setw(2) << trial_id << ".path";
-
-        }
+        // if(imha == true){
+          ss2 << m_current_path.str().c_str() << file_prefix.c_str() << std::setfill('0') << std::setw(2) << trial_id << ".path";
+        // } else {
+          // ss2 << m_current_path.str().c_str() << "smha_" << std::setfill('0') << std::setw(2) << trial_id << ".path";
+        // }
         FILE* path = fopen(ss2.str().c_str(), "w");
         for (size_t i=0; i < states.size(); i++){
             vector<double> l_arm = states[i].left_arm;

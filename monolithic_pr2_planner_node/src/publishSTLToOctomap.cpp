@@ -91,7 +91,7 @@ void addRandomObstacles(pcl::PointCloud<pcl::PointXYZ>::Ptr pclCloud, int
     double surfaceBoundsXMin = 6.2;
     double surfaceBoundsXMax = 7;
     
-    double surfaceBoundsYMin = 0;
+    double surfaceBoundsYMin = 0.8;
     double surfaceBoundsYMax = 3.5;
 
     double surfaceSizeXMax = 0.65;

@@ -13,8 +13,9 @@
 #include <vector>
 #include <memory>
 
-#define NUM_SMHA_HEUR 3 // Used in EnvInterfaces to initialize the planner.
+#define NUM_SMHA_HEUR 5 // Used in EnvInterfaces to initialize the planner.
 // This should include the Anchor search -> Total number of searches.
+
 #define EPS1 25
 #define EPS2 2
 
@@ -35,6 +36,7 @@ namespace monolithic_pr2_planner {
             std::vector<FullBodyState> reconstructPath(std::vector<int> 
                 state_ids);
             void reset();
+            void setPlannerType(int planner_type);
 
         protected:
             bool setStartGoal(SearchRequestPtr search_request, 
@@ -50,6 +52,8 @@ namespace monolithic_pr2_planner {
             GoalStatePtr m_goal;
             MotionPrimitivesMgr m_mprims;
             HeuristicMgrPtr m_heur_mgr;
+
+            int m_planner_type;
 
         // SBPL interface stuff
         public:

@@ -97,10 +97,6 @@ HeuristicMgr::HeuristicMgr() :
     m_num_mha_heuristics(NUM_MHA_BASE_HEUR) {
 }
 
-// HeuristicMgr::HeuristicMgr(CSpaceMgrPtr cspace_mgr){
-//     m_num_mha_heuristics = 0;
-//     m_cspace_mgr = cspace_mgr;
-// }
 
 /**
  * @brief Resets the heuristic manager.
@@ -113,27 +109,49 @@ void HeuristicMgr::reset(){
     update2DHeuristicMaps(m_grid_data);
 }
 
-void HeuristicMgr::initializeHeuristics(){
-    // TODO: It's 40 for now, until the actual cost for arm costs are computed.
+/**
+ * @brief sets the planner type - mainly for experiments for the MHA paper
+ * @details change the internal planner type to any of the different planners
+ */
+void HeuristicMgr::setPlannerType(int planner_type) {
+    m_planner_type = planner_type;
+    switch (planner_type) {
+        case T_SMHA:
+        case T_IMHA:
+        case T_MHG_REEX:
+        case T_MHG_NO_REEX:
+            m_num_mha_heuristics = 2;
+            break;
+        case T_ARA:
+        case T_MPWA:
+            m_num_mha_heuristics = 0;
+            break;
+        case T_EES:
+            m_num_mha_heuristics = 1;
+            addUniformCost3DHeur();
+            addUniformCost2DHeur(1, 0.7);
+            break;
+    }
+}
+
+void HeuristicMgr::initializeHeuristics() {
+    // NOTE: It's 40 for now, until the actual cost for arm costs are computed.
     // 3DHeur is unit costs - multiply by whatever you want.
     // To get them in terms of mm distance
     // add3DHeur(20);  //0 - multiply by 20 : grid resolution in mm :
     // underestimated
-    add3DHeur(20);  //0 - multiply by 20 : grid resolution in mm :
+    add3DHeur(20);  // 0 - multiply by 20 : grid resolution in mm :
     // underestimated
-    
+
     // Already in mm.
-    m_base_heur_id = add2DHeur(1, 0.7);//1
+    m_base_heur_id = add2DHeur(1, 0.7);  // 1
     // The argument is TOTAL_HEUR_NUM - 1 (TOTAL_HEUR_NUM is what you
     // entered in the MPlanner parameters)
-    addUniformCost3DHeur();
-    addUniformCost2DHeur(1, 0.7);
 
     // m_arm_angles_heur_id = addArmAnglesHeur(1);
 }
 
-int HeuristicMgr::add3DHeur(const int cost_multiplier){
-
+int HeuristicMgr::add3DHeur(const int cost_multiplier) {
     // Initialize the new heuristic.
     AbstractHeuristicPtr new_3d_heur = make_shared<BFS3DHeuristic>();
     // MUST set the cost multiplier here. If not, it is taken as 1.
@@ -247,8 +265,8 @@ void HeuristicMgr::setGoal(GoalState& goal_state){
     m_goal = goal_state;
 
     // At this point, there are no dynamic heuristics.
-    // TODO: Change this if we initialize the grids before the planning request
-    for (size_t i = 0; i < m_heuristics.size(); ++i){
+    // NOTE: Change this if we initialize the grids before the planning request
+    for (size_t i = 0; i < m_heuristics.size(); ++i) {
         ROS_DEBUG_NAMED(HEUR_LOG, "[HeurMgr] Setting goal for heuristic %d", int(i));
         m_heuristics[i]->setGoal(goal_state);
     }
@@ -289,7 +307,7 @@ bool HeuristicMgr::checkIKAtPose(int g_x, int g_y, RobotPosePtr& final_pose){
 
         seed_robot_pose.right_arm(r_arm);
 
-        vector<double> init_l_arm(7,0);
+        vector <double> init_l_arm(7, 0);
         init_l_arm[0] = (0.038946287971107774);
         init_l_arm[1] = (1.2146697069025374);
         init_l_arm[2] = (1.3963556492780154);
@@ -396,7 +414,7 @@ void HeuristicMgr::initializeMHAHeuristics(const int
     double res = m_occupancy_grid->getResolution();
     int discrete_radius = radius_around_goal/res;
     BFS2DHeuristic::getBresenhamCirclePoints(state.x(), state.y(), discrete_radius, circle_x, circle_y);
-    
+
     // ROS_DEBUG_NAMED(HEUR_LOG, "[MHAHeur] Radius around goal: %f, resolution: %f, discrete radius: %d", radius_around_goal, res, discrete_radius);
     // No, we cannot have more number of heuristics than there are points on
     // the cirlce. That's just redundant.
@@ -408,8 +426,7 @@ void HeuristicMgr::initializeMHAHeuristics(const int
      * Get the size of this list. Sample from a uniform distribution. 
      * Make sure you don't repeat points. */
     unsigned char threshold = 80;
-    for (size_t i = 0; i < circle_x.size();)
-    {
+    for (size_t i = 0; i < circle_x.size();) {
         // Reject points on obstacles.
         if(m_grid[circle_x[i]][circle_y[i]] > threshold){    //Obstacle!
             circle_x.erase(circle_x.begin() + i);
@@ -427,8 +444,7 @@ void HeuristicMgr::initializeMHAHeuristics(const int
     std::vector<int> ik_circle_x;
     std::vector<int> ik_circle_y;
 
-    for (size_t i = 0; i < circle_x.size(); ++i)
-    {
+    for (size_t i = 0; i < circle_x.size(); ++i) {
         if(isValidIKForGoalState(circle_x[i], circle_y[i])){
             ik_circle_x.push_back(circle_x[i]);
             ik_circle_y.push_back(circle_y[i]);
@@ -436,7 +452,7 @@ void HeuristicMgr::initializeMHAHeuristics(const int
     }
 
     std::vector<Point> selected_points;
-    if(static_cast<int>(ik_circle_x.size()) < m_num_mha_heuristics){
+    if (static_cast<int>(ik_circle_x.size()) < m_num_mha_heuristics) {
         selected_points = sample_points(discrete_radius,
                 center_x, center_y, circle_x, circle_y, m_num_mha_heuristics);
     } else {
@@ -445,12 +461,15 @@ void HeuristicMgr::initializeMHAHeuristics(const int
     }
 
     // assert(static_cast<int>(circle_x.size()) >= m_num_mha_heuristics);
-    for (size_t i = 0; i < selected_points.size(); ++i)
-    {
+    for (size_t i = 0; i < selected_points.size(); ++i) {
         RightContArmState r_arm_state =
         getRightArmIKSol(selected_points[i].first, selected_points[i].second);
         initNewMHABaseHeur(selected_points[i].first, selected_points[i].second,
-            r_arm_state, 
+            r_arm_state,
             cost_multiplier);
     }
+    ROS_DEBUG_NAMED(HEUR_LOG, "--------------------");
+    ROS_DEBUG_NAMED(HEUR_LOG, "Size of m_heuristics : %d", static_cast<int>
+        (m_heuristics.size()));
+    ROS_DEBUG_NAMED(HEUR_LOG, "--------------------");
 }

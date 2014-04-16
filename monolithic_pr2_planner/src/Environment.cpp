@@ -19,7 +19,8 @@ using namespace boost;
 Environment::Environment(ros::NodeHandle nh)
     :   m_hash_mgr(new HashManager(&StateID2IndexMapping)),
         m_nodehandle(nh), m_mprims(m_goal),
-        m_heur_mgr(new HeuristicMgr()) {
+        m_heur_mgr(new HeuristicMgr()),
+        m_planner_type(T_SMHA) {
         m_param_catalog.fetch(nh);
         configurePlanningDomain();
 }
@@ -38,28 +39,84 @@ void Environment::reset() {
     // m_param_catalog.fetch(m_nodehandle);
 }
 
+/**
+ * @brief sets the planner type - mainly for experiments for the MHA paper
+ * @details change the internal planner type to any of the different planners
+ */
+void Environment::setPlannerType(int planner_type) {
+    m_planner_type = planner_type;
+    m_heur_mgr->setPlannerType(planner_type);
+}
+
 bool Environment::configureRequest(SearchRequestParamsPtr search_request_params,
                                    int& start_id, int& goal_id) {
-    SearchRequestPtr search_request = SearchRequestPtr(new SearchRequest(search_request_params));
+    SearchRequestPtr search_request = SearchRequestPtr(new SearchRequest(
+        search_request_params));
     configureQuerySpecificParams(search_request);
-    if (!setStartGoal(search_request, start_id, goal_id)){
+    if (!setStartGoal(search_request, start_id, goal_id)) {
         return false;
     }
     return true;
 }
 
-int Environment::GetGoalHeuristic(int stateID){
+int Environment::GetGoalHeuristic(int stateID) {
     // For now, return the max of all the heuristics
     return GetGoalHeuristic(stateID, 0);
 }
 
-int Environment::GetGoalHeuristic (int stateID, int goal_id) {
+int Environment::GetGoalHeuristic(int stateID, int goal_id) {
     // This vector is of size NUM_MHA_BASE_HEUR + 2
     // Eg, if NUM_MHA_BASE_HEUR is 2, that means there are 2 additional base
     // heuristics. So, the values will be endEff, Base, Base1, Base2
     std::vector <int> values = m_heur_mgr->getGoalHeuristic(
         m_hash_mgr->getGraphState(stateID));
 
+    switch (m_planner_type) {
+        case T_SMHA:
+        case T_MHG_REEX:
+        case T_MHG_NO_REEX:
+        case T_ARA:
+            switch (goal_id) {
+                case 0:  // Anchor
+                    return std::max(values[0], values[1]);
+                case 1:  // ARA Heur
+                    return EPS2*std::max(values[0], values[1]);
+                case 2:  // Just arm, inflated
+                    return EPS2*values[0];
+                case 3:  // Base1, Base2 heur
+                case 4:
+                    return values[goal_id-1];
+            }
+            break;
+        case T_IMHA:
+            switch (goal_id) {
+                case 0:  // Anchor
+                    return std::max(values[0], values[1]);
+                case 1:  // ARA Heur
+                    return EPS2*std::max(values[0], values[1]);
+                case 2:  // Base1, Base2 heur
+                case 3:
+                    return values[goal_id];
+            }
+            break;
+        case T_MPWA:
+            return (goal_id+1)*(EPS1*EPS2/NUM_SMHA_HEUR)*std::max(
+                values[0], values[1]);
+            break;
+        case T_EES:
+            switch (goal_id) {
+                case 0:  // Anchor
+                    return std::max(values[0], values[1]);
+                case 1:  // Inadmissible
+                    return values[4];
+                case 2:  // Distance function
+                    // return values[2];
+                    return values[2] + values[3];
+            }
+            break;
+    }
+
+    // Post-paper
     // switch(goal_id){
     //     case 0: //Anchor
     //         return std::max(values[0], values[1]);
@@ -70,29 +127,10 @@ int Environment::GetGoalHeuristic (int stateID, int goal_id) {
     //             0.5f*values[0]);
     // }
 
-    // switch(goal_id){
-    //     case 0: // Anchor
-    //         return std::max(values[0], values[1]);
-    //     case 1: // ARA Heur
-    //         return EPS2*std::max(values[0], values[1]);
-    //     case 2: //Just arm, inflated
-    //         return EPS2*values[0];
-    //     case 3: // Base1, Base2 heur
-    //     case 4:
-    //         return values[goal_id-1];
-    // }
 
     // ROS_DEBUG_NAMED(HEUR_LOG, "2: %d,\t 3: %d", values[2],
     //     values[3]);
-    switch (goal_id) {
-        case 0:  // Anchor
-            return std::max(values[0], values[1]);
-        case 1:  // Inadmissible
-            return values[4];
-        case 2:  // Distance function
-            // return values[2];
-            return values[2] + values[3];
-    }
+    // EES
 
     return std::max(values[0], values[1]);
 }
@@ -125,7 +163,7 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
             continue;
         }
 
-        if (m_cspace_mgr->isValidSuccessor(*successor, t_data) && 
+        if (m_cspace_mgr->isValidSuccessor(*successor,t_data) &&
             m_cspace_mgr->isValidTransitionStates(t_data)){
             ROS_DEBUG_NAMED(SEARCH_LOG, "Source state is:");
             source_state->printToDebug(SEARCH_LOG);

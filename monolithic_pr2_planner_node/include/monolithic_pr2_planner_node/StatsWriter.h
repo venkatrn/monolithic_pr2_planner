@@ -25,15 +25,13 @@ struct RRTData {
 class StatsWriter {
     public:
         StatsWriter(int planner_id=-1);
-        void writeMHA(std::vector<double> &stats, 
+        void writeSBPL(std::vector<double> &stats, 
                       std::vector<monolithic_pr2_planner::FullBodyState> &states, 
-                      int trial_id, bool imha = false);
+                      int trial_id, std::string
+                      planner_prefix);
         void writeARA(std::vector<double> &stats, 
                       std::vector<monolithic_pr2_planner::FullBodyState> &states, 
                       int trial_id);
-        void writeRRT(int trial_id, RRTData data);
-        void writePRM(int trial_id, RRTData data);
-        void writeRRTStar(int trial_id, RRTData data);
         void write(int trial_id, RRTData data);
         inline void setPlannerId(int planner_id){ m_planner_id = planner_id; };
     private:

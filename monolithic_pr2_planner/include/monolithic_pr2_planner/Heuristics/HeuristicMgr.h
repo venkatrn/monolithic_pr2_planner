@@ -15,10 +15,22 @@
 #define NUM_MHA_BASE_HEUR 1
 
 
+
+
 namespace monolithic_pr2_planner {
+    // Type of planner.
+    enum {
+        T_SMHA,
+        T_IMHA,
+        T_MPWA,
+        T_MHG_REEX,
+        T_MHG_NO_REEX,
+        T_EES,
+        T_ARA,
+    };
     /*! \brief The manager class that handles all the heuristics.
      */
-    class HeuristicMgr : public OccupancyGridUser{
+    class HeuristicMgr : public OccupancyGridUser {
         public:
             HeuristicMgr();
             // HeuristicMgr(CSpaceMgrPtr cspace_mgr);
@@ -31,14 +43,15 @@ namespace monolithic_pr2_planner {
             // heuristic type is added, a corresponding add<type>Heur() method
             // needs to be added here. Returns the id of the heuristic in the
             // internal m_heuristics vector.
-            int add3DHeur(const int cost_multiplier=1);
-            int add2DHeur(const int cost_multiplier=1, const double radius_m = 0);
-            int addMHABaseHeur(const int cost_multiplier=1);
-            int addUniformCost2DHeur(const int cost_multiplier=1, const double
+            int add3DHeur(const int cost_multiplier = 1);
+            int add2DHeur(const int cost_multiplier = 1,
+                            const double radius_m = 0);
+            int addMHABaseHeur(const int cost_multiplier = 1);
+            int addUniformCost2DHeur(const int cost_multiplier = 1, const double
                 radius_m = 0);
             int addUniformCost3DHeur();
-            int addEndEffHeur(const int cost_multiplier=1);
-            int addArmAnglesHeur(const int cost_multiplier=1);
+            int addEndEffHeur(const int cost_multiplier = 1);
+            int addArmAnglesHeur(const int cost_multiplier = 1);
 
             // Updates the collision map for the heuristics that need them.
             // Doesn't take in an argument because each 3D heuristic shares the
@@ -65,9 +78,10 @@ namespace monolithic_pr2_planner {
             //     = num_mha_heuristics;};
 
             void reset();
+            void setPlannerType(int planner_type);
 
             // int numberOfMHAHeuristics(){ return m_num_mha_heuristics;};
-	    inline void setCollisionSpaceMgr(CSpaceMgrPtr cspace_mgr){ m_cspace_mgr = cspace_mgr;};
+        inline void setCollisionSpaceMgr(CSpaceMgrPtr cspace_mgr){ m_cspace_mgr = cspace_mgr;};
  
         private:
             bool isValidIKForGoalState(int g_x, int g_y);
@@ -76,6 +90,7 @@ namespace monolithic_pr2_planner {
             RightContArmState getRightArmIKSol(int g_x, int g_y);
             void initNewMHABaseHeur(int g_x, int g_y, RightContArmState& r_arm_state, const int
                 cost_multiplier);
+
 
             GoalState m_goal;
             std::vector<AbstractHeuristicPtr> m_heuristics;
@@ -89,6 +104,7 @@ namespace monolithic_pr2_planner {
             std::vector<int> m_mha_heur_ids;
             int m_base_heur_id;
             int m_arm_angles_heur_id;
+            int m_planner_type;
             
             // Saving the goal and the grid for MHA heuristics
             unsigned char** m_grid;

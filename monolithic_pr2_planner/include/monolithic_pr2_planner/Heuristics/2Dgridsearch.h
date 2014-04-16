@@ -145,7 +145,8 @@ public:
             return ((searchStates2D_[x][y].iterationaccessed == iteration_ &&
                     searchStates2D_[x][y].g + h <= largestcomputedoptf_)      ? (cellSize_m_*sqrt((x - startX_)*(x - startX_) + (y - startY_)*(y - startY_)) < radius_) ? 0:(searchStates2D_[x][y].g) :
                     largestcomputedoptf_ < INFINITECOST                       ? largestcomputedoptf_ - h :
-                                                                                INFINITECOST);
+                                                                               
+                    INFINITECOST/2);
         }
         else {
             //Dijkstra's search

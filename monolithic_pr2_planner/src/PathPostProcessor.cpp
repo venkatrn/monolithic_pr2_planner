@@ -163,7 +163,7 @@ void PathPostProcessor::visualizeFinalPath(vector<FullBodyState> path){
         bp.z = base[2];
         bp.theta = base[3];
         Visualizer::pviz->visualizeRobot(r_arm, l_arm, bp, 150, "robot", 0);
-        usleep(50000);
+        usleep(5000);
         // std::cin.get();
     }
 }

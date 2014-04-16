@@ -13,6 +13,7 @@
 #include <costmap_2d/costmap_2d_ros.h>
 #include <costmap_2d/costmap_2d_publisher.h>
 #include <monolithic_pr2_planner_node/StatsWriter.h>
+#include <monolithic_pr2_planner/SearchRequest.h>
 #include <monolithic_pr2_planner/PathPostProcessor.h>
 
 #include <monolithic_pr2_planner_node/ompl_pr2_planner.h>
@@ -52,6 +53,13 @@ namespace monolithic_pr2_planner_node {
             void crop2DMap(const nav_msgs::MapMetaData& map_info, const std::vector<signed char>& v,
                            double new_origin_x, double new_origin_y,
                            double width, double height);
+            void runMHAPlanner(int planner_type,
+                  std::string planner_prefix,
+                  GetMobileArmPlan::Request &req,
+                  GetMobileArmPlan::Response &res,
+                  monolithic_pr2_planner::SearchRequestParamsPtr search_request,
+                  int counter);
+
             ros::NodeHandle m_nodehandle;
             InterfaceParams m_params;
             boost::shared_ptr<monolithic_pr2_planner::Environment> m_env;

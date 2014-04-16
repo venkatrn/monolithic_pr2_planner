@@ -3,7 +3,6 @@
 #include <monolithic_pr2_planner/StateReps/RobotState.h>
 #include <monolithic_pr2_planner/StateReps/ContBaseState.h>
 #include <monolithic_pr2_planner/StateReps/ContObjectState.h>
-#include <monolithic_pr2_planner/SearchRequest.h>
 #include <monolithic_pr2_planner/Constants.h>
 #include <kdl/frames.hpp>
 #include <boost/filesystem.hpp>
@@ -66,9 +65,9 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
     vector<pair<RobotState, RobotState> > start_goal_pairs;
     RobotState::setPlanningMode(PlanningModes::RIGHT_ARM_MOBILE);
     int counter = 0;
-    while (counter < 5){
+    while (counter < 10){
         m_generator->initializeRegions();
-        m_generator->generateUniformPairs(6, start_goal_pairs);
+        m_generator->generateUniformPairs(10, start_goal_pairs);
 
         for (auto& start_goal : start_goal_pairs){
             ROS_ERROR("running trial %d", counter);
@@ -123,6 +122,8 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
             vector<double> stats;
             vector<string> stat_names;
             vector<FullBodyState> states;
+            vector<int> soln;
+            int soln_cost;
 
             // if(!m_env->configureRequest(search_request, start_id, goal_id))
             //         ROS_ERROR("Unable to configure request for MHA! Trial ID: %d", counter);
@@ -132,10 +133,18 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
             } else {
                 // Here starts the actual planning requests
 
-                /****** RUN SMHA **********/
+                runMHAPlanner(monolithic_pr2_planner::T_SMHA, "smha_", req, res, search_request, counter);
+                runMHAPlanner(monolithic_pr2_planner::T_IMHA, "imha_", req, res, search_request, counter);
+                runMHAPlanner(monolithic_pr2_planner::T_MPWA, "mpwa_", req, res, search_request, counter);
+                runMHAPlanner(monolithic_pr2_planner::T_MHG_REEX, "mhg_reex_", req, res, search_request, counter);
+                runMHAPlanner(monolithic_pr2_planner::T_MHG_NO_REEX, "mhg_no_reex_", req, res, search_request, counter);
+                runMHAPlanner(monolithic_pr2_planner::T_EES, "ees_", req, res, search_request, counter);
+
+                /****** RUN SMHA **********
                 m_env->reset();
+                m_env->setPlannerType(T_SMHA);
                 m_mha_planner.reset(new MPlanner(m_env.get(), NUM_SMHA_HEUR, forward_search,
-                    false));
+                    T_SMHA));
                 total_planning_time = clock();
                 if(!m_env->configureRequest(search_request, start_id, goal_id))
                     ROS_ERROR("Unable to configure request for SMHA! Trial ID: %d", counter);
@@ -146,21 +155,16 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
                 ROS_INFO("setting SMHA goal id to %d", goal_id);
                 m_mha_planner->set_goal(goal_id);
                 m_mha_planner->force_planning_from_scratch();
-                vector<int> soln;
-                int soln_cost;
                 isPlanFound = m_mha_planner->replan(req.allocated_planning_time, 
                                                      &soln, &soln_cost);
 
-                // stats.clear();
-                // stat_names.clear();
-                // states.clear();
-                if (isPlanFound){
+                if (isPlanFound) {
                     ROS_INFO("Plan found in SMHA Planner. Moving on to reconstruction.");
                     states =  m_env->reconstructPath(soln);
                     total_planning_time = clock() - total_planning_time;
                     packageMHAStats(stat_names, stats, soln_cost, states.size(),
                         total_planning_time);
-                    m_stats_writer.writeMHA(stats, states, counter, false);
+                    m_stats_writer.writeSBPL(stats, states, counter, "smha_");
                     res.stats_field_names = stat_names;
                     res.stats = stats;
                 } else {
@@ -170,55 +174,16 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
                 }
                 /********* END SMHA ********/
 
-
-                // Run IMHA
-                // resetEnvironment(true);
-                // m_mha_planner.reset(new MPlanner(m_env.get(), NUM_IMHA_HEUR, forward_search,
-                //     true));
-                // total_planning_time = clock();
-                // if(!m_env->configureRequest(search_request, start_id, goal_id))
-                //     ROS_ERROR("Unable to configure request for IMHA! Trial ID: %d", counter);
-                // m_mha_planner->set_initialsolution_eps1(EPS1);
-                // m_mha_planner->set_initialsolution_eps2(EPS2);
-                // m_mha_planner->set_search_mode(return_first_soln);
-                // m_mha_planner->set_start(start_id);
-                // ROS_INFO("setting IMHA goal id to %d", goal_id);
-                // m_mha_planner->set_goal(goal_id);
-                // m_mha_planner->force_planning_from_scratch();
-                // soln.clear();
-                // soln_cost = 0;
-                // isPlanFound = m_mha_planner->replan(req.allocated_planning_time, 
-                //                                      &soln, &soln_cost);
-
-                // // stats.clear();
-                // // stat_names.clear();
-                // // states.clear();
-                // if (isPlanFound){
-                //     ROS_INFO("Plan found in IMHA Planner. Moving on to reconstruction.");
-                //     states =  m_env->reconstructPath(soln);
-                //     total_planning_time = clock() - total_planning_time;
-                //     packageMHAStats(stat_names, stats, soln_cost, states.size(),
-                //         total_planning_time);
-                //     m_stats_writer.writeMHA(stats, states, counter, true);
-                //     res.stats_field_names = stat_names;
-                //     res.stats = stats;
-                // } else {
-                //     packageMHAStats(stat_names, stats, soln_cost, states.size(),
-                //         total_planning_time);
-                //     ROS_INFO("No plan found!");
-                // }
-
-
                 // ARA Planner
-                /*** BEGIN ARA PLANNER ****
+                /*** BEGIN ARA PLANNER ****/
                 m_env->reset();
-                // Not sure if actually necessary
+                m_env->setPlannerType(monolithic_pr2_planner::T_ARA);
                 m_ara_planner.reset(new ARAPlanner(m_env.get(), forward_search));
                 total_planning_time = clock();
                 if(!m_env->configureRequest(search_request, start_id, goal_id))
                     ROS_ERROR("Unable to configure request for ARA! Trial ID: %d", counter);
 
-                m_ara_planner->set_initialsolution_eps(search_request->initial_epsilon);
+                m_ara_planner->set_initialsolution_eps(EPS1*EPS2);
                 m_ara_planner->set_search_mode(return_first_soln);
                 m_ara_planner->set_start(start_id);
                 ROS_INFO("setting ARA goal id to %d", goal_id);
@@ -229,9 +194,6 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
                 isPlanFound = m_ara_planner->replan(req.allocated_planning_time, 
                                                      &soln, &soln_cost);
 
-                // stats.clear();
-                // stat_names.clear();
-                // states.clear();
                 if (isPlanFound){
                     ROS_INFO("Plan found in ARA Planner. Moving on to reconstruction.");
                     states =  m_env->reconstructPath(soln);
@@ -266,6 +228,65 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
         }
     }
     return true;
+}
+
+void EnvInterfaces::runMHAPlanner(int planner_type,
+    std::string planner_prefix,
+    GetMobileArmPlan::Request &req,
+    GetMobileArmPlan::Response &res,
+    SearchRequestParamsPtr search_request,
+    int counter) {
+
+    int start_id, goal_id;
+    bool return_first_soln = true;
+    bool forward_search = true;
+    clock_t total_planning_time;
+    bool isPlanFound;
+    vector<double> stats;
+    vector<string> stat_names;
+    vector<FullBodyState> states;
+
+    int planner_queues = NUM_SMHA_HEUR;
+    if (planner_type == monolithic_pr2_planner::T_EES)
+        planner_queues = 3;
+    else if (planner_type == monolithic_pr2_planner::T_IMHA)
+        planner_queues = 4;
+
+    m_env->reset();
+    m_env->setPlannerType(planner_type);
+    m_mha_planner.reset(new MPlanner(m_env.get(), planner_queues, forward_search,
+        planner_type));
+    total_planning_time = clock();
+    if (!m_env->configureRequest(search_request, start_id, goal_id))
+        ROS_ERROR("Unable to configure request for %s! Trial ID: %d",
+         planner_prefix.c_str(), counter);
+    m_mha_planner->set_initialsolution_eps1(EPS1);
+    m_mha_planner->set_initialsolution_eps2(EPS2);
+    m_mha_planner->set_search_mode(return_first_soln);
+    m_mha_planner->set_start(start_id);
+    ROS_INFO("setting %s goal id to %d", planner_prefix.c_str(), goal_id);
+    m_mha_planner->set_goal(goal_id);
+    m_mha_planner->force_planning_from_scratch();
+    vector<int> soln;
+    int soln_cost;
+    isPlanFound = m_mha_planner->replan(req.allocated_planning_time, 
+                                         &soln, &soln_cost);
+
+    if (isPlanFound) {
+        ROS_INFO("Plan found in %s Planner. Moving on to reconstruction.",
+            planner_prefix.c_str());
+        states =  m_env->reconstructPath(soln);
+        total_planning_time = clock() - total_planning_time;
+        packageMHAStats(stat_names, stats, soln_cost, states.size(),
+            total_planning_time);
+        m_stats_writer.writeSBPL(stats, states, counter, planner_prefix);
+        res.stats_field_names = stat_names;
+        res.stats = stats;
+    } else {
+        packageMHAStats(stat_names, stats, soln_cost, states.size(),
+            total_planning_time);
+        ROS_INFO("No plan found in %s!", planner_prefix.c_str());
+    }
 }
 
 bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req, 

@@ -64,7 +64,7 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
     ROS_INFO("running simulations!");
     vector<pair<RobotState, RobotState> > start_goal_pairs;
     RobotState::setPlanningMode(PlanningModes::RIGHT_ARM_MOBILE);
-    int number_of_trials = 5;
+    int number_of_trials = 10;
     int counter = 0;
     while (counter < number_of_trials){
         m_generator->initializeRegions();
@@ -131,13 +131,17 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
 
             // if(!m_env->configureRequest(search_request, start_id, goal_id))
             //         ROS_ERROR("Unable to configure request for MHA! Trial ID: %d", counter);
+            int environment_seed;
+
+            m_nodehandle.getParam("/monolithic_pr2_planner_node/experiments/seed",
+                environment_seed);
 
             if (!m_rrt->checkRequest(*search_request)){
                     ROS_WARN("bad start goal for ompl");
             } else {
                 // Here starts the actual planning requests
                 start_goal.first.visualize();
-                m_stats_writer.writeStartGoal(counter, start_goal);
+                m_stats_writer.writeStartGoal(counter, start_goal, environment_seed);
                 runMHAPlanner(monolithic_pr2_planner::T_SMHA, "smha_", req, res, search_request, counter);
                 runMHAPlanner(monolithic_pr2_planner::T_IMHA, "imha_", req, res, search_request, counter);
                 runMHAPlanner(monolithic_pr2_planner::T_MPWA, "mpwa_", req, res, search_request, counter);
@@ -225,7 +229,7 @@ void EnvInterfaces::runMHAPlanner(int planner_type,
     if (planner_type == monolithic_pr2_planner::T_EES)
         planner_queues = 3;
     else if (planner_type == monolithic_pr2_planner::T_IMHA)
-        planner_queues = 4;
+        planner_queues = NUM_IMHA_HEUR;
 
     m_env->reset();
     m_env->setPlannerType(planner_type);

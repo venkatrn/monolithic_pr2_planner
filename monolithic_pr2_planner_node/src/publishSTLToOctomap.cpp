@@ -122,8 +122,8 @@ void addRandomObstacles(pcl::PointCloud<pcl::PointXYZ>::Ptr pclCloud, int
     nh.setParam("/monolithic_pr2_planner_node/experiments/number_of_regions",
         numSurfaces);
     
-    int seed;
-    nh.getParam("/monolithic_pr2_planner_node/experiments/seed", seed);
+    int seed = clock();
+    nh.setParam("/monolithic_pr2_planner_node/experiments/seed", seed);
     srand(seed);
     for (int i = 0, j = 0; i < numSurfaces; ++i, j+=2){
 

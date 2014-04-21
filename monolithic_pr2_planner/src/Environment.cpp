@@ -80,15 +80,13 @@ int Environment::GetGoalHeuristic(int stateID, int goal_id) {
             switch (goal_id) {
                 case 0:  // Anchor
                     return std::max(values[0], values[1]);
-                case 1:  // ARA Heur
-                    return std::max(values[0], 2*values[1]);
-                case 2:
+                case 1:
                     return EPS2*values[0];
-                case 3:  // Base1, Base2 heur
-                case 4:
+                case 2:  // Base1, Base2 heur
+                case 3:
                     // return static_cast<int>(values[goal_id] +
                         // values[0]);
-                    return values[goal_id-1] + values[0];
+                    return values[goal_id] + values[0];
             }
             break;
         case T_IMHA:
@@ -96,7 +94,7 @@ int Environment::GetGoalHeuristic(int stateID, int goal_id) {
                 case 0:  // Anchor
                     return std::max(values[0], values[1]);
                 case 1:  // ARA Heur
-                    return std::max(values[0], 2*values[1]);
+                    return EPS2*std::max(values[0], values[1]);
                 case 2:  // Base1, Base2 heur
                 case 3:
                     // return static_cast<int>(values[goal_id] + values[0]);

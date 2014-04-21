@@ -34,7 +34,7 @@ class StatsWriter {
                       int trial_id);
         void write(int trial_id, RRTData data);
         void writeStartGoal(int trial_id, std::pair<monolithic_pr2_planner::RobotState, monolithic_pr2_planner::RobotState>
-          start_goal);
+          start_goal, int seed);
         inline void setPlannerId(int planner_id){ m_planner_id = planner_id; };
     private:
         FILE* ara;

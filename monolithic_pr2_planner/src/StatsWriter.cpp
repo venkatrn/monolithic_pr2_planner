@@ -208,7 +208,7 @@ void StatsWriter::writeSBPL(std::vector<double> &stats_v, std::vector<FullBodySt
 }
 
 void StatsWriter::writeStartGoal(int trial_id, std::pair<RobotState, RobotState>
-          start_goal) {
+          start_goal, int seed) {
     ROS_INFO("writing current start goal");
     stringstream ss;
     // if(imha == true){
@@ -219,6 +219,7 @@ void StatsWriter::writeStartGoal(int trial_id, std::pair<RobotState, RobotState>
     FILE* stats = fopen(ss.str().c_str(), "w");
     start_goal.first.printToFile(stats);
     start_goal.second.printToFile(stats);
+    fprintf(stats, "%d\n", seed);
     fclose(stats);
 
     /* The file should look like:

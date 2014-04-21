@@ -46,7 +46,7 @@ visualizations:
   # end_effector_path: false
   # collision_model_trajectory: false
   # trajectory_throttle: 50
-  final_path: true
+  final_path: false
   expansions: true
 
 collision_space:

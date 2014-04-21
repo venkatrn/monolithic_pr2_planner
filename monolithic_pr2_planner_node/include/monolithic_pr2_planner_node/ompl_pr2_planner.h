@@ -16,7 +16,7 @@
 #include <monolithic_pr2_planner/StateReps/RobotState.h>
 #include <monolithic_pr2_planner_node/GetMobileArmPlan.h>
 #include <monolithic_pr2_planner/SearchRequest.h>
-#include <monolithic_pr2_planner_node/StatsWriter.h>
+#include <monolithic_pr2_planner/StatsWriter.h>
 
 typedef ompl::base::RealVectorStateSpace::StateType VectorState;
 typedef ompl::base::SE2StateSpace::StateType SE2State;

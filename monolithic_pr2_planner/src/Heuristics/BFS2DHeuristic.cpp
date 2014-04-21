@@ -111,7 +111,7 @@ void BFS2DHeuristic::visualizeCenter(int x, int y) {
     point.push_back(0.0);
     startpoint.push_back(point);
     std::stringstream ss;
-    ss << "start_point";
+    ss << "start_point" << x << y;
     Visualizer::pviz->visualizeBasicStates(startpoint, color, ss.str(), 0.02);
 }
 

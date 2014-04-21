@@ -74,6 +74,33 @@ void RobotState::printToDebug(char* log_level) const {
                     r_arm[Joints::WRIST_ROLL]);
 }
 
+void RobotState::printToFile(FILE *& path) const {
+    fprintf(path, "%f %f %f %f\n", 
+                   m_base_state.x(),
+                   m_base_state.y(),
+                   m_base_state.z(),
+                   m_base_state.theta());
+    std::vector<double> l_arm, r_arm;
+    m_right_arm.getAngles(&r_arm);
+    m_left_arm.getAngles(&l_arm);
+    fprintf(path, "%f %f %f %f %f %f %f\n",
+                    l_arm[Joints::SHOULDER_PAN],
+                    l_arm[Joints::SHOULDER_LIFT],
+                    l_arm[Joints::UPPER_ARM_ROLL],
+                    l_arm[Joints::ELBOW_FLEX],
+                    l_arm[Joints::FOREARM_ROLL],
+                    l_arm[Joints::WRIST_FLEX],
+                    l_arm[Joints::WRIST_ROLL]);
+    fprintf(path, "%f %f %f %f %f %f %f\n", 
+                    r_arm[Joints::SHOULDER_PAN],
+                    r_arm[Joints::SHOULDER_LIFT],
+                    r_arm[Joints::UPPER_ARM_ROLL],
+                    r_arm[Joints::ELBOW_FLEX],
+                    r_arm[Joints::FOREARM_ROLL],
+                    r_arm[Joints::WRIST_FLEX],
+                    r_arm[Joints::WRIST_ROLL]);
+}
+
 void RobotState::printToInfo(char* log_level) const {
     // ContBaseState base_state = m_base_state.getContBaseState();
     ROS_INFO_NAMED(log_level, "\tbase: %f %f %f %f", 
@@ -102,12 +129,12 @@ void RobotState::printToInfo(char* log_level) const {
                     r_arm[6]);
 }
 
-void RobotState::visualize(){
+void RobotState::visualize(int hue){
     std::vector<double> l_arm, r_arm;
     m_left_arm.getAngles(&l_arm);
     m_right_arm.getAngles(&r_arm);
     BodyPose body_pose = m_base_state.body_pose();
-    Visualizer::pviz->visualizeRobot(r_arm, l_arm, body_pose, 250, 
+    Visualizer::pviz->visualizeRobot(r_arm, l_arm, body_pose, hue, 
                                     std::string("planner"), 1);
 }
 

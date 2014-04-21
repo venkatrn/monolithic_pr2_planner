@@ -143,10 +143,7 @@ public:
             //the logic is that if s wasn't expanded, then g(s) + h(s) >=
             //maxcomputed_fval => g(s) >= maxcomputed_fval - h(s)
             return ((searchStates2D_[x][y].iterationaccessed == iteration_ &&
-                    searchStates2D_[x][y].g + h <= largestcomputedoptf_)      ? (cellSize_m_*sqrt((x - startX_)*(x - startX_) + (y - startY_)*(y - startY_)) < radius_) ? 0:(searchStates2D_[x][y].g) :
-                    largestcomputedoptf_ < INFINITECOST                       ? largestcomputedoptf_ - h :
-                                                                               
-                    INFINITECOST/2);
+                    searchStates2D_[x][y].g + h <= largestcomputedoptf_)      ? (cellSize_m_*sqrt((x - startX_)*(x - startX_) + (y - startY_)*(y - startY_)) < radius_) ? 0:(searchStates2D_[x][y].g) : (largestcomputedoptf_ < INFINITECOST)? (largestcomputedoptf_ - h):INFINITECOST/2);
         }
         else {
             //Dijkstra's search

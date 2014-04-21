@@ -11,7 +11,10 @@ set(ROS_BUILD_TYPE Release)
 
 rosbuild_init()
 SET(CMAKE_CXX_FLAGS "-std=c++0x")
+# set(CMAKE_CXX_COMPILER "/usr/bin/g++-4.8")
 
+
+# find_package(Boost 1.46.0 COMPONENTS thread system filesystem REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(SBPL REQUIRED sbpl)
 include_directories(${SBPL_INCLUDE_DIRS})
@@ -35,7 +38,6 @@ rosbuild_add_executable(node src/node.cpp src/EnvInterfaces.cpp
                              src/CollisionSpaceInterface.cpp
                              src/ompl_pr2_planner.cpp
                              src/ompl_collision_checker.cpp
-                             src/StatsWriter.cpp
                         )
 # TODO figure out why i have to include bfs3d here
 target_link_libraries(node monolithic_pr2_planner bfs3d ${SBPL_LIBRARIES})
@@ -48,3 +50,4 @@ target_link_libraries(testExecute monolithic_pr2_planner ${SBPL_LIBRARIES})
 
 rosbuild_add_executable(stlToOctomap src/publishSTLToOctomap.cpp)
 rosbuild_add_executable(run_simulation src/run_simulations.cpp)
+rosbuild_add_executable(run_sim_file src/runSimulationFromFile.cpp)

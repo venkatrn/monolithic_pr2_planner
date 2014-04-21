@@ -1,128 +1,165 @@
 %directories = dir('/home/victor/ros/mpp_groovy/mpp/monolithic_pr2_planner_node/compute_stats/imha_all_set/');
-directories = dir('/tmp/planning_stats/');
+stem = '/home/siddharth/Dropbox/Academics/CMU/Research/SBPL/Multiple_Hypothesis_Heuristics/automated_results/meta_review_8/planning_stats';
+%stem = '/Users/vhwang/Desktop/stats/data/';
+%stem = '/Users/vhwang/Desktop/stats/imha_all_set/';
+%stem = '/Users/vhwang/Desktop/stats/meta_review_5/planning_stats/';
+%stem = '/Users/vhwang/Desktop/stats/no_rot/';
+%stem = '/home/siddharth/Documents/backup/meta_review_stats/meta_review_7/planning_stats/';
+directories = dir(stem);
 %for idx=3:size(directories,1)
 
-success_rate = 0;
-avg_time_ratio = 0;
-avg_base_ratio = 0;
-avg_ee_ratio = 0;
 
-avg_cost_ratio = 0;
-avg_expansion_ratio = 0;
+NUMBER_OF_TOTAL_PLANNING_REQUESTS = 100;
 
-range = 3:size(directories,1);
-%range = 3:4
+valid_dirs = [];
+for i=1:length(directories)
+    if regexp(directories(i).name, '[0-9]*')
+        valid_dirs = [valid_dirs; i];
+    end
+end
 
-for idx=range
-    cur_dir = directories(idx).name
-    num = 5;
-    %path = ['/home/victor/ros/mpp_groovy/mpp/monolithic_pr2_planner_node/compute_stats/imha_all_set/' cur_dir ]
-    path = ['/tmp/planning_stats/' cur_dir ]
-    rrt_stats = computeMethodStats([path '/rrt_'],num,0);
-    smha_stats = computeMethodStats([path '/smha_'],num,1);
-    prm_stats = computeMethodStats([path '/prm_'],num,0);
-    rrtstar_stats = computeMethodStats([path '/rrtstar_'],num,0);
-    rrtstarfirstsol_stats = computeMethodStats([path '/rrtstarfirstsol_'],num,0);
-    ara_stats = computeMethodStats([path '/ara_'],num,1);
-    imha_stats = computeMethodStats([path '/imha_'],num,1);
+range = valid_dirs;
 
+cumulative_stats = {};
+planners = {'smha_'; 'ara_'; 'imha_'; 'mpwa_'; 'mhg_reex_'; 'mhg_no_reex_'; 'ees_'};
+%planners = {'rrt_'; 'rrtstar_'; 'imha_'; 'ara_'; 'prm_'; 'smha_'};
+for planner_idx = 1:length(planners)
+    cumulative_stats.(planners{planner_idx}) = {};
+    cumulative_stats.(planners{planner_idx}).num_success = 0;
+    cumulative_stats.(planners{planner_idx}).success_ratio = 0;
 
+    cumulative_stats.(planners{planner_idx}).total_ee_length = 0;
+    cumulative_stats.(planners{planner_idx}).ee_length_for_smha = 0;
+    cumulative_stats.(planners{planner_idx}).ee_ratio = 0;
 
+    cumulative_stats.(planners{planner_idx}).total_base_length = 0;
+    cumulative_stats.(planners{planner_idx}).base_length_for_smha = 0;
+    cumulative_stats.(planners{planner_idx}).base_ratio = 0;
 
+    cumulative_stats.(planners{planner_idx}).total_time = 0;
+    cumulative_stats.(planners{planner_idx}).total_time_for_smha = 0;
+    cumulative_stats.(planners{planner_idx}).time_ratio = 0;
 
-    %other_methods = [prm_stats rrt_stats rrtstar_stats ara_stats smha_stats];
-    other_methods = [prm_stats rrt_stats rrtstar_stats imha_stats ara_stats rrtstarfirstsol_stats];
+    cumulative_stats.(planners{planner_idx}).total_expands = 0;
+    cumulative_stats.(planners{planner_idx}).total_expands_for_smha = 0;
+    cumulative_stats.(planners{planner_idx}).expands_ratio = 0;
+
+    cumulative_stats.(planners{planner_idx}).total_cost = 0;
+    cumulative_stats.(planners{planner_idx}).total_cost_for_smha = 0;
+    cumulative_stats.(planners{planner_idx}).cost_ratio = 0;
+
+    cumulative_stats.(planners{planner_idx}).num_successes_with_smha = 0;
+end
+
+for idx=1:length(valid_dirs)
+    cur_dir = directories(valid_dirs(idx)).name;
+    num = 10;
+    %path_ = ['/home/victor/ros/mpp_groovy/mpp/monolithic_pr2_planner_node/compute_stats/imha_all_set/' cur_dir ]
+    path_ = [stem '/' cur_dir ];
+    %rrt_stats = computeMethodStats([path_ '/rrt_'],num,0);
+    %smha_stats = computeMethodStats([path_ '/smha_'],num,1);
+    %prm_stats = computeMethodStats([path_ '/prm_'],num,0);
+    %rrtstar_stats = computeMethodStats([path_ '/rrtstar_'],num,0);
+    %rrtstarfirstsol_stats = computeMethodStats([path_ '/rrtstarfirstsol_'],num,0);
+    %ara_stats = computeMethodStats([path_ '/ara_'],num,1);
+    %imha_stats = computeMethodStats([path_ '/imha_'],num,1);
+    %other_methods = [rrt_stats prm_stats rrtstar_stats imha_stats ara_stats];
+    %smha_comparison = compareMethods(smha_stats,other_methods);
+
+    isSBPL = 1;
+    smha_stats = computeMethodStats([path_ '/smha_'],num,isSBPL);
+    ara_stats = computeMethodStats([path_ '/ara_'],num,isSBPL);
+    imha_stats = computeMethodStats([path_ '/imha_'],num,isSBPL);
+    mpwa_stats = computeMethodStats([path_ '/mpwa_'],num,isSBPL);
+    mhg_reex_stats = computeMethodStats([path_ '/mhg_reex_'],num,isSBPL);
+    mhg_no_reex_stats = computeMethodStats([path_ '/mhg_no_reex_'],num,isSBPL);
+    ees_stats = computeMethodStats([path_ '/ees_'],num,isSBPL);
+    other_methods = [mpwa_stats mhg_no_reex_stats mhg_reex_stats ees_stats imha_stats ara_stats];
     smha_comparison = compareMethods(smha_stats,other_methods);
 
+
+
+
+
     % for each 'other' planner
-    [path,planner_name,ext] = fileparts(smha_comparison.method.name)
+    [path_,planner_name,ext] = fileparts(smha_comparison.method.name);
 
-
-
-    %ara_stats2 = computeMethodStatsSBPL([path '/ara_'],num);
-    %smha_stats2 = computeMethodStatsSBPL([path '/smha_'],num);
-    %sbpl_compare = compareMethodsSBPL(smha_stats2, [ara_stats2]);
-
-    %if isnan(sbpl_compare.other(1).expansions.ratio_mean)
-    %    sbpl_compare.other(1).expansions.ratio_mean = 0;
-    %end
-    %if isnan(sbpl_compare.other(1).cost.ratio_mean)
-    %    sbpl_compare.other(1).cost.ratio_mean = 0;
-    %end
-    %if ~isfield(avg_expansion_ratio, planner_name)
-    %    avg_expansion_ratio.(planner_name) = sbpl_compare.other(1).expansions.ratio_mean;
-    %else
-    %    avg_expansion_ratio.(planner_name) = avg_expansion_ratio.(planner_name) + sbpl_compare.other(1).expansions.ratio_mean/size(range,2);
-    %end
-
-    %if ~isfield(avg_cost_ratio, planner_name)
-    %    avg_cost_ratio.(planner_name) = sbpl_compare.other(1).cost.ratio_mean;
-    %else
-    %    avg_cost_ratio.(planner_name) = avg_cost_ratio.(planner_name) + sbpl_compare.other(1).cost.ratio_mean/size(range,2);
-    %end
-
-
-
-
-
-
-    %if isnan(other(i).time.ratio_mean)
-    %    other(i).time.ratio_mean = 0;
-    %end
-
-    if ~isfield(success_rate, planner_name)
-        success_rate.(planner_name) = sum(smha_stats.base>0);
-    else
-        success_rate.(planner_name) = success_rate.(planner_name) + sum(smha_stats.base>0);
-    end
+    % for each folder of experiments, compute how successes the base (smha) had
+    cumulative_stats.(planner_name).num_success = cumulative_stats.(planner_name).num_success + sum(smha_stats.base>0);
 
     other = smha_comparison.other;
     for i=1:length(other_methods)
-        [path,planner_name,ext] = fileparts(other_methods(i).name);
-        if ~isfield(success_rate, planner_name)
-            success_rate.(planner_name) = sum(other_methods(i).base>0);
-        else
-            success_rate.(planner_name) = success_rate.(planner_name) + sum(other_methods(i).base>0);
-        end
+        current_comparison = other(i);
+        [path_,planner_name,ext] = fileparts(other_methods(i).name);
+        cur_num_success = other(i).num_success;
+        % the total number of successes each planner had
+        cumulative_stats.(planner_name).num_success = cumulative_stats.(planner_name).num_success + sum(other_methods(i).base>0);
+        % let's keep track of the total planning time for all experiments where
+        % the base planner and this "other" planner succeeded
 
-        if isnan(other(i).time.ratio_mean)
-            other(i).time.ratio_mean = 0;
-        end
+        num_both_successes = current_comparison.num_success;
+        cumulative_stats.(planner_name).num_successes_with_smha = cumulative_stats.(planner_name).num_successes_with_smha + num_both_successes;
+        m_total_time = current_comparison.time.m_mean*num_both_successes;
+        o_total_time = current_comparison.time.o_mean*num_both_successes;
 
-        if ~isfield(avg_time_ratio, planner_name)
-            avg_time_ratio.(planner_name) = other(i).time.ratio_mean/size(range,2);
-        else
-            avg_time_ratio.(planner_name) = avg_time_ratio.(planner_name) + other(i).time.ratio_mean/size(range,2);
-        end
+        % need this because these values will be NaN when there are no successes
+        if cur_num_success ~= 0
+            cumulative_stats.(planner_name).total_time = cumulative_stats.(planner_name).total_time + o_total_time;
+            cumulative_stats.(planner_name).total_time_for_smha = cumulative_stats.(planner_name).total_time_for_smha + m_total_time;
 
-        if isnan(other(i).base.ratio_mean)
-            other(i).base.ratio_mean = 0;
-        end
-        other(i).name
-        other(i).base.ratio_mean
-        if ~isfield(avg_base_ratio, planner_name)
-            avg_base_ratio.(planner_name) = other(i).base.ratio_mean/size(range,2);
-        else
-            avg_base_ratio.(planner_name) = avg_base_ratio.(planner_name) + other(i).base.ratio_mean/size(range,2);
-        end
+            % let's keep track of the total base length for all experiments where
+            % the base planner and this "other" planner succeeded
+            m_total_base_length = current_comparison.base.m_mean*num_both_successes;
+            o_total_base_length = current_comparison.base.o_mean*num_both_successes;
+            cumulative_stats.(planner_name).total_base_length = cumulative_stats.(planner_name).total_base_length + o_total_base_length;
+            cumulative_stats.(planner_name).base_length_for_smha = cumulative_stats.(planner_name).base_length_for_smha + m_total_base_length;
 
-        if isnan(other(i).obj.ratio_mean)
-            other(i).obj.ratio_mean = 0;
-        end
-        if ~isfield(avg_ee_ratio, planner_name)
-            avg_ee_ratio.(planner_name) = other(i).obj.ratio_mean/size(range,2);
-        else
-            avg_ee_ratio.(planner_name) = avg_ee_ratio.(planner_name) + other(i).obj.ratio_mean/size(range,2);
-        end
+            % let's keep track of the total base length for all experiments where
+            % the base planner and this "other" planner succeeded
+            m_total_ee_length = current_comparison.obj.m_mean*num_both_successes;
+            o_total_ee_length = current_comparison.obj.o_mean*num_both_successes;
+            cumulative_stats.(planner_name).total_ee_length = cumulative_stats.(planner_name).total_ee_length + o_total_ee_length;
+            cumulative_stats.(planner_name).ee_length_for_smha = cumulative_stats.(planner_name).ee_length_for_smha + m_total_ee_length;
 
+            if isSBPL
+                m_total_cost = current_comparison.cost.m_mean*num_both_successes;
+                o_total_cost = current_comparison.cost.o_mean*num_both_successes;
+                cumulative_stats.(planner_name).total_cost = cumulative_stats.(planner_name).total_cost + o_total_cost;
+                cumulative_stats.(planner_name).total_cost_for_smha = cumulative_stats.(planner_name).total_cost_for_smha + m_total_cost;
+
+                m_total_expands = current_comparison.expands.m_mean*num_both_successes;
+                o_total_expands = current_comparison.expands.o_mean*num_both_successes;
+                cumulative_stats.(planner_name).total_expands = cumulative_stats.(planner_name).total_expands + o_total_expands;
+                cumulative_stats.(planner_name).total_expands_for_smha = cumulative_stats.(planner_name).total_expands_for_smha + m_total_expands;
+            end
+        end
     end
-    %other_methods = [prm_stats rrt_stats rrtstar_stats ara_stats smha_stats];
-    %smha_comparison = compareMethods(smha_stats,other_methods);
+end
+for planner_idx = 1:length(planners)
+    planner = planners{planner_idx};
+
+
+    % i've thrown this in here due to laziness. the data set i'm using right now
+    % has 40 planning requests - 04/17/2014 @ 4:11pm
+    cumulative_stats.(planner).success_ratio = cumulative_stats.(planner).num_success/NUMBER_OF_TOTAL_PLANNING_REQUESTS;
+    cumulative_stats.(planner).ee_ratio = cumulative_stats.(planner).total_ee_length/cumulative_stats.(planner).ee_length_for_smha;
+    cumulative_stats.(planner).base_ratio = cumulative_stats.(planner).total_base_length/cumulative_stats.(planner).base_length_for_smha;
+    cumulative_stats.(planner).time_ratio = cumulative_stats.(planner).total_time /cumulative_stats.(planner).total_time_for_smha;
+    cumulative_stats.(planner).cost_ratio = cumulative_stats.(planner).total_cost /cumulative_stats.(planner).total_cost_for_smha;
+    cumulative_stats.(planner).expands_ratio = cumulative_stats.(planner).total_expands /cumulative_stats.(planner).total_expands_for_smha;
+
+    disp(planner);
+    disp(['Number of requests: ', num2str(NUMBER_OF_TOTAL_PLANNING_REQUESTS)]);
+    disp(['Number of total successes: ', num2str(cumulative_stats.(planner).num_success)]);
+    disp(['Success rate over all planning requests: ', num2str(cumulative_stats.(planner).success_ratio)]);
+    disp(['Number of trials where both planners succeeded: ', num2str(cumulative_stats.(planner).num_successes_with_smha)])
+    disp(['End effector ratio (other/smha): ', num2str(cumulative_stats.(planner).ee_ratio)]);
+    disp(['Base distance ratio (other/smha): ', num2str(cumulative_stats.(planner).base_ratio)]);
+    disp(['Time ratio (other/smha): ', num2str(cumulative_stats.(planner).time_ratio)])
+    if isSBPL
+        disp(['Expands ratio (other/smha): ', num2str(cumulative_stats.(planner).expands_ratio)]);
+        disp(['Cost ratio (other/smha): ', num2str(cumulative_stats.(planner).cost_ratio)]);
+    end
+    fprintf('\n');
 end
 
-success_rate
-avg_time_ratio
-avg_base_ratio
-avg_ee_ratio
-avg_cost_ratio
-avg_expansion_ratio

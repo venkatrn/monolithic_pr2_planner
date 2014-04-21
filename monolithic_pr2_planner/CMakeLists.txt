@@ -11,6 +11,11 @@ set(ROS_BUILD_TYPE Release)
 
 rosbuild_init()
 SET(CMAKE_CXX_FLAGS "-std=c++0x")
+# set(CMAKE_CXX_COMPILER "/usr/bin/g++-4.8")
+
+
+# find_package(Boost 1.46.0 COMPONENTS thread system filesystem REQUIRED)
+
 #add_definitions(-DUSE_IKFAST_SOLVER)
 add_definitions(-DUSE_KDL_SOLVER)
 
@@ -68,6 +73,7 @@ rosbuild_add_library(monolithic_pr2_planner src/StateReps/RobotState.cpp
                                             src/PathPostProcessor.cpp
 
                                             src/ExperimentFramework/randomStartGoalGenerator.cpp
+                                            src/StatsWriter.cpp
                                             )
 target_link_libraries(monolithic_pr2_planner ${SBPL_LIBRARIES} bfs3d)
 #rosbuild_add_boost_directories()

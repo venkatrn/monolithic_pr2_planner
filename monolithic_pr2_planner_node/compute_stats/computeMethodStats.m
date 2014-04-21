@@ -5,8 +5,10 @@ function stats = computeMethodStats(folder_name,num,sbpl)
   arm_sqr = [];
   arm_abs = [];
   time = [];
+  cost = [];
+  expands = [];
   for i=1:num
-    path_filename = [folder_name num2str(i-1,'%02d') '.path']
+    path_filename = [folder_name num2str(i-1,'%02d') '.path'];
     stat_filename = [folder_name num2str(i-1,'%02d') '.stats'];
     if exist(path_filename, 'file')~=2 || exist(stat_filename, 'file')~=2
       base(i) = -1;
@@ -15,6 +17,8 @@ function stats = computeMethodStats(folder_name,num,sbpl)
       arm_abs(i) = -1;
       arm_sqr(i) = -1;
       time(i) = -1;
+      cost(i) = -1;
+      expands(i) = -1;
       continue;
     end
     raw_path = load(path_filename);
@@ -49,6 +53,8 @@ function stats = computeMethodStats(folder_name,num,sbpl)
     raw_stats = load(stat_filename);
     if sbpl
       time(i) = raw_stats(1,1);
+      cost(i) = raw_stats(1,9);
+      expands(i) = raw_stats(1,8);
     else
       time(i) = raw_stats(1,1) + raw_stats(1,2);
     end
@@ -60,5 +66,9 @@ function stats = computeMethodStats(folder_name,num,sbpl)
   stats.arm_abs = arm_abs;
   stats.arm_sqr = arm_sqr;
   stats.time = time;
+  if sbpl
+      stats.cost = cost;
+      stats.expands = expands;
+  end
 end
 

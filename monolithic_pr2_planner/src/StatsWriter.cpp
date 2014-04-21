@@ -1,4 +1,4 @@
-#include <monolithic_pr2_planner_node/StatsWriter.h>
+#include <monolithic_pr2_planner/StatsWriter.h>
 #include <stdio.h>
 #include <ctime>
 #include <sys/stat.h>
@@ -205,4 +205,28 @@ void StatsWriter::writeSBPL(std::vector<double> &stats_v, std::vector<FullBodySt
         fclose(path);
     }
     fclose(stats);
+}
+
+void StatsWriter::writeStartGoal(int trial_id, std::pair<RobotState, RobotState>
+          start_goal) {
+    ROS_INFO("writing current start goal");
+    stringstream ss;
+    // if(imha == true){
+    ss << m_current_path.str().c_str() << "start_goal_" << std::setfill('0') 
+        << std::setw(2) << trial_id << ".env";
+
+    ROS_DEBUG_NAMED(HEUR_LOG, "Opening file : %s", ss.str().c_str());
+    FILE* stats = fopen(ss.str().c_str(), "w");
+    start_goal.first.printToFile(stats);
+    start_goal.second.printToFile(stats);
+    fclose(stats);
+
+    /* The file should look like:
+    start_base
+    start_larm
+    start_rarm
+    goal_base
+    goal_larm
+    goal_rarm
+    */
 }

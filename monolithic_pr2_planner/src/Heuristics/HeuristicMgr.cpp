@@ -129,7 +129,8 @@ void HeuristicMgr::setPlannerType(int planner_type) {
         case T_EES:
             m_num_mha_heuristics = 1;
             addUniformCost3DHeur();
-            addUniformCost2DHeur(1, 0.7);
+            int unif_2d = addUniformCost2DHeur(1, 0.7);
+            m_heuristics[unif_2d]->update2DHeuristicMap(m_grid_data);
             break;
     }
 }
@@ -267,7 +268,8 @@ void HeuristicMgr::setGoal(GoalState& goal_state){
     // At this point, there are no dynamic heuristics.
     // NOTE: Change this if we initialize the grids before the planning request
     for (size_t i = 0; i < m_heuristics.size(); ++i) {
-        ROS_DEBUG_NAMED(HEUR_LOG, "[HeurMgr] Setting goal for heuristic %d", int(i));
+        ROS_DEBUG_NAMED(HEUR_LOG, "[HeurMgr] Setting goal for heuristic %d", 
+            int(i));
         m_heuristics[i]->setGoal(goal_state);
     }
     // Create additional heuristics for MHA planner
@@ -292,7 +294,8 @@ bool HeuristicMgr::checkIKAtPose(int g_x, int g_y, RobotPosePtr& final_pose){
     int center_x = state.x();
     int center_y = state.y();
 
-    double angle_with_center = normalize_angle_positive(std::atan2(static_cast<double>(g_y -
+    double angle_with_center = normalize_angle_positive(
+        std::atan2(static_cast<double>(g_y -
             center_y),static_cast<double>(g_x
                     - center_x)) - M_PI);
         RobotState seed_robot_pose;
@@ -325,7 +328,8 @@ bool HeuristicMgr::checkIKAtPose(int g_x, int g_y, RobotPosePtr& final_pose){
         
         KDL::Frame to_robot_frame;
         Visualizer::pviz->getMaptoRobotTransform(cont_seed_base_state.x(),
-            cont_seed_base_state.y(), cont_seed_base_state.theta(), to_robot_frame);
+            cont_seed_base_state.y(), cont_seed_base_state.theta(), 
+            to_robot_frame);
 
         ContObjectState goal_c = m_goal.getObjectState().getContObjectState();
 
@@ -379,8 +383,8 @@ RightContArmState HeuristicMgr::getRightArmIKSol(int g_x, int g_y){
 void HeuristicMgr::initNewMHABaseHeur(int g_x, int g_y, RightContArmState& r_arm_state, const int cost_multiplier){
         // ROS_DEBUG_NAMED(HEUR_LOG, "IK was a success! Wooohoooo!");
         // Valid - push the state
-        ROS_DEBUG_NAMED(HEUR_LOG, "New MHA Base Heuristic initialized : %d %d", g_x,
-            g_y);
+        ROS_DEBUG_NAMED(HEUR_LOG, "New MHA Base Heuristic initialized : %d %d", 
+            g_x, g_y);
         DiscObjectState state = m_goal.getObjectState(); 
         state.x(g_x);
         state.y(g_y);
@@ -392,7 +396,8 @@ void HeuristicMgr::initNewMHABaseHeur(int g_x, int g_y, RightContArmState& r_arm
         // Update its costmap
         m_heuristics[heur_num]->update2DHeuristicMap(m_grid_data);
 
-
+        // NOTE: Uncomment this if you want to use the base heuristic with
+        // rotation.
         // m_heuristics[heur_num]->setOriginalGoal(m_goal);
         m_heuristics[heur_num]->setGoal(new_goal_state);
         // m_heuristics[heur_num]->setGoalArmState(r_arm_state);
@@ -432,8 +437,9 @@ void HeuristicMgr::initializeMHAHeuristics(const int
             circle_x.erase(circle_x.begin() + i);
             circle_y.erase(circle_y.begin() + i);
         }
-        else
+        else {
             i++;
+        }
     }
 
     // ROS_DEBUG_NAMED(HEUR_LOG, "[MHAHeur] Circle points cropped %d",static_cast<int>(circle_x.size()));
@@ -441,24 +447,24 @@ void HeuristicMgr::initializeMHAHeuristics(const int
     int center_x = state.x();
     int center_y = state.y();
 
-    std::vector<int> ik_circle_x;
-    std::vector<int> ik_circle_y;
+    // std::vector<int> ik_circle_x;
+    // std::vector<int> ik_circle_y;
 
-    for (size_t i = 0; i < circle_x.size(); ++i) {
-        if(isValidIKForGoalState(circle_x[i], circle_y[i])){
-            ik_circle_x.push_back(circle_x[i]);
-            ik_circle_y.push_back(circle_y[i]);
-        }
-    }
+    // for (size_t i = 0; i < circle_x.size(); ++i) {
+    //     if(isValidIKForGoalState(circle_x[i], circle_y[i])){
+    //         ik_circle_x.push_back(circle_x[i]);
+    //         ik_circle_y.push_back(circle_y[i]);
+    //     }
+    // }
 
     std::vector<Point> selected_points;
-    if (static_cast<int>(ik_circle_x.size()) < m_num_mha_heuristics) {
+    // if (static_cast<int>(ik_circle_x.size()) < m_num_mha_heuristics) {
         selected_points = sample_points(discrete_radius,
                 center_x, center_y, circle_x, circle_y, m_num_mha_heuristics);
-    } else {
-        selected_points = sample_points(discrete_radius,
-                center_x, center_y, ik_circle_x, ik_circle_y, m_num_mha_heuristics);
-    }
+    // } else {
+    //     selected_points = sample_points(discrete_radius,
+    //             center_x, center_y, ik_circle_x, ik_circle_y, m_num_mha_heuristics);
+    // }
 
     // assert(static_cast<int>(circle_x.size()) >= m_num_mha_heuristics);
     for (size_t i = 0; i < selected_points.size(); ++i) {

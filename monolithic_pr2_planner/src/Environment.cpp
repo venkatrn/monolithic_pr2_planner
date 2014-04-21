@@ -46,6 +46,7 @@ void Environment::reset() {
 void Environment::setPlannerType(int planner_type) {
     m_planner_type = planner_type;
     m_heur_mgr->setPlannerType(planner_type);
+    ROS_INFO_NAMED(SEARCH_LOG, "Setting planner type: %d", m_planner_type);
 }
 
 bool Environment::configureRequest(SearchRequestParamsPtr search_request_params,
@@ -81,11 +82,13 @@ int Environment::GetGoalHeuristic(int stateID, int goal_id) {
                     return std::max(values[0], values[1]);
                 case 1:  // ARA Heur
                     return EPS2*std::max(values[0], values[1]);
-                case 2:  // Just arm, inflated
+                case 2:
                     return EPS2*values[0];
                 case 3:  // Base1, Base2 heur
                 case 4:
-                    return values[goal_id-1];
+                    // return static_cast<int>(values[goal_id] +
+                        // values[0]);
+                    return 0.5f*values[goal_id-1] + 0.5f*values[0];
             }
             break;
         case T_IMHA:
@@ -96,7 +99,8 @@ int Environment::GetGoalHeuristic(int stateID, int goal_id) {
                     return EPS2*std::max(values[0], values[1]);
                 case 2:  // Base1, Base2 heur
                 case 3:
-                    return values[goal_id];
+                    // return static_cast<int>(values[goal_id] + values[0]);
+                    return std::max(values[goal_id], values[0]);
             }
             break;
         case T_MPWA:
@@ -108,9 +112,12 @@ int Environment::GetGoalHeuristic(int stateID, int goal_id) {
                 case 0:  // Anchor
                     return std::max(values[0], values[1]);
                 case 1:  // Inadmissible
-                    return values[4];
+                    return std::max(values[4], values[0]);
+                    // return static_cast<int>(0.5f*values[4] + 0.5f*values[0]);
                 case 2:  // Distance function
                     // return values[2];
+                    // ROS_DEBUG_NAMED(HEUR_LOG, "Arm : %d, Base : %d", values[2],
+                    //     values[3]);
                     return values[2] + values[3];
             }
             break;
@@ -137,6 +144,11 @@ int Environment::GetGoalHeuristic(int stateID, int goal_id) {
 
 void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs, 
                            vector<int>* costs){
+    GetSuccs(sourceStateID, succIDs, costs, 0);
+}
+
+void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs, 
+                           vector<int>* costs, int ii){
     assert(sourceStateID != GOAL_STATE);
     ROS_DEBUG_NAMED(SEARCH_LOG, 
             "==================Expanding state %d==================", 
@@ -150,7 +162,7 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
     ROS_DEBUG_NAMED(SEARCH_LOG, "Source state is:");
     source_state->robot_pose().printToDebug(SEARCH_LOG);
     if (m_param_catalog.m_visualization_params.expansions) {
-        source_state->robot_pose().visualize();
+        source_state->robot_pose().visualize(250/NUM_SMHA_HEUR*ii);
         usleep(5000);
     }
     for (auto mprim : m_mprims.getMotionPrims()) {

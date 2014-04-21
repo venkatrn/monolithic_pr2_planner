@@ -47,7 +47,7 @@ visualizations:
   # collision_model_trajectory: false
   # trajectory_throttle: 50
   final_path: false
-  expansions: false
+  expansions: true
 
 collision_space:
   reference_frame: map

@@ -29,6 +29,7 @@ function comparison = compareMethods(m,other)
       end
       idx = idx & (m.(fields{j}) >= 0) & (other(i).(fields{j}) >= 0);
     end
+    
     c.num_trials = length(idx);
     c.num_success = sum(idx);
     for j=2:length(fields)

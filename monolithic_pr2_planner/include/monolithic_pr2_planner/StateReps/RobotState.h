@@ -32,10 +32,11 @@ namespace monolithic_pr2_planner {
 
             void printToDebug(char* log_level) const;
             void printToInfo(char* log_level) const;
+            void printToFile(FILE *& path) const;
 
             // this sets which arm to use for computing the object pose
             static void setPlanningMode(int planning_mode){ m_planning_mode = planning_mode; };
-            void visualize();
+            void visualize(int hue = 240);
 
             ContObjectState getObjectStateRelMap() const;
             ContObjectState getObjectStateRelMap(ContBaseState base) const;

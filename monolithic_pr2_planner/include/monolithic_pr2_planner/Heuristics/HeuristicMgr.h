@@ -14,9 +14,6 @@
 
 #define NUM_MHA_BASE_HEUR 1
 
-
-
-
 namespace monolithic_pr2_planner {
     // Type of planner.
     enum {

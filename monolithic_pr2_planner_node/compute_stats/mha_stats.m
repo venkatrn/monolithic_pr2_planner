@@ -1,5 +1,6 @@
 %directories = dir('/home/victor/ros/mpp_groovy/mpp/monolithic_pr2_planner_node/compute_stats/imha_all_set/');
-stem = '/home/siddharth/Dropbox/Academics/CMU/Research/SBPL/Multiple_Hypothesis_Heuristics/automated_results/meta_review_8/planning_stats';
+% stem = '/home/siddharth/Dropbox/Academics/CMU/Research/SBPL/Multiple_Hypothesis_Heuristics/automated_results/meta_review_8/planning_stats';
+stem = '/home/siddharth/Dropbox/Academics/CMU/Research/SBPL/Multiple_Hypothesis_Heuristics/automated_results/new_heur/victor/latest_stats';
 %stem = '/Users/vhwang/Desktop/stats/data/';
 %stem = '/Users/vhwang/Desktop/stats/imha_all_set/';
 %stem = '/Users/vhwang/Desktop/stats/meta_review_5/planning_stats/';

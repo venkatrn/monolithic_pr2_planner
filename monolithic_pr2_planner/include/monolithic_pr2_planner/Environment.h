@@ -16,7 +16,7 @@
 #define NUM_SMHA_HEUR 5 // Used in EnvInterfaces to initialize the planner.
 // This should include the Anchor search -> Total number of searches.
 
-#define EPS1 50
+#define EPS1 25
 #define EPS2 2
 
 namespace monolithic_pr2_planner {

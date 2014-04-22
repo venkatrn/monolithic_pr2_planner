@@ -116,16 +116,19 @@ int main(int argc, char** argv){
                     right_arm_goal[6]);
     fclose(path);
 
-    RightContArmState rarm_goal(right_arm_goal);
-    LeftContArmState larm_goal(left_arm_goal);
-    ContBaseState base_goal(body_goal);
+    // RightContArmState rarm_goal(right_arm_goal);
+    // LeftContArmState larm_goal(left_arm_goal);
+    // ContBaseState base_goal(body_goal);
 
-    RobotState::setPlanningMode(monolithic_pr2_planner::PlanningModes::RIGHT_ARM_MOBILE);
+    // RobotState::setPlanningMode(monolithic_pr2_planner::PlanningModes::RIGHT_ARM_MOBILE);
 
 
     srv.request.rarm_start = right_arm_start;
     srv.request.larm_start = left_arm_start;
     srv.request.body_start = body_start;
+    srv.request.rarm_goal = right_arm_goal;
+    srv.request.larm_goal = left_arm_goal;
+    srv.request.body_goal = body_goal;
 
     geometry_msgs::PoseStamped pose;
 
@@ -151,17 +154,17 @@ int main(int argc, char** argv){
     // larm_goal.setObjectOffset(larm_offset);
     // rarm_goal.setObjectOffset(rarm_offset);
     
-    RobotPosePtr goal_robot = boost::make_shared<RobotState>(base_goal,
-        rarm_goal, larm_goal);
+    // RobotPosePtr goal_robot = boost::make_shared<RobotState>(base_goal,
+        // rarm_goal, larm_goal);
 
-    ContObjectState obj_goal = goal_robot->getObjectStateRelMap();
+    // ContObjectState obj_goal = goal_robot->getObjectStateRelMap();
 
-    pose.pose.position.x = obj_goal.x();
-    pose.pose.position.y = obj_goal.y();
-    pose.pose.position.z = obj_goal.z();
+    pose.pose.position.x = 0;
+    pose.pose.position.y = 0;
+    pose.pose.position.z = 0;
     
     KDL::Rotation rot =
-    KDL::Rotation::RPY(obj_goal.roll(),obj_goal.pitch(),obj_goal.yaw());
+    KDL::Rotation::RPY(0,0,M_PI/2);
     double qx, qy, qz, qw;
     rot.GetQuaternion(qx, qy, qz, qw);
     pose.pose.orientation.x = qx;

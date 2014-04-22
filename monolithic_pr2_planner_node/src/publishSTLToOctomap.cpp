@@ -194,11 +194,11 @@ void addStartStateRegionToParamServer(){
     // Sets the start state regions to the param server for experiments.
     // Note: Setting only one start region for now.
     ros::NodeHandle nh;
-    double X = 1.5;
-    double Y = 1.6;
+    double X = 0.5;
+    double Y = 0.5;
     double Z = 0.1;
-    double dimX = 0.2;
-    double dimY = 3;
+    double dimX = 8;
+    double dimY = 5;
     double dimZ = 0.0;
     nh.setParam("/monolithic_pr2_planner_node/experiments/start_region_x", X);
     nh.setParam("/monolithic_pr2_planner_node/experiments/start_region_y", Y);

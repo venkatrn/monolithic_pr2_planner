@@ -69,9 +69,15 @@ int Environment::GetGoalHeuristic(int stateID, int goal_id) {
     // This vector is of size NUM_MHA_BASE_HEUR + 2
     // Eg, if NUM_MHA_BASE_HEUR is 2, that means there are 2 additional base
     // heuristics. So, the values will be endEff, Base, Base1, Base2
-    std::vector <int> values = m_heur_mgr->getGoalHeuristic(
-        m_hash_mgr->getGraphState(stateID));
+    GraphStatePtr successor = m_hash_mgr->getGraphState(stateID);
+    if(m_goal->isSatisfiedBy(successor) || stateID == GOAL_STATE){
+        return 0;
+    }
 
+    std::vector <int> values = m_heur_mgr->getGoalHeuristic(successor);
+    // ROS_DEBUG_NAMED(HEUR_LOG, "State ID : %d\t 0 : %d\t 1 : %d\t 2: %d\t 3: %d",
+    //     stateID, std::max(values[0], values[1]),
+    //     EPS2*values[0], values[2] + values[0], values[3] + values[0]);
     switch (m_planner_type) {
         case T_SMHA:
         case T_MHG_REEX:
@@ -80,13 +86,16 @@ int Environment::GetGoalHeuristic(int stateID, int goal_id) {
             switch (goal_id) {
                 case 0:  // Anchor
                     return std::max(values[0], values[1]);
-                case 1:
+                case 1:  // ARA Heur
+                    return EPS2*std::max(values[0], values[1]);
+                case 2:
                     return EPS2*values[0];
-                case 2:  // Base1, Base2 heur
-                case 3:
+                case 3:  // Base1, Base2 heur
+                case 4:
                     // return static_cast<int>(values[goal_id] +
                         // values[0]);
-                    return values[goal_id] + values[0];
+                    return static_cast<int>(0.5f*values[goal_id-1] + 0.5f*values[0]);
+
             }
             break;
         case T_IMHA:
@@ -98,7 +107,7 @@ int Environment::GetGoalHeuristic(int stateID, int goal_id) {
                 case 2:  // Base1, Base2 heur
                 case 3:
                     // return static_cast<int>(values[goal_id] + values[0]);
-                    return std::max(values[goal_id], values[0]);
+                    return (0.5f*values[goal_id] + 0.5f*values[0]);
             }
             break;
         case T_MPWA:

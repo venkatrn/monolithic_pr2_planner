@@ -144,15 +144,15 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
                 m_stats_writer.writeStartGoal(counter, start_goal, environment_seed);
                 runMHAPlanner(monolithic_pr2_planner::T_SMHA, "smha_", req, res, search_request, counter);
                 runMHAPlanner(monolithic_pr2_planner::T_IMHA, "imha_", req, res, search_request, counter);
-                runMHAPlanner(monolithic_pr2_planner::T_MPWA, "mpwa_", req, res, search_request, counter);
-                runMHAPlanner(monolithic_pr2_planner::T_MHG_REEX, "mhg_reex_",
-                    req, res, search_request, counter);
-                runMHAPlanner(monolithic_pr2_planner::T_MHG_NO_REEX,
-                    "mhg_no_reex_", req, res, search_request, counter);
-                runMHAPlanner(monolithic_pr2_planner::T_EES, "ees_", req, res, search_request, counter);
+                // runMHAPlanner(monolithic_pr2_planner::T_MPWA, "mpwa_", req, res, search_request, counter);
+                // runMHAPlanner(monolithic_pr2_planner::T_MHG_REEX, "mhg_reex_",
+                    // req, res, search_request, counter);
+                // runMHAPlanner(monolithic_pr2_planner::T_MHG_NO_REEX,
+                //     "mhg_no_reex_", req, res, search_request, counter);
+                // runMHAPlanner(monolithic_pr2_planner::T_EES, "ees_", req, res, search_request, counter);
 
                 // ARA Planner
-                /*** BEGIN ARA PLANNER ****/
+                /*** BEGIN ARA PLANNER ****
                 m_env->reset();
                 m_env->setPlannerType(monolithic_pr2_planner::T_ARA);
                 m_ara_planner.reset(new ARAPlanner(m_env.get(), forward_search));
@@ -271,11 +271,11 @@ void EnvInterfaces::runMHAPlanner(int planner_type,
 bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req, 
                                      GetMobileArmPlan::Response &res)
 {
+    RobotState::setPlanningMode(PlanningModes::RIGHT_ARM_MOBILE);
     SearchRequestParamsPtr search_request = make_shared<SearchRequestParams>();
     search_request->initial_epsilon = req.initial_eps;
     search_request->final_epsilon = req.final_eps;
     search_request->decrement_epsilon = req.dec_eps;
-    search_request->obj_goal= req.goal;
     search_request->base_start = req.body_start;
     search_request->left_arm_start = LeftContArmState(req.larm_start);
     search_request->right_arm_start = RightContArmState(req.rarm_start);
@@ -304,6 +304,18 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
     search_request->yaw_tolerance = req.yaw_tolerance;
     search_request->planning_mode = req.planning_mode;
 
+    RightContArmState rarm_goal(req.rarm_goal);
+    LeftContArmState larm_goal(req.larm_goal);
+    ContBaseState base_goal(req.body_goal);
+    RobotPosePtr goal_robot = boost::make_shared<RobotState>(base_goal,
+        rarm_goal, larm_goal);
+
+    ContObjectState obj_goal = goal_robot->getObjectStateRelMap();
+
+    search_request->obj_goal= obj_goal;
+    goal_robot->visualize();
+    std::cin.get();
+
     res.stats_field_names.resize(18);
     res.stats.resize(18);
     int start_id, goal_id;
@@ -317,12 +329,12 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
     }
     bool forward_search = true;
     runMHAPlanner(monolithic_pr2_planner::T_SMHA, "smha_", req, res, search_request, counter);
-    // runMHAPlanner(monolithic_pr2_planner::T_IMHA, "imha_", req, res, search_request, counter);
+    runMHAPlanner(monolithic_pr2_planner::T_IMHA, "imha_", req, res, search_request, counter);
     // runMHAPlanner(monolithic_pr2_planner::T_MPWA, "mpwa_", req, res, search_request, counter);
     // runMHAPlanner(monolithic_pr2_planner::T_MHG_REEX, "mhg_reex_",
     //     req, res, search_request, counter);
-    runMHAPlanner(monolithic_pr2_planner::T_MHG_NO_REEX,
-        "mhg_no_reex_", req, res, search_request, counter);
+    // runMHAPlanner(monolithic_pr2_planner::T_MHG_NO_REEX,
+        // "mhg_no_reex_", req, res, search_request, counter);
     // runMHAPlanner(monolithic_pr2_planner::T_EES, "ees_", req, res, search_request, counter);
     // m_ara_planner.reset(new MPlanner(m_env.get(), NUM_SMHA_HEUR, forward_search,
     //     false));

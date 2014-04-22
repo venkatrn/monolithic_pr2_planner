@@ -12,7 +12,7 @@
 #include <monolithic_pr2_planner/CollisionSpaceMgr.h>
 
 
-#define NUM_MHA_BASE_HEUR 1
+#define NUM_MHA_BASE_HEUR 0
 
 namespace monolithic_pr2_planner {
     // Type of planner.

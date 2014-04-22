@@ -97,7 +97,6 @@ HeuristicMgr::HeuristicMgr() :
     m_num_mha_heuristics(NUM_MHA_BASE_HEUR) {
 }
 
-
 /**
  * @brief Resets the heuristic manager.
  */

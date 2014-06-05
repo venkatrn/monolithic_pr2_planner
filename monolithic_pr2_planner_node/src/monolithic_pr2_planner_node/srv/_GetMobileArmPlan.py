@@ -243,8 +243,8 @@ float64 w
       buff.write(struct.pack('<I%ss'%length, length, _x))
       _x = self
       buff.write(_struct_10d.pack(_x.larm_object.pose.position.x, _x.larm_object.pose.position.y, _x.larm_object.pose.position.z, _x.larm_object.pose.orientation.x, _x.larm_object.pose.orientation.y, _x.larm_object.pose.orientation.z, _x.larm_object.pose.orientation.w, _x.initial_eps, _x.final_eps, _x.dec_eps))
-    except struct.error as se: self._check_types(se)
-    except TypeError as te: self._check_types(te)
+    except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(_x))))
+    except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(_x))))
 
   def deserialize(self, str):
     """
@@ -435,8 +435,8 @@ float64 w
       buff.write(struct.pack('<I%ss'%length, length, _x))
       _x = self
       buff.write(_struct_10d.pack(_x.larm_object.pose.position.x, _x.larm_object.pose.position.y, _x.larm_object.pose.position.z, _x.larm_object.pose.orientation.x, _x.larm_object.pose.orientation.y, _x.larm_object.pose.orientation.z, _x.larm_object.pose.orientation.w, _x.initial_eps, _x.final_eps, _x.dec_eps))
-    except struct.error as se: self._check_types(se)
-    except TypeError as te: self._check_types(te)
+    except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(_x))))
+    except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(_x))))
 
   def deserialize_numpy(self, str, numpy):
     """
@@ -746,8 +746,8 @@ duration time_from_start
       buff.write(_struct_I.pack(length))
       pattern = '<%sd'%length
       buff.write(struct.pack(pattern, *self.stats))
-    except struct.error as se: self._check_types(se)
-    except TypeError as te: self._check_types(te)
+    except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(_x))))
+    except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(_x))))
 
   def deserialize(self, str):
     """
@@ -996,8 +996,8 @@ duration time_from_start
       buff.write(_struct_I.pack(length))
       pattern = '<%sd'%length
       buff.write(self.stats.tostring())
-    except struct.error as se: self._check_types(se)
-    except TypeError as te: self._check_types(te)
+    except struct.error as se: self._check_types(struct.error("%s: '%s' when writing '%s'" % (type(se), str(se), str(_x))))
+    except TypeError as te: self._check_types(ValueError("%s: '%s' when writing '%s'" % (type(te), str(te), str(_x))))
 
   def deserialize_numpy(self, str, numpy):
     """

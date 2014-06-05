@@ -16,7 +16,7 @@ namespace monolithic_pr2_planner {
      *
      * The PR2 arm has associated with it seven joints, an object offset, and
      * inverse and forward kinematic functions. This class provides the
-     * necessary functions to retrieve and set continuous joint informatio about
+     * necessary functions to retrieve and set continuous joint information about
      * the arms.
      */
     class ContArmState {

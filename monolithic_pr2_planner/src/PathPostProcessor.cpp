@@ -48,8 +48,6 @@ vector<FullBodyState> PathPostProcessor::reconstructPath(vector<int> soln_path,
                                                     transition_states,
                                                     goal_state);
 
-
-
     // temptime = clock();
     // std::vector<FullBodyState> final_path = shortcutPath(soln_path,
     //     transition_states, goal_state);
@@ -59,8 +57,8 @@ vector<FullBodyState> PathPostProcessor::reconstructPath(vector<int> soln_path,
 
 std::vector<FullBodyState> PathPostProcessor::shortcutPath(const vector<int>&
     state_ids, const vector<TransitionData>& transition_states, GoalState& goal_state){
-    // ROS_DEBUG_NAMED(HEUR_LOG, "Original request : States : %d, transition data : %d",
-    //     state_ids.size(), transition_states.size());
+    ROS_DEBUG_NAMED(HEUR_LOG, "Original request : States : %d, transition data : %d",
+        state_ids.size(), transition_states.size());
     std::vector<FullBodyState> final_path;
     size_t i = 0;
     size_t j = 1;
@@ -163,7 +161,9 @@ void PathPostProcessor::visualizeFinalPath(vector<FullBodyState> path){
         bp.z = base[2];
         bp.theta = base[3];
         Visualizer::pviz->visualizeRobot(r_arm, l_arm, bp, 150, "robot", 0);
-        usleep(5000);
+        RobotState robot_state = createRobotState(state);
+        m_cspace_mgr->visualizeAttachedObject(robot_state);
+        usleep(10000);
         // std::cin.get();
     }
 }

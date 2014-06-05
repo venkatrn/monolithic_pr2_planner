@@ -1,9 +1,13 @@
 map_type: costmap
 # resolution: 0.02
 # z_resolution: 0.02
+# global_frame: /map
+# robot_base_frame: base_link
 publish_voxel_map: true
-map_topic: /projected_map
+
+# Enable the following line if using the publishSTLToOctomap
 static_map: true
+map_topic: /projected_map
 # origin_x: 0
 # origin_y: 0
 # origin_z: 0

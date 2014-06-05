@@ -35,6 +35,14 @@ ContBaseState::ContBaseState(const DiscBaseState& base_pose) :
     m_pose[BodyDOF::THETA] = normalize_angle_positive(static_cast<double>(base_pose.theta())*theta_res);
 }
 
+ContBaseState::ContBaseState(const BodyPose body_pose) :
+    m_pose(4) {
+        x(body_pose.x);
+        y(body_pose.y);
+        z(body_pose.z);
+        theta(body_pose.theta);
+}
+
 // returns <num_steps> number of interpolated points, with the start and end
 // included in this count. That's why we subtract 1 from the input number.
 vector<ContBaseState> ContBaseState::interpolate(const ContBaseState& start, 

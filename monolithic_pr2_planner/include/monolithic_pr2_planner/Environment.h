@@ -18,7 +18,7 @@
 // This should include the Anchor search -> Total number of searches.
 
 #define EPS1 25
-#define EPS2 2
+#define EPS2 4
 
 namespace monolithic_pr2_planner {
     /*! \brief Implements a complete environment used by the SBPL planner.
@@ -72,6 +72,5 @@ namespace monolithic_pr2_planner {
             int  SizeofCreatedEnv(){ return m_hash_mgr->size(); };
             void PrintState(int stateID, bool bVerbose, FILE* fOut=NULL){};
             void PrintEnv_Config(FILE* fOut){};
-
     };
 }

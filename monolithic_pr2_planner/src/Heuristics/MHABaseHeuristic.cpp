@@ -63,8 +63,8 @@ void MHABaseHeuristic::setGoal(GoalState& goal_state) {
     // std::vector<std::pair<int,int> > init_points;
     // BFS2DHeuristic::getBresenhamLinePoints(state.x(), state.y(), orig_state.x(), orig_state.y(), init_points);
 
-    // visualizeLineToOriginalGoal(state.x(), state.y(), orig_state.x(),
-        // orig_state.y());
+    visualizeLineToOriginalGoal(state.x(), state.y(), orig_state.x(),
+        orig_state.y());
 
     // Set the goal state to 0,0 - just make sure it's not the start state.
     m_gridsearch->search(m_grid, threshold, state.x(), state.y(),

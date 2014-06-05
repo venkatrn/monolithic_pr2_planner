@@ -15,6 +15,7 @@ namespace monolithic_pr2_planner {
             ContBaseState();
             ContBaseState(double x, double y, double z, double theta);
             ContBaseState(std::vector<double> base_pose);
+            ContBaseState(const BodyPose body_pose);
             ContBaseState(const DiscBaseState& base_pose);
 
 

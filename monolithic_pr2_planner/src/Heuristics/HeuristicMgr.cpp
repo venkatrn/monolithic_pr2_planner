@@ -101,10 +101,11 @@ HeuristicMgr::HeuristicMgr() :
  * @brief Resets the heuristic manager.
  */
 void HeuristicMgr::reset(){
-    ROS_DEBUG_NAMED(CONFIG_LOG, "Resetting the heuristic manager.");
+    ROS_DEBUG_NAMED(HEUR_LOG, "Resetting the heuristic manager.");
     m_heuristics.clear();
     m_mha_heur_ids.clear();
     initializeHeuristics();
+    // update3DHeuristicMaps();
     update2DHeuristicMaps(m_grid_data);
 }
 
@@ -140,7 +141,7 @@ void HeuristicMgr::initializeHeuristics() {
     // To get them in terms of mm distance
     // add3DHeur(20);  //0 - multiply by 20 : grid resolution in mm :
     // underestimated
-    add3DHeur(20);  // 0 - multiply by 20 : grid resolution in mm :
+    int endeff_heur = add3DHeur(20);  // 0 - multiply by 20 : grid resolution in mm :
     // underestimated
 
     // Already in mm.
@@ -151,11 +152,16 @@ void HeuristicMgr::initializeHeuristics() {
     // m_arm_angles_heur_id = addArmAnglesHeur(1);
 }
 
-int HeuristicMgr::add3DHeur(const int cost_multiplier) {
+int HeuristicMgr::add3DHeur(const int cost_multiplier, double* gripper_radius) {
     // Initialize the new heuristic.
-    AbstractHeuristicPtr new_3d_heur = make_shared<BFS3DHeuristic>();
+    BFS3DHeuristicPtr new_3d_heur = make_shared<BFS3DHeuristic>();
     // MUST set the cost multiplier here. If not, it is taken as 1.
     new_3d_heur->setCostMultiplier(cost_multiplier);
+    // if gripper radius is provided, set it.
+    if (gripper_radius){
+        new_3d_heur->setGripperRadius(*gripper_radius);
+    }
+    new_3d_heur->update3DHeuristicMap();
     // Add it to the list of heuristics
     m_heuristics.push_back(new_3d_heur);
     return m_heuristics.size() - 1;
@@ -391,14 +397,16 @@ void HeuristicMgr::initNewMHABaseHeur(int g_x, int g_y, RightContArmState& r_arm
         new_goal_state.setGoal(state);
 
         // Create the new heuristic
-        int heur_num = add2DHeur(cost_multiplier);
+        int heur_num = addMHABaseHeur(cost_multiplier);
         // Update its costmap
         m_heuristics[heur_num]->update2DHeuristicMap(m_grid_data);
 
         // NOTE: Uncomment this if you want to use the base heuristic with
         // rotation.
-        // m_heuristics[heur_num]->setOriginalGoal(m_goal);
+        m_heuristics[heur_num]->setOriginalGoal(m_goal);
         m_heuristics[heur_num]->setGoal(new_goal_state);
+        
+
         // m_heuristics[heur_num]->setGoalArmState(r_arm_state);
         m_mha_heur_ids.push_back(heur_num);
 }
@@ -446,24 +454,24 @@ void HeuristicMgr::initializeMHAHeuristics(const int
     int center_x = state.x();
     int center_y = state.y();
 
-    // std::vector<int> ik_circle_x;
-    // std::vector<int> ik_circle_y;
+    std::vector<int> ik_circle_x;
+    std::vector<int> ik_circle_y;
 
-    // for (size_t i = 0; i < circle_x.size(); ++i) {
-    //     if(isValidIKForGoalState(circle_x[i], circle_y[i])){
-    //         ik_circle_x.push_back(circle_x[i]);
-    //         ik_circle_y.push_back(circle_y[i]);
-    //     }
-    // }
+    for (size_t i = 0; i < circle_x.size(); ++i) {
+        if(isValidIKForGoalState(circle_x[i], circle_y[i])){
+            ik_circle_x.push_back(circle_x[i]);
+            ik_circle_y.push_back(circle_y[i]);
+        }
+    }
 
     std::vector<Point> selected_points;
-    // if (static_cast<int>(ik_circle_x.size()) < m_num_mha_heuristics) {
+    if (static_cast<int>(ik_circle_x.size()) < m_num_mha_heuristics) {
         selected_points = sample_points(discrete_radius,
                 center_x, center_y, circle_x, circle_y, m_num_mha_heuristics);
-    // } else {
-    //     selected_points = sample_points(discrete_radius,
-    //             center_x, center_y, ik_circle_x, ik_circle_y, m_num_mha_heuristics);
-    // }
+    } else {
+        selected_points = sample_points(discrete_radius,
+                center_x, center_y, ik_circle_x, ik_circle_y, m_num_mha_heuristics);
+    }
 
     // assert(static_cast<int>(circle_x.size()) >= m_num_mha_heuristics);
     for (size_t i = 0; i < selected_points.size(); ++i) {
@@ -473,6 +481,7 @@ void HeuristicMgr::initializeMHAHeuristics(const int
             r_arm_state,
             cost_multiplier);
     }
+    
     ROS_DEBUG_NAMED(HEUR_LOG, "--------------------");
     ROS_DEBUG_NAMED(HEUR_LOG, "Size of m_heuristics : %d", static_cast<int>
         (m_heuristics.size()));

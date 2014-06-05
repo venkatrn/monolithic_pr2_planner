@@ -57,6 +57,12 @@ void EnvInterfaces::bindExperimentToEnv(string service_name){
                                                          this);
 }
 
+void EnvInterfaces::bindDemoToEnv(string service_name){
+    m_demo_service = m_nodehandle.advertiseService(service_name, 
+                                                &EnvInterfaces::demoCallback,
+                                                this);
+}
+
 /*! \brief this is callback is purely for simulation purposes
  */
 bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
@@ -141,14 +147,11 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
             } else {
                 // Here starts the actual planning requests
                 start_goal.first.visualize();
-                m_stats_writer.writeStartGoal(counter, start_goal, environment_seed);
                 runMHAPlanner(monolithic_pr2_planner::T_SMHA, "smha_", req, res, search_request, counter);
                 runMHAPlanner(monolithic_pr2_planner::T_IMHA, "imha_", req, res, search_request, counter);
                 // runMHAPlanner(monolithic_pr2_planner::T_MPWA, "mpwa_", req, res, search_request, counter);
-                // runMHAPlanner(monolithic_pr2_planner::T_MHG_REEX, "mhg_reex_",
-                    // req, res, search_request, counter);
-                // runMHAPlanner(monolithic_pr2_planner::T_MHG_NO_REEX,
-                //     "mhg_no_reex_", req, res, search_request, counter);
+                // runMHAPlanner(monolithic_pr2_planner::T_MHG_REEX, "mhg_reex_", req, res, search_request, counter);
+                // runMHAPlanner(monolithic_pr2_planner::T_MHG_NO_REEX, "mhg_no_reex_", req, res, search_request, counter);
                 // runMHAPlanner(monolithic_pr2_planner::T_EES, "ees_", req, res, search_request, counter);
 
                 // ARA Planner
@@ -189,6 +192,10 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
                 }
                 /*** END ARA PLANNER ****/
 
+                // Write env if the whole thing didn't crash.
+                m_stats_writer.writeStartGoal(counter, start_goal, environment_seed);
+
+
                 // OMPL
                 // m_env->reset();
                 // if(!m_env->configureRequest(search_request, start_id, goal_id)){
@@ -209,7 +216,7 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
     return true;
 }
 
-void EnvInterfaces::runMHAPlanner(int planner_type,
+bool EnvInterfaces::runMHAPlanner(int planner_type,
     std::string planner_prefix,
     GetMobileArmPlan::Request &req,
     GetMobileArmPlan::Response &res,
@@ -266,12 +273,12 @@ void EnvInterfaces::runMHAPlanner(int planner_type,
             total_planning_time);
         ROS_INFO("No plan found in %s!", planner_prefix.c_str());
     }
+    return isPlanFound;
 }
 
 bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req, 
                                      GetMobileArmPlan::Response &res)
 {
-    RobotState::setPlanningMode(PlanningModes::RIGHT_ARM_MOBILE);
     SearchRequestParamsPtr search_request = make_shared<SearchRequestParams>();
     search_request->initial_epsilon = req.initial_eps;
     search_request->final_epsilon = req.final_eps;
@@ -303,18 +310,162 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
     search_request->pitch_tolerance = req.pitch_tolerance;
     search_request->yaw_tolerance = req.yaw_tolerance;
     search_request->planning_mode = req.planning_mode;
+    search_request->obj_goal= req.goal;
 
-    RightContArmState rarm_goal(req.rarm_goal);
-    LeftContArmState larm_goal(req.larm_goal);
-    ContBaseState base_goal(req.body_goal);
-    RobotPosePtr goal_robot = boost::make_shared<RobotState>(base_goal,
-        rarm_goal, larm_goal);
+    // Uncomment this stuff if you want to send the robot pose as the goal
+    // instead of the object pose
+    // RobotState::setPlanningMode(PlanningModes::RIGHT_ARM_MOBILE);
+    // RightContArmState rarm_goal(req.rarm_goal);
+    // LeftContArmState larm_goal(req.larm_goal);
+    // ContBaseState base_goal(req.body_goal);
+    // RobotPosePtr goal_robot = boost::make_shared<RobotState>(base_goal,
+    //     rarm_goal, larm_goal);
 
-    ContObjectState obj_goal = goal_robot->getObjectStateRelMap();
+    // ContObjectState obj_goal = goal_robot->getObjectStateRelMap();
+    // search_request->obj_goal= obj_goal;
+    // goal_robot->visualize();
+    
+    
+    // std::cin.get();
+    double object_dim_x = 0.5;
+    double object_dim_y = 0.5;
+    double object_dim_z = 0.1;
+    geometry_msgs::Pose attached_object_pose;
+    attached_object_pose.position.x = object_dim_x/2 + 0.08;
+    attached_object_pose.position.y = -req.rarm_object.pose.position.y;
+    attached_object_pose.position.z = 0.0;
+    
+    KDL::Rotation rot = KDL::Rotation::RPY(0, 0, 0);
+    double qx, qy, qz, qw;
+    rot.GetQuaternion(qx, qy, qz, qw);
+    attached_object_pose.orientation.x = qx;
+    attached_object_pose.orientation.y = qy;
+    attached_object_pose.orientation.z = qz;
+    attached_object_pose.orientation.w = qw;
 
-    search_request->obj_goal= obj_goal;
-    goal_robot->visualize();
-    std::cin.get();
+    m_env->getCollisionSpace()->attachCube("picture", "r_wrist_roll_link",
+        attached_object_pose, object_dim_x, object_dim_y, object_dim_z);
+
+    res.stats_field_names.resize(18);
+    res.stats.resize(18);
+    int start_id, goal_id;
+    int counter = 42;
+    bool isPlanFound;
+    
+    double total_planning_time = clock();
+    bool retVal = m_env->configureRequest(search_request, start_id, goal_id);
+    if(!retVal){
+        return false;
+    }
+    bool forward_search = true;
+    isPlanFound = runMHAPlanner(monolithic_pr2_planner::T_SMHA, "smha_", req, res, search_request, counter);
+    isPlanFound = runMHAPlanner(monolithic_pr2_planner::T_IMHA, "imha_", req, res, search_request, counter);
+    // runMHAPlanner(monolithic_pr2_planner::T_MPWA, "mpwa_", req, res, search_request, counter);
+    // runMHAPlanner(monolithic_pr2_planner::T_MHG_REEX, "mhg_reex_",
+    //     req, res, search_request, counter);
+    // runMHAPlanner(monolithic_pr2_planner::T_MHG_NO_REEX,
+        // "mhg_no_reex_", req, res, search_request, counter);
+    // runMHAPlanner(monolithic_pr2_planner::T_EES, "ees_", req, res, search_request, counter);
+    // m_ara_planner.reset(new MPlanner(m_env.get(), NUM_SMHA_HEUR, forward_search,
+    //     false));
+    // ARA Planner
+    /*** BEGIN ARA PLANNER ****
+    m_env->reset();
+    m_env->setPlannerType(monolithic_pr2_planner::T_ARA);
+    m_ara_planner.reset(new ARAPlanner(m_env.get(), forward_search));
+    total_planning_time = clock();
+    if(!m_env->configureRequest(search_request, start_id, goal_id))
+        ROS_ERROR("Unable to configure request for ARA!"
+            " Trial ID: %d", counter);
+
+    m_ara_planner->set_initialsolution_eps(EPS1*EPS2);
+    m_ara_planner->set_search_mode(return_first_soln);
+    m_ara_planner->set_start(start_id);
+    ROS_INFO("setting ARA goal id to %d", goal_id);
+    m_ara_planner->set_goal(goal_id);
+    m_ara_planner->force_planning_from_scratch();
+    soln.clear();
+    soln_cost = 0;
+    isPlanFound = m_ara_planner->replan(req.allocated_planning_time, 
+                                         &soln, &soln_cost);
+
+    if (isPlanFound){
+        ROS_INFO("Plan found in ARA Planner." 
+            " Moving on to reconstruction.");
+        states =  m_env->reconstructPath(soln);
+        total_planning_time = clock() - total_planning_time;
+        packageStats(stat_names, stats, soln_cost, states.size(),
+            total_planning_time);
+        m_stats_writer.writeARA(stats, states, counter);
+        res.stats_field_names = stat_names;
+        res.stats = stats;
+    } else {
+        packageStats(stat_names, stats, soln_cost, states.size(),
+            total_planning_time);
+        ROS_INFO("No plan found!");
+    }
+    /*** END ARA PLANNER ****/
+    return isPlanFound;
+}
+
+bool EnvInterfaces::demoCallback(GetMobileArmPlan::Request &req, 
+                                     GetMobileArmPlan::Response &res)
+{
+    ROS_INFO("demoCallback!");
+    SearchRequestParamsPtr search_request = make_shared<SearchRequestParams>();
+    search_request->initial_epsilon = req.initial_eps;
+    search_request->final_epsilon = req.final_eps;
+    search_request->decrement_epsilon = req.dec_eps;
+    BodyPose start_body_pos;
+    std::vector<double> start_rangles;
+    std::vector<double> start_langles;
+    getRobotState(m_tf, start_body_pos, start_rangles, start_langles);
+
+    search_request->left_arm_start = LeftContArmState(start_langles);
+    search_request->right_arm_start = RightContArmState(start_rangles);
+    ContBaseState start_base_pose(start_body_pos);
+    search_request->base_start = start_base_pose;
+
+    KDL::Frame rarm_offset, larm_offset;
+    rarm_offset.p.x(req.rarm_object.pose.position.x);
+    rarm_offset.p.y(req.rarm_object.pose.position.y);
+    rarm_offset.p.z(req.rarm_object.pose.position.z);
+    larm_offset.p.x(req.larm_object.pose.position.x);
+    larm_offset.p.y(req.larm_object.pose.position.y);
+    larm_offset.p.z(req.larm_object.pose.position.z);
+
+    rarm_offset.M = Rotation::Quaternion(req.rarm_object.pose.orientation.x, 
+                                         req.rarm_object.pose.orientation.y, 
+                                         req.rarm_object.pose.orientation.z, 
+                                         req.rarm_object.pose.orientation.w);
+    larm_offset.M = Rotation::Quaternion(req.larm_object.pose.orientation.x, 
+                                         req.larm_object.pose.orientation.y, 
+                                         req.larm_object.pose.orientation.z, 
+                                         req.larm_object.pose.orientation.w);
+    search_request->left_arm_object = larm_offset;
+    search_request->right_arm_object = rarm_offset;
+    search_request->xyz_tolerance = req.xyz_tolerance;
+    search_request->roll_tolerance = req.roll_tolerance;
+    search_request->pitch_tolerance = req.pitch_tolerance;
+    search_request->yaw_tolerance = req.yaw_tolerance;
+    search_request->planning_mode = req.planning_mode;
+
+    // Uncomment this stuff if you want to send the robot pose as the goal
+    // instead of the object pose
+
+    // RightContArmState rarm_goal(req.rarm_goal);
+    // LeftContArmState larm_goal(req.larm_goal);
+    // ContBaseState base_goal(req.body_goal);
+    // RobotPosePtr goal_robot = boost::make_shared<RobotState>(base_goal,
+        // rarm_goal, larm_goal);
+
+    // ContObjectState obj_goal = goal_robot->getObjectStateRelMap();
+    // search_request->obj_goal= obj_goal;
+    // goal_robot->visualize();
+    
+    
+    search_request->obj_goal= req.goal;
+    // std::cin.get();
 
     res.stats_field_names.resize(18);
     res.stats.resize(18);
@@ -412,12 +563,11 @@ void EnvInterfaces::packageStats(vector<string>& stat_names,
     stats[9] = static_cast<double>(solution_size);
 }
 
-void EnvInterfaces::packageMHAStats(vector<string>& stat_names, 
+void EnvInterfaces::packageMHAStats(vector<string>& stat_names,
                                  vector<double>& stats,
                                  int solution_cost,
                                  size_t solution_size,
                                  double total_planning_time){
-    
     stat_names.resize(10);
     stats.resize(10);
     stat_names[0] = "total plan time";
@@ -573,8 +723,59 @@ void EnvInterfaces::loadNavMap(const nav_msgs::OccupancyGridPtr& map){
     costmap_pub.info.origin.position.y = 0;
     costmap_pub.data = m_final_map;
 
-    // Publish the cropped version of the costmap
+    // Publish the cropped version of the costmap; publishes
+    // /monolithic_pr2_planner/costmap_pub
     m_costmap_pub.publish(costmap_pub);
 
     m_collision_space_interface->update2DHeuristicMaps(m_final_map);
+
+}
+
+void EnvInterfaces::getRobotState(tf::TransformListener &tf_, BodyPose &body_pos, std::vector<double> &rangles, std::vector<double> &langles){
+  tf::StampedTransform base_map_transform;
+  sensor_msgs::JointStateConstPtr state = ros::topic::waitForMessage < sensor_msgs::JointState > ("joint_states");
+  rangles.resize(7);
+  langles.resize(7);
+
+  rangles[0] = getJointAngle("r_shoulder_pan_joint",state);
+  rangles[1] = getJointAngle("r_shoulder_lift_joint",state);
+  rangles[2] = getJointAngle("r_upper_arm_roll_joint",state);
+  rangles[3] = getJointAngle("r_elbow_flex_joint",state);
+  rangles[4] = getJointAngle("r_forearm_roll_joint",state);
+  rangles[5] = getJointAngle("r_wrist_flex_joint",state);
+  rangles[6] = getJointAngle("r_wrist_roll_joint",state);
+
+  langles[0] = getJointAngle("l_shoulder_pan_joint",state);
+  langles[1] = getJointAngle("l_shoulder_lift_joint",state);
+  langles[2] = getJointAngle("l_upper_arm_roll_joint",state);
+  langles[3] = getJointAngle("l_elbow_flex_joint",state);
+  langles[4] = getJointAngle("l_forearm_roll_joint",state);
+  langles[5] = getJointAngle("l_wrist_flex_joint",state);
+  langles[6] = getJointAngle("l_wrist_roll_joint",state);
+
+  body_pos.z = getJointAngle("torso_lift_joint",state);
+
+  bool done = false;
+  while(!done){
+    try {
+      tf_.lookupTransform("map", "base_footprint", ros::Time(0), base_map_transform);
+      body_pos.x = base_map_transform.getOrigin().x();
+      body_pos.y = base_map_transform.getOrigin().y();
+      body_pos.theta = 2 * atan2(base_map_transform.getRotation().getZ(), base_map_transform.getRotation().getW());
+      done = true;
+    }
+    catch (tf::TransformException& ex) {
+      ROS_ERROR("[EnvInterfaces] Is there a map? The map-robot transform failed. (%s)", ex.what());
+      sleep(1);
+    }
+  }
+}
+
+double EnvInterfaces::getJointAngle(std::string name, sensor_msgs::JointStateConstPtr msg){
+  for(unsigned int i=0; i<msg->name.size(); i++){
+    if(msg->name[i] == name)
+      return msg->position[i];
+  }
+  ROS_ERROR("joint doesn't exist! (exit)\n");
+  exit(1);
 }

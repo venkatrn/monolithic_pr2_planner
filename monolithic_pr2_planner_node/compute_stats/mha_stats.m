@@ -1,16 +1,15 @@
 %directories = dir('/home/victor/ros/mpp_groovy/mpp/monolithic_pr2_planner_node/compute_stats/imha_all_set/');
-stem = '/home/siddharth/Dropbox/Academics/CMU/Research/SBPL/Multiple_Hypothesis_Heuristics/automated_results/meta_review_8/planning_stats';
-% stem = '/home/siddharth/Dropbox/Academics/CMU/Research/SBPL/Multiple_Hypothesis_Heuristics/automated_results/new_heur/victor/latest_stats';
+stem = '/home/siddharth/Dropbox/Academics/CMU/Research/SBPL/Multiple_Hypothesis_Heuristics/automated_results/final_paper/set_3';
 %stem = '/Users/vhwang/Desktop/stats/data/';
 %stem = '/Users/vhwang/Desktop/stats/imha_all_set/';
 %stem = '/Users/vhwang/Desktop/stats/meta_review_5/planning_stats/';
-%stem = '/Users/vhwang/Desktop/stats/no_rot/';
-%stem = '/home/siddharth/Documents/backup/meta_review_stats/meta_review_7/planning_stats/';
+% stem = '/Users/vhwang/Desktop/stats/new/run2';
+% stem = '/home/siddharth/Dropbox/Academics/CMU/Research/SBPL/Multiple_Hypothesis_Heuristics/automated_results/new_heur/victor/latest_stats';
 directories = dir(stem);
 %for idx=3:size(directories,1)
 
 
-NUMBER_OF_TOTAL_PLANNING_REQUESTS = 100;
+NUMBER_OF_TOTAL_PLANNING_REQUESTS = 0;
 
 valid_dirs = [];
 for i=1:length(directories)
@@ -48,13 +47,43 @@ for planner_idx = 1:length(planners)
     cumulative_stats.(planners{planner_idx}).total_cost = 0;
     cumulative_stats.(planners{planner_idx}).total_cost_for_smha = 0;
     cumulative_stats.(planners{planner_idx}).cost_ratio = 0;
+    cumulative_stats.(planners{planner_idx}).independent_total = 0;
 
     cumulative_stats.(planners{planner_idx}).num_successes_with_smha = 0;
 end
+total_num_env = 0;
+
+smha_cost = 0;
+ara_cost = 0;
+imha_cost = 0;
+mpwa_cost = 0;
+mhg_reex_cost = 0;
+mhg_no_reex_cost = 0;
+ees_cost = 0;
 
 for idx=1:length(valid_dirs)
     cur_dir = directories(valid_dirs(idx)).name;
-    num = 10;
+
+    %look for the last env number that was generated, then ignore that one
+    list_of_files = dir([stem '/' directories(valid_dirs(idx)).name]);
+    counter = 1;
+    valid_nums = [];
+    for f_idx=1:size(list_of_files,1)
+        if findstr(list_of_files(f_idx).name, 'env')
+            str_idx = regexp(list_of_files(f_idx).name, '[0-9]*');
+            valid_nums = [valid_nums; str2num(list_of_files(f_idx).name(str_idx:str_idx+1))];
+            counter = counter + 1;
+        end
+    end
+    if size(valid_nums,1) == 1
+        continue;
+    end
+    valid_nums = sort(valid_nums);
+    valid_nums = valid_nums(1:end);
+    num = valid_nums(end) + 1;
+    NUMBER_OF_TOTAL_PLANNING_REQUESTS = NUMBER_OF_TOTAL_PLANNING_REQUESTS + num;
+    % num = 10;
+    fprintf('computing stats over %d experiments\n', num);
     %path_ = ['/home/victor/ros/mpp_groovy/mpp/monolithic_pr2_planner_node/compute_stats/imha_all_set/' cur_dir ]
     path_ = [stem '/' cur_dir ];
     %rrt_stats = computeMethodStats([path_ '/rrt_'],num,0);
@@ -79,7 +108,13 @@ for idx=1:length(valid_dirs)
     smha_comparison = compareMethods(smha_stats,other_methods);
 
 
-
+    smha_cost = smha_cost + sum(smha_stats.cost(find(smha_stats.cost>0)));
+    ara_cost = ara_cost + sum(ara_stats.cost(find(ara_stats.cost>0)));
+    imha_cost = imha_cost + sum(imha_stats.cost(find(imha_stats.cost>0)));
+    mpwa_cost = mpwa_cost + sum(mpwa_stats.cost(find(mpwa_stats.cost>0)));
+    mhg_reex_cost = mhg_reex_cost + sum(mhg_reex_stats.cost(find(mhg_reex_stats.cost>0)));
+    mhg_no_reex_cost = mhg_no_reex_cost + sum(mhg_no_reex_stats.cost(find(mhg_no_reex_stats.cost>0)));
+    ees_cost = ees_cost + sum(ees_stats.cost(find(ees_stats.cost>0)));
 
 
     % for each 'other' planner
@@ -160,7 +195,15 @@ for planner_idx = 1:length(planners)
     if isSBPL
         disp(['Expands ratio (other/smha): ', num2str(cumulative_stats.(planner).expands_ratio)]);
         disp(['Cost ratio (other/smha): ', num2str(cumulative_stats.(planner).cost_ratio)]);
+        disp(['Cumulative Avg Cost (other): ', num2str(cumulative_stats.(planner).total_cost/cumulative_stats.(planner).num_successes_with_smha)]);
     end
     fprintf('\n');
 end
+disp(['smha average cost: ', num2str(smha_cost/cumulative_stats.smha_.num_success)]);
+disp(['ara average cost: ', num2str(ara_cost/cumulative_stats.ara_.num_success)]);
+disp(['imha average cost: ', num2str(imha_cost/cumulative_stats.imha_.num_success)]);
+disp(['mpwa average cost: ', num2str(mpwa_cost/cumulative_stats.mpwa_.num_success)]);
+disp(['mhg_reex average cost: ', num2str(mhg_reex_cost/cumulative_stats.mhg_reex_.num_success)]);
+disp(['mhg_no_reex average cost: ', num2str(mhg_no_reex_cost/cumulative_stats.mhg_no_reex_.num_success)]);
+disp(['ees average cost: ', num2str(ees_cost/cumulative_stats.ees_.num_success)]);
 

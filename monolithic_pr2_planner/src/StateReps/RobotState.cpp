@@ -5,6 +5,7 @@
 #include <pr2_collision_checker/pr2_collision_space.h>
 #include <kdl/frames.hpp>
 #include <vector>
+#include <sstream>
 
 using namespace monolithic_pr2_planner;
 using namespace boost;
@@ -134,18 +135,22 @@ void RobotState::visualize(int hue){
     m_left_arm.getAngles(&l_arm);
     m_right_arm.getAngles(&r_arm);
     BodyPose body_pose = m_base_state.body_pose();
+    stringstream ss;
+    ss << "planner_" << hue;
     Visualizer::pviz->visualizeRobot(r_arm, l_arm, body_pose, hue, 
-                                    std::string("planner"), 1);
+                                    ss.str(), 1);
 }
 
+// this is a bit weird at the moment, but we use the arm angles as seed angles
+// disc_obj_state is in body frame : Torso_lift_link?
+bool RobotState::computeRobotPose(const DiscObjectState& disc_obj_state,
+                                 const RobotState& seed_robot_pose,
+                                 RobotPosePtr& new_robot_pose,
+                                 bool free_angle_search){
+    ContObjectState obj_state = disc_obj_state.getContObjectState();
+    RightContArmState seed_r_arm = seed_robot_pose.right_arm();
+    LeftContArmState seed_l_arm = seed_robot_pose.left_arm();
 
-// TODO combine this with the function below
-bool RobotState::computeRobotPose(const ContObjectState& obj_state,
-                                  const ContBaseState& base_state,
-                                  const RightContArmState& seed_r_arm,
-                                  const LeftContArmState& seed_l_arm,
-                                  RightContArmState& output_r_arm,
-                                  LeftContArmState& output_l_arm){
     KDL::Frame obj_frame;
     obj_frame.p.x(obj_state.x());
     obj_frame.p.y(obj_state.y());
@@ -153,8 +158,8 @@ bool RobotState::computeRobotPose(const ContObjectState& obj_state,
     obj_frame.M = KDL::Rotation::RPY(obj_state.roll(), 
                                      obj_state.pitch(),
                                      obj_state.yaw());
-    KDL::Frame r_obj_to_wrist_offset = seed_r_arm.getObjectOffset();
-    KDL::Frame l_obj_to_wrist_offset = seed_l_arm.getObjectOffset();
+    KDL::Frame r_obj_to_wrist_offset = seed_robot_pose.right_arm().getObjectOffset();
+    KDL::Frame l_obj_to_wrist_offset = seed_robot_pose.left_arm().getObjectOffset();
 
     KDL::Frame r_wrist_frame = obj_frame * r_obj_to_wrist_offset;
     KDL::Frame l_wrist_frame = obj_frame * l_obj_to_wrist_offset;
@@ -190,95 +195,20 @@ bool RobotState::computeRobotPose(const ContObjectState& obj_state,
 
     // TODO make this work for the left arm as well
 #ifdef USE_KDL_SOLVER
-    SBPLArmModelPtr arm_model = seed_r_arm.getArmModel();
-    bool ik_success = arm_model->computeFastIK(r_wrist_frame, r_seed, r_angles);
-    if (!ik_success){
-        if (!arm_model->computeIK(r_wrist_frame, r_seed, r_angles)){
+    if (use_right_arm) {
+        SBPLArmModelPtr arm_model = seed_r_arm.getArmModel();
+        bool ik_success = arm_model->computeFastIK(r_wrist_frame, r_seed, r_angles);
+        if (!ik_success) {
+            ROS_DEBUG_NAMED(MPRIM_LOG, "IK failed for right arm");
             return false;
         }
     }
-#endif
-#ifdef USE_IKFAST_SOLVER
 
-    if (use_right_arm){
-        double r_free_angle = r_seed[Joints::UPPER_ARM_ROLL];
-        if (!m_ikfast_solver.ikRightArm(r_wrist_frame, r_free_angle, &r_angles)){
-            return false;
-        }
-    }
-    
-    if (use_left_arm){
-        double l_free_angle = l_seed[Joints::UPPER_ARM_ROLL];
-        if (!m_ikfast_solver.ikLeftArm(l_wrist_frame, l_free_angle, &l_angles)){
-            return false;
-        }
-    }
-#endif
-    double after = tv_a.tv_usec + (tv_a.tv_sec * 1000000);
-    ik_time += after - before;
-
-    output_r_arm = RightContArmState(r_angles);
-    output_r_arm = RightContArmState(r_angles);
-    return true;
-}
-
-
-// this is a bit weird at the moment, but we use the arm angles as seed angles
-// disc_obj_state is in body frame : Torso_lift_link?
-bool RobotState::computeRobotPose(const DiscObjectState& disc_obj_state,
-                                 const RobotState& seed_robot_pose,
-                                 RobotPosePtr& new_robot_pose,
-                                 bool free_angle_search){
-    ContObjectState obj_state = disc_obj_state.getContObjectState();
-
-    KDL::Frame obj_frame;
-    obj_frame.p.x(obj_state.x());
-    obj_frame.p.y(obj_state.y());
-    obj_frame.p.z(obj_state.z());
-    obj_frame.M = KDL::Rotation::RPY(obj_state.roll(), 
-                                     obj_state.pitch(),
-                                     obj_state.yaw());
-    KDL::Frame r_obj_to_wrist_offset = seed_robot_pose.right_arm().getObjectOffset();
-    KDL::Frame l_obj_to_wrist_offset = seed_robot_pose.left_arm().getObjectOffset();
-
-    KDL::Frame r_wrist_frame = obj_frame * r_obj_to_wrist_offset;
-    KDL::Frame l_wrist_frame = obj_frame * l_obj_to_wrist_offset;
-
-    // store the seed angles as the actual angles in case we don't compute for
-    // the other arm. otherwise, computing a new robot pose would reset the
-    // unused arm to angles of 0
-    vector<double> r_seed(7,0), r_angles(7,0), l_seed(7,0), l_angles(7,0);
-    seed_robot_pose.right_arm().getAngles(&r_seed);
-    r_angles = r_seed;
-    seed_robot_pose.left_arm().getAngles(&l_seed);
-    l_angles = l_seed;
-
-    ik_calls++;
-    struct timeval tv_b;
-    struct timeval tv_a;
-    gettimeofday(&tv_b, NULL);
-    double before = tv_b.tv_usec + (tv_b.tv_sec * 1000000);
-    gettimeofday(&tv_a, NULL);
-
-    // decide which arms we need to run IK for
-    bool use_right_arm = (m_planning_mode == PlanningModes::RIGHT_ARM ||
-                          m_planning_mode == PlanningModes::DUAL_ARM ||
-                          m_planning_mode == PlanningModes::RIGHT_ARM_MOBILE ||
-                          m_planning_mode == PlanningModes::DUAL_ARM_MOBILE);
-    bool use_left_arm = (m_planning_mode == PlanningModes::LEFT_ARM ||
-                          m_planning_mode == PlanningModes::DUAL_ARM ||
-                          m_planning_mode == PlanningModes::LEFT_ARM_MOBILE ||
-                          m_planning_mode == PlanningModes::DUAL_ARM_MOBILE);
-    if (!(use_right_arm || use_left_arm)){
-        ROS_ERROR("what! not using any arm for IK??");
-    }
-
-    // TODO make this work for the left arm as well
-#ifdef USE_KDL_SOLVER
-    SBPLArmModelPtr arm_model = seed_robot_pose.m_right_arm.getArmModel();
-    bool ik_success = arm_model->computeFastIK(r_wrist_frame, r_seed, r_angles);
-    if (!ik_success){
-        if (!arm_model->computeIK(r_wrist_frame, r_seed, r_angles)){
+    if (use_left_arm) {
+        SBPLArmModelPtr arm_model = seed_l_arm.getArmModel();
+        bool ik_success = arm_model->computeFastIK(l_wrist_frame, l_seed, l_angles);
+        if (!ik_success){
+            ROS_DEBUG_NAMED(MPRIM_LOG, "IK failed for left arm");
             return false;
         }
     }

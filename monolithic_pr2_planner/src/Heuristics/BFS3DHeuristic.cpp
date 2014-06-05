@@ -10,6 +10,7 @@ BFS3DHeuristic::BFS3DHeuristic(){
     int dimX, dimY, dimZ;
     m_occupancy_grid->getGridSize(dimX, dimY, dimZ);
     m_bfs.reset(new BFS_3D(dimX, dimY, dimZ));
+    m_gripper_sphere_radius = m_resolution_params.gripper_sphere_radius;
 }
 
 int BFS3DHeuristic::getGoalHeuristic(GraphStatePtr state){
@@ -44,8 +45,7 @@ void BFS3DHeuristic::loadObstaclesFromOccupGrid(){
     for (int z = 0; z < dimZ - 2; z++){
         for (int y = 0; y < dimY - 2; y++){
             for (int x = 0; x < dimX - 2; x++){
-                double gripper_radius = m_resolution_params.gripper_sphere_radius;
-                if(m_occupancy_grid->getDistance(x,y,z) <= gripper_radius){
+                if(m_occupancy_grid->getDistance(x,y,z) <= m_gripper_sphere_radius){
                     m_bfs->setWall(x + 1, y + 1, z + 1); //, true);
                     walls++;
                 }
@@ -54,8 +54,7 @@ void BFS3DHeuristic::loadObstaclesFromOccupGrid(){
     }
     ROS_DEBUG_NAMED(HEUR_LOG, "Initialized BFS3Dheuristic with %d walls", walls);
     ROS_DEBUG_NAMED(HEUR_LOG, "using gripper sphere radius %f", 
-                    m_resolution_params.gripper_sphere_radius);
-
+                    m_gripper_sphere_radius);
 }
 
 void BFS3DHeuristic::visualize(){

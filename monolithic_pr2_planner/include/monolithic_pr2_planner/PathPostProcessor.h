@@ -18,7 +18,7 @@ namespace monolithic_pr2_planner {
             std::vector<FullBodyState> reconstructPath(std::vector<int> state_ids,
                                                        GoalState& goal_state,
                                                        std::vector<MotionPrimitivePtr> mprims);
-            static void visualizeFinalPath(std::vector<FullBodyState> path);
+            void visualizeFinalPath(std::vector<FullBodyState> path);
             bool stateInterpolate(const RobotState& start, const RobotState& end,
                                              std::vector<FullBodyState>* interp_steps);
             static bool isBasePathBetter(std::vector<FullBodyState> &new_path,

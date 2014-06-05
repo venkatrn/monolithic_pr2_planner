@@ -22,6 +22,15 @@ CollisionSpaceMgr::CollisionSpaceMgr(SBPLArmModelPtr right_arm,
         exit(1);
     }
     ROS_DEBUG_NAMED(INIT_LOG, "Launched collision space manager");
+    // geometry_msgs::Pose pose;
+    // pose.position.x = 0.20;
+    // pose.position.y = 0;
+    // pose.position.z = 0;
+
+    // pose.orientation.x = 0;
+    // pose.orientation.y = 0;
+    // pose.orientation.z = 0;
+    // pose.orientation.w = 1;
 }
 
 /*! \brief Updates the internal collision map of the collision checker.
@@ -178,4 +187,28 @@ bool CollisionSpaceMgr::isValidContState(std::vector<double>& l_arm, std::vector
     if(!m_cspace->checkBaseMotion(l_arm, r_arm, body_pose, verbose, dist, debug))
         return false;
     return true;
+}
+
+/**
+ * \brief visualizes the object attached to the robot.
+ * 
+ */
+ void CollisionSpaceMgr::visualizeAttachedObject(RobotState& robot_state,
+    int hue){
+    vector<double> t1, t2;
+    robot_state.right_arm().getAngles(&t2);
+    robot_state.left_arm().getAngles(&t1);
+    BodyPose bp = robot_state.base_state().getBodyPose();
+    std::vector<std::vector<double> > spheres;
+    m_cspace->getAttachedObjectSpheres(t1, t2, bp, spheres);
+    stringstream ss;
+    ss << "attached_object_" << hue;
+    Visualizer::pviz->visualizeSpheres(spheres, hue, ss.str(), .04);
+}
+
+void CollisionSpaceMgr::attachCube(std::string name, std::string reference_frame,
+                geometry_msgs::Pose relative_pose, double dim_x, double dim_y,
+                double dim_z) {
+    m_cspace->attachCube(name, reference_frame, relative_pose,
+        dim_x,dim_y,dim_z);
 }

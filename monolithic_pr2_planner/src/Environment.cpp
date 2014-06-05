@@ -57,6 +57,7 @@ bool Environment::configureRequest(SearchRequestParamsPtr search_request_params,
     if (!setStartGoal(search_request, start_id, goal_id)) {
         return false;
     }
+
     return true;
 }
 
@@ -78,6 +79,7 @@ int Environment::GetGoalHeuristic(int stateID, int goal_id) {
     // ROS_DEBUG_NAMED(HEUR_LOG, "State ID : %d\t 0 : %d\t 1 : %d\t 2: %d\t 3: %d",
     //     stateID, std::max(values[0], values[1]),
     //     EPS2*values[0], values[2] + values[0], values[3] + values[0]);
+    // ROS_DEBUG_NAMED(HEUR_LOG, "End eff inflated: %d", values.back());
     switch (m_planner_type) {
         case T_SMHA:
         case T_MHG_REEX:
@@ -94,8 +96,9 @@ int Environment::GetGoalHeuristic(int stateID, int goal_id) {
                 case 4:
                     // return static_cast<int>(values[goal_id] +
                         // values[0]);
-                    return static_cast<int>(0.5f*values[goal_id-1] + 0.5f*values[0]);
-
+                    return static_cast<int>(0.5f*values[goal_id-1] +
+                        0.5f*values[0]);
+                    // return static_cast<int>(values[goal_id-1]);
             }
             break;
         case T_IMHA:
@@ -107,7 +110,7 @@ int Environment::GetGoalHeuristic(int stateID, int goal_id) {
                 case 2:  // Base1, Base2 heur
                 case 3:
                     // return static_cast<int>(values[goal_id] + values[0]);
-                    return (0.5f*values[goal_id] + 0.5f*values[0]);
+                    return static_cast<int>(0.5f*values[goal_id] + 0.5f*values[0]);
             }
             break;
         case T_MPWA:
@@ -169,7 +172,10 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
     ROS_DEBUG_NAMED(SEARCH_LOG, "Source state is:");
     source_state->robot_pose().printToDebug(SEARCH_LOG);
     if (m_param_catalog.m_visualization_params.expansions) {
-        source_state->robot_pose().visualize(250/NUM_SMHA_HEUR*ii);
+        RobotState expansion_pose = source_state->robot_pose();
+        expansion_pose.visualize(250/NUM_SMHA_HEUR*ii);
+        // source_state->robot_pose().visualize(250/NUM_SMHA_HEUR*ii);
+        m_cspace_mgr->visualizeAttachedObject(expansion_pose, 250/NUM_SMHA_HEUR*ii);
         usleep(5000);
     }
     for (auto mprim : m_mprims.getMotionPrims()) {
@@ -321,6 +327,8 @@ void Environment::configureQuerySpecificParams(SearchRequestPtr search_request){
     RightContArmState r_arm;
     l_arm.setObjectOffset(search_request->m_params->left_arm_object);
     r_arm.setObjectOffset(search_request->m_params->right_arm_object);
+    ROS_DEBUG_NAMED(SEARCH_LOG, "Setting planning mode to : %d",
+        search_request->m_params->planning_mode);
     RobotState::setPlanningMode(search_request->m_params->planning_mode);
 }
 

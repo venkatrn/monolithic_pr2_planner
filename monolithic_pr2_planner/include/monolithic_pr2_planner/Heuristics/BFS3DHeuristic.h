@@ -21,8 +21,11 @@ namespace monolithic_pr2_planner {
             void loadObstaclesFromOccupGrid();
             void visualize();
             void update3DHeuristicMap();
+            void setGripperRadius(double radius) { m_gripper_sphere_radius =
+                radius; }
         private:
             GoalState m_goal;
+            double m_gripper_sphere_radius;
             std::unique_ptr<sbpl_arm_planner::BFS_3D> m_bfs;
     };
     typedef boost::shared_ptr<BFS3DHeuristic> BFS3DHeuristicPtr;

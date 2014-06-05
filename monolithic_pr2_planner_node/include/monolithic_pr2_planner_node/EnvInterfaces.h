@@ -33,6 +33,7 @@ namespace monolithic_pr2_planner_node {
                                   GetMobileArmPlan::Response &res);
             void bindPlanPathToEnv(std::string service_name);
             void bindExperimentToEnv(std::string service_name);
+            void bindDemoToEnv(std::string service_name);
             bool bindCollisionSpaceToTopic(std::string topic_name);
             void bindNavMapToTopic(std::string topic_name);
             void packageStats(std::vector<std::string>& stat_names,
@@ -47,18 +48,24 @@ namespace monolithic_pr2_planner_node {
                               double total_planning_time);
             bool experimentCallback(GetMobileArmPlan::Request &req,
                                     GetMobileArmPlan::Response &res);
+            bool demoCallback(GetMobileArmPlan::Request &req,
+                                    GetMobileArmPlan::Response &res);
 
         private:
             void loadNavMap(const nav_msgs::OccupancyGridPtr& map);
             void crop2DMap(const nav_msgs::MapMetaData& map_info, const std::vector<signed char>& v,
                            double new_origin_x, double new_origin_y,
                            double width, double height);
-            void runMHAPlanner(int planner_type,
+            bool runMHAPlanner(int planner_type,
                   std::string planner_prefix,
                   GetMobileArmPlan::Request &req,
                   GetMobileArmPlan::Response &res,
                   monolithic_pr2_planner::SearchRequestParamsPtr search_request,
                   int counter);
+            void getRobotState(tf::TransformListener &tf_, BodyPose &body_pos, std::vector<double> &rangles, std::vector<double>
+              &langles);
+            double getJointAngle(std::string name, sensor_msgs::JointStateConstPtr
+              msg);
 
             ros::NodeHandle m_nodehandle;
             InterfaceParams m_params;
@@ -67,6 +74,7 @@ namespace monolithic_pr2_planner_node {
             std::unique_ptr<CollisionSpaceInterface> m_collision_space_interface;
             ros::ServiceServer m_plan_service;
             ros::ServiceServer m_experiment_service;
+            ros::ServiceServer m_demo_service;
             std::unique_ptr<SBPLPlanner> m_ara_planner;
             std::unique_ptr<SBPLPlanner> m_mha_planner;
             ros::Subscriber m_nav_map;

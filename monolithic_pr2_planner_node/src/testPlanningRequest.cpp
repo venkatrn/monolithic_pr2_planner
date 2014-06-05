@@ -112,7 +112,7 @@ int main(int argc, char** argv){
     // KDL::Rotation rot = KDL::Rotation::RPY(0,0,M_PI/2);
 
     // Goal pose
-    KDL::Rotation rot = KDL::Rotation::RPY(M_PI/6,0.0,M_PI/2);
+    KDL::Rotation rot = KDL::Rotation::RPY(M_PI/2,0.0,0);
     double qx, qy, qz, qw;
     rot.GetQuaternion(qx, qy, qz, qw);
 
@@ -127,9 +127,9 @@ int main(int argc, char** argv){
     // pose.pose.position.x = 3.0;
     // pose.pose.position.y = 4.9;
     // pose.pose.position.z = 1.0;
-    pose.pose.position.x = 4.00000;
-    pose.pose.position.y = 3.00000;
-    pose.pose.position.z = 1.18000;
+    pose.pose.position.x = 5.50000;
+    pose.pose.position.y = 2.50000;
+    pose.pose.position.z = 0.90000;
 
     // pose.pose.position.x = 6.440000;
     // pose.pose.position.y = 0.460000;

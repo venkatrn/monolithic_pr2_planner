@@ -59,16 +59,6 @@ void addCuboid(pcl::PointCloud<pcl::PointXYZ>::Ptr pclCloud, double X, double Y,
     // double dimX, dimY, dimZ;
     // double X, Y, Z;
 
-
-    // Must randomize.
-    // dimX = 0.6;
-    // dimY = 1.2;
-    // dimZ = 0.8;
-
-    // X = 4.5;
-    // Y = 2;
-    // Z = 0.0;
-
     std::vector<std::vector<double> > voxels;
     sbpl::Voxelizer::voxelizeBox(dimX, dimY, dimZ, 0.02, voxels, fill);
     size_t currentPCLCloudSize = pclCloud->points.size();
@@ -285,6 +275,7 @@ vector<Eigen::Vector3d> getVoxelsFromFile(std::string filename){
     // Doorway
     // addCuboid(pclCloud, 5, 0, 0, 0.05, 2, 1.8, true);
     // addCuboid(pclCloud, 5, 3.05, 0, 0.05, 2.2, 1.8, true);
+    // head of doorway; don't add this.
     // addCuboid(pclCloud, 5, 2, 1.6, 0.05, 1, 1.8, true);
     
 

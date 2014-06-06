@@ -78,9 +78,6 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
 
         for (auto& start_goal : start_goal_pairs){
             ROS_ERROR("running trial %d", counter);
-            // Write envt stats to file
-            // m_stats_writer.writeEnvt(m_generator->getGoalRegions(), start_goal.first, start_goal.second,
-            //     counter);
             // start_goal.first.visualize();
             SearchRequestParamsPtr search_request = 
                 make_shared<SearchRequestParams>();
@@ -135,8 +132,6 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
             vector<int> soln;
             int soln_cost;
 
-            // if(!m_env->configureRequest(search_request, start_id, goal_id))
-            //         ROS_ERROR("Unable to configure request for MHA! Trial ID: %d", counter);
             int environment_seed;
 
             m_nodehandle.getParam("/monolithic_pr2_planner_node/experiments/seed",
@@ -149,13 +144,13 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
                 start_goal.first.visualize();
                 runMHAPlanner(monolithic_pr2_planner::T_SMHA, "smha_", req, res, search_request, counter);
                 runMHAPlanner(monolithic_pr2_planner::T_IMHA, "imha_", req, res, search_request, counter);
-                // runMHAPlanner(monolithic_pr2_planner::T_MPWA, "mpwa_", req, res, search_request, counter);
-                // runMHAPlanner(monolithic_pr2_planner::T_MHG_REEX, "mhg_reex_", req, res, search_request, counter);
-                // runMHAPlanner(monolithic_pr2_planner::T_MHG_NO_REEX, "mhg_no_reex_", req, res, search_request, counter);
-                // runMHAPlanner(monolithic_pr2_planner::T_EES, "ees_", req, res, search_request, counter);
+                runMHAPlanner(monolithic_pr2_planner::T_MPWA, "mpwa_", req, res, search_request, counter);
+                runMHAPlanner(monolithic_pr2_planner::T_MHG_REEX, "mhg_reex_", req, res, search_request, counter);
+                runMHAPlanner(monolithic_pr2_planner::T_MHG_NO_REEX, "mhg_no_reex_", req, res, search_request, counter);
+                runMHAPlanner(monolithic_pr2_planner::T_EES, "ees_", req, res, search_request, counter);
 
                 // ARA Planner
-                /*** BEGIN ARA PLANNER ****
+                /*** BEGIN ARA PLANNER ****/
                 m_env->reset();
                 m_env->setPlannerType(monolithic_pr2_planner::T_ARA);
                 m_ara_planner.reset(new ARAPlanner(m_env.get(), forward_search));
@@ -192,23 +187,22 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
                 }
                 /*** END ARA PLANNER ****/
 
-                // Write env if the whole thing didn't crash.
-                m_stats_writer.writeStartGoal(counter, start_goal, environment_seed);
-
-
                 // OMPL
-                // m_env->reset();
-                // if(!m_env->configureRequest(search_request, start_id, goal_id)){
-                //     ROS_ERROR("Unable to configure request for OMPL! Trial ID: %d", counter);
-                // }
+                m_env->reset();
+                if(!m_env->configureRequest(search_request, start_id, goal_id)){
+                    ROS_ERROR("Unable to configure request for OMPL! Trial ID: %d", counter);
+                }
 
                 // Run OMPL
-                /*** OMPL PLANNERS ****
+                /*** OMPL PLANNERS ****/
                 m_rrt->planPathCallback(*search_request, counter, m_stats_writer);
                 m_prm->planPathCallback(*search_request, counter, m_stats_writer);
                 m_rrtstar->planPathCallback(*search_request, counter, m_stats_writer);
                 m_rrtstar_first_sol->planPathCallback(*search_request, counter, m_stats_writer);
                 /**** END OMPL PLANNERS ***/
+                
+                // Write env if the whole thing didn't crash.
+                m_stats_writer.writeStartGoal(counter, start_goal, environment_seed);
                 counter++;
             }
         }

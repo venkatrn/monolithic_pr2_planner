@@ -57,6 +57,8 @@ function stats = computeMethodStats(folder_name,num,sbpl)
       expands(i) = raw_stats(1,8);
     else
       time(i) = raw_stats(1,1) + raw_stats(1,2);
+      cost(i) = 0;
+      expands(i) = 0;
     end
   end
   stats.name = folder_name;
@@ -66,9 +68,10 @@ function stats = computeMethodStats(folder_name,num,sbpl)
   stats.arm_abs = arm_abs;
   stats.arm_sqr = arm_sqr;
   stats.time = time;
-  if sbpl
+  % if sbpl
       stats.cost = cost;
       stats.expands = expands;
-  end
+  % end
+
 end
 

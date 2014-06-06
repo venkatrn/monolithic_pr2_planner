@@ -240,7 +240,7 @@ bool OMPLPR2Planner::planPathCallback(SearchRequestParams& search_request, int t
     //}
     double t0 = ros::Time::now().toSec();
     if(m_planner_id == RRTSTAR || m_planner_id == RRTSTARFIRSTSOL)
-        planner->solve(30.0);
+        planner->solve(60.0);
     else
         planner->solve(60.0);
     double t1 = ros::Time::now().toSec();
@@ -280,8 +280,8 @@ bool OMPLPR2Planner::planPathCallback(SearchRequestParams& search_request, int t
             robot_state.left_arm().getAngles(&l_arm);
             BodyPose bp = base.body_pose();
             
-            Visualizer::pviz->visualizeRobot(r_arm, l_arm, bp, 150, "robot", 0);
-            usleep(5000);
+            // Visualizer::pviz->visualizeRobot(r_arm, l_arm, bp, 150, "robot", 0);
+            // usleep(5000);
         }
         data.robot_state = robot_states;
         data.base = base_states;

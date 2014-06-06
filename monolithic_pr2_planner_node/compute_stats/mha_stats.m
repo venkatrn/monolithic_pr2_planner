@@ -1,5 +1,5 @@
 %directories = dir('/home/victor/ros/mpp_groovy/mpp/monolithic_pr2_planner_node/compute_stats/imha_all_set/');
-stem = '/home/siddharth/Dropbox/Academics/CMU/Research/SBPL/Multiple_Hypothesis_Heuristics/automated_results/final_paper/set_3';
+stem = '/home/siddharth/Dropbox/Academics/CMU/Research/SBPL/Multiple_Hypothesis_Heuristics/automated_results/final_paper/ompl';
 %stem = '/Users/vhwang/Desktop/stats/data/';
 %stem = '/Users/vhwang/Desktop/stats/imha_all_set/';
 %stem = '/Users/vhwang/Desktop/stats/meta_review_5/planning_stats/';
@@ -21,8 +21,8 @@ end
 range = valid_dirs;
 
 cumulative_stats = {};
-planners = {'smha_'; 'ara_'; 'imha_'; 'mpwa_'; 'mhg_reex_'; 'mhg_no_reex_'; 'ees_'};
-%planners = {'rrt_'; 'rrtstar_'; 'imha_'; 'ara_'; 'prm_'; 'smha_'};
+planners = {'smha_'; 'ara_'; 'imha_'; 'mpwa_'; 'mhg_reex_'; 'mhg_no_reex_'; 'ees_'; 'rrt_'; 'rrtstar_'; 'prm_'; 'rrtstarfirstsol_'};
+% ompl_planners = {'rrt_'; 'rrtstar_'; 'imha_'; 'ara_'; 'prm_'; 'smha_'};
 for planner_idx = 1:length(planners)
     cumulative_stats.(planners{planner_idx}) = {};
     cumulative_stats.(planners{planner_idx}).num_success = 0;
@@ -75,7 +75,7 @@ for idx=1:length(valid_dirs)
             counter = counter + 1;
         end
     end
-    if size(valid_nums,1) == 1
+    if size(valid_nums,1) == 0
         continue;
     end
     valid_nums = sort(valid_nums);
@@ -87,10 +87,10 @@ for idx=1:length(valid_dirs)
     %path_ = ['/home/victor/ros/mpp_groovy/mpp/monolithic_pr2_planner_node/compute_stats/imha_all_set/' cur_dir ]
     path_ = [stem '/' cur_dir ];
     %rrt_stats = computeMethodStats([path_ '/rrt_'],num,0);
-    %smha_stats = computeMethodStats([path_ '/smha_'],num,1);
-    %prm_stats = computeMethodStats([path_ '/prm_'],num,0);
     %rrtstar_stats = computeMethodStats([path_ '/rrtstar_'],num,0);
+    %prm_stats = computeMethodStats([path_ '/prm_'],num,0);
     %rrtstarfirstsol_stats = computeMethodStats([path_ '/rrtstarfirstsol_'],num,0);
+    %smha_stats = computeMethodStats([path_ '/smha_'],num,1);
     %ara_stats = computeMethodStats([path_ '/ara_'],num,1);
     %imha_stats = computeMethodStats([path_ '/imha_'],num,1);
     %other_methods = [rrt_stats prm_stats rrtstar_stats imha_stats ara_stats];
@@ -105,8 +105,15 @@ for idx=1:length(valid_dirs)
     mhg_no_reex_stats = computeMethodStats([path_ '/mhg_no_reex_'],num,isSBPL);
     ees_stats = computeMethodStats([path_ '/ees_'],num,isSBPL);
     other_methods = [mpwa_stats mhg_no_reex_stats mhg_reex_stats ees_stats imha_stats ara_stats];
-    smha_comparison = compareMethods(smha_stats,other_methods);
 
+    isSBPL = 0;
+    rrt_stats = computeMethodStats([path_ '/rrt_'],num,isSBPL);
+    rrtstar_stats = computeMethodStats([path_ '/rrtstar_'],num,isSBPL);
+    prm_stats = computeMethodStats([path_ '/prm_'],num,isSBPL);
+    rrtstarfirstsol_stats = computeMethodStats([path_ '/rrtstarfirstsol_'],num,isSBPL);
+    other_methods = [other_methods rrt_stats rrtstar_stats prm_stats rrtstarfirstsol_stats];
+
+    smha_comparison = compareMethods(smha_stats,other_methods);
 
     smha_cost = smha_cost + sum(smha_stats.cost(find(smha_stats.cost>0)));
     ara_cost = ara_cost + sum(ara_stats.cost(find(ara_stats.cost>0)));

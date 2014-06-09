@@ -4,9 +4,7 @@
 #include <monolithic_pr2_planner/Heuristics/HeuristicMgr.h>
 #include <monolithic_pr2_planner/Heuristics/BFS3DHeuristic.h>
 #include <monolithic_pr2_planner/Heuristics/BFS2DHeuristic.h>
-#include <monolithic_pr2_planner/Heuristics/EndEffectorHeuristic.h>
-#include <monolithic_pr2_planner/Heuristics/MHABaseHeuristic.h>
-#include <monolithic_pr2_planner/Heuristics/ArmAnglesHeuristic.h>
+#include <monolithic_pr2_planner/Heuristics/BaseWithRotationHeuristic.h>
 #include <kdl/frames.hpp>
 #include <memory>
 #include <vector>
@@ -103,7 +101,7 @@ HeuristicMgr::HeuristicMgr() :
 void HeuristicMgr::reset(){
     ROS_DEBUG_NAMED(HEUR_LOG, "Resetting the heuristic manager.");
     m_heuristics.clear();
-    m_mha_heur_ids.clear();
+    m_heuristic_map.clear();
     initializeHeuristics();
     // update3DHeuristicMaps();
     update2DHeuristicMaps(m_grid_data);
@@ -120,7 +118,7 @@ void HeuristicMgr::setPlannerType(int planner_type) {
         case T_IMHA:
         case T_MHG_REEX:
         case T_MHG_NO_REEX:
-            m_num_mha_heuristics = 2;
+            m_num_mha_heuristics = 1;
             break;
         case T_ARA:
         case T_MPWA:
@@ -128,9 +126,9 @@ void HeuristicMgr::setPlannerType(int planner_type) {
             break;
         case T_EES:
             m_num_mha_heuristics = 1;
-            addUniformCost3DHeur();
-            int unif_2d = addUniformCost2DHeur(1, 0.7);
-            m_heuristics[unif_2d]->update2DHeuristicMap(m_grid_data);
+            addUniformCost3DHeur("uniform_3d");
+            addUniformCost2DHeur("uniform_2d", 0.7);
+            m_heuristics[m_heuristic_map["uniform_2d"]]->update2DHeuristicMap(m_grid_data);
             break;
     }
 }
@@ -141,18 +139,20 @@ void HeuristicMgr::initializeHeuristics() {
     // To get them in terms of mm distance
     // add3DHeur(20);  //0 - multiply by 20 : grid resolution in mm :
     // underestimated
-    int endeff_heur = add3DHeur(20);  // 0 - multiply by 20 : grid resolution in mm :
-    // underestimated
+    {
+        int cost_multiplier = 20;
+        add3DHeur("admissible_endeff", cost_multiplier);  // 0 - multiply by 20 : grid resolution in mm :
+    }
 
     // Already in mm.
-    m_base_heur_id = add2DHeur(1, 0.7);  // 1
-    // The argument is TOTAL_HEUR_NUM - 1 (TOTAL_HEUR_NUM is what you
-    // entered in the MPlanner parameters)
-
-    // m_arm_angles_heur_id = addArmAnglesHeur(1);
+    {
+        int cost_multiplier = 1;
+        double radius_around_goal = 0.7;
+        add2DHeur("admissible_base", cost_multiplier, radius_around_goal);
+    }
 }
 
-int HeuristicMgr::add3DHeur(const int cost_multiplier, double* gripper_radius) {
+void HeuristicMgr::add3DHeur(std::string name, const int cost_multiplier, double* gripper_radius) {
     // Initialize the new heuristic.
     BFS3DHeuristicPtr new_3d_heur = make_shared<BFS3DHeuristic>();
     // MUST set the cost multiplier here. If not, it is taken as 1.
@@ -164,10 +164,10 @@ int HeuristicMgr::add3DHeur(const int cost_multiplier, double* gripper_radius) {
     new_3d_heur->update3DHeuristicMap();
     // Add it to the list of heuristics
     m_heuristics.push_back(new_3d_heur);
-    return m_heuristics.size() - 1;
+    m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
 }
 
-int HeuristicMgr::addUniformCost3DHeur(){
+void HeuristicMgr::addUniformCost3DHeur(std::string name){
 
     // Initialize the new heuristic.
     BFS3DHeuristicPtr new_3d_heur = make_shared<BFS3DHeuristic>();
@@ -175,21 +175,21 @@ int HeuristicMgr::addUniformCost3DHeur(){
     new_3d_heur->setCostMultiplier(1);
     // Add it to the list of heuristics
     m_heuristics.push_back(new_3d_heur);
-    return m_heuristics.size() - 1;
+    m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
 }
 
-int HeuristicMgr::addEndEffHeur(const int cost_multiplier){
+// int HeuristicMgr::addEndEffHeur(const int cost_multiplier){
 
-    // Initialize the new heuristic.
-    AbstractHeuristicPtr new_end_eff_heur = make_shared<EndEffectorHeuristic>();
-    // MUST set the cost multiplier here. If not, it is taken as 1.
-    new_end_eff_heur->setCostMultiplier(cost_multiplier);
-    // Add it to the list of heuristics
-    m_heuristics.push_back(new_end_eff_heur);
-    return m_heuristics.size() - 1;
-}
+//     // Initialize the new heuristic.
+//     AbstractHeuristicPtr new_end_eff_heur = make_shared<EndEffectorHeuristic>();
+//     // MUST set the cost multiplier here. If not, it is taken as 1.
+//     new_end_eff_heur->setCostMultiplier(cost_multiplier);
+//     // Add it to the list of heuristics
+//     m_heuristics.push_back(new_end_eff_heur);
+//     return m_heuristics.size() - 1;
+// }
 
-int HeuristicMgr::add2DHeur(const int cost_multiplier, const double radius_m){
+void HeuristicMgr::add2DHeur(std::string name, const int cost_multiplier, const double radius_m){
     // Initialize the new heuristic
     AbstractHeuristicPtr new_2d_heur = make_shared<BFS2DHeuristic>();
     // Set cost multiplier here.
@@ -197,41 +197,41 @@ int HeuristicMgr::add2DHeur(const int cost_multiplier, const double radius_m){
     new_2d_heur->setRadiusAroundGoal(radius_m);
     // Add to the list of heuristics
     m_heuristics.push_back(new_2d_heur);
-    return m_heuristics.size() - 1;
+    m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
 }
 
-int HeuristicMgr::addUniformCost2DHeur(const int cost_multiplier, const double radius_m){
+void HeuristicMgr::addUniformCost2DHeur(std::string name, const double radius_m){
     // Initialize the new heuristic
     BFS2DHeuristicPtr new_ucs_heur = make_shared<BFS2DHeuristic>();
     // Set cost multiplier here.
-    new_ucs_heur->setCostMultiplier(cost_multiplier);
+    new_ucs_heur->setCostMultiplier(1);
     new_ucs_heur->setRadiusAroundGoal(radius_m);
     new_ucs_heur->setUniformCostSearch(true);
     // Add to the list of heuristics
     m_heuristics.push_back(new_ucs_heur);
-    return m_heuristics.size() - 1;
+    m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
 }
 
-int HeuristicMgr::addMHABaseHeur(const int cost_multiplier){
+void HeuristicMgr::addBaseWithRotationHeur(std::string name, const int cost_multiplier){
     // Initialize the new heuristic
-    AbstractHeuristicPtr new_mha_base_heur = make_shared<MHABaseHeuristic>();
+    AbstractHeuristicPtr new_base_with_rot_heur = make_shared<BaseWithRotationHeuristic>();
     // Set cost multiplier here.
-    new_mha_base_heur->setCostMultiplier(cost_multiplier);
+    new_base_with_rot_heur->setCostMultiplier(cost_multiplier);
     // Add to the list of heuristics
-    m_heuristics.push_back(new_mha_base_heur);
-    return m_heuristics.size() - 1;
+    m_heuristics.push_back(new_base_with_rot_heur);
+    m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
 }
 
-int HeuristicMgr::addArmAnglesHeur(const int cost_multiplier){
-    // Initialize the new heuristic
-    AbstractHeuristicPtr new_arm_angles_heur =
-    make_shared<ArmAnglesHeuristic>(m_cspace_mgr);
-    // Set cost multiplier here.
-    new_arm_angles_heur->setCostMultiplier(cost_multiplier);
-    // Add to the list of heuristics
-    m_heuristics.push_back(new_arm_angles_heur);
-    return m_heuristics.size() - 1;
-}
+// int HeuristicMgr::addArmAnglesHeur(const int cost_multiplier){
+//     // Initialize the new heuristic
+//     AbstractHeuristicPtr new_arm_angles_heur =
+//     make_shared<ArmAnglesHeuristic>(m_cspace_mgr);
+//     // Set cost multiplier here.
+//     new_arm_angles_heur->setCostMultiplier(cost_multiplier);
+//     // Add to the list of heuristics
+//     m_heuristics.push_back(new_arm_angles_heur);
+//     return m_heuristics.size() - 1;
+// }
 
 // most heuristics won't need both 2d and 3d maps. however, the abstract
 // heuristic type has function stubs for both of them so we don't need to pick
@@ -277,21 +277,23 @@ void HeuristicMgr::setGoal(GoalState& goal_state){
             int(i));
         m_heuristics[i]->setGoal(goal_state);
     }
-    // Create additional heuristics for MHA planner
-    initializeMHAHeuristics(m_base_heur_id, 1);
+    {
+        // Create additional heuristics for MHA planner
+        int cost_multiplier = 1;
+        initializeMHAHeuristics(cost_multiplier);
+    }
 }
 
-std::vector<int> HeuristicMgr::getGoalHeuristic(const GraphStatePtr& state)
+void HeuristicMgr::getGoalHeuristic(const GraphStatePtr& state, std::unique_ptr<stringintmap>& values)
 {
     if (!m_heuristics.size()){
         ROS_ERROR_NAMED(HEUR_LOG, "No heuristics initialized!");
     }
-    std::vector<int> values(m_heuristics.size(),0);
-    for (size_t i = 0; i < m_heuristics.size(); ++i){
-        values[i] = m_heuristics[i]->getGoalHeuristic(state);
+    values.reset(new stringintmap(m_heuristic_map));
+    for (auto& heur: m_heuristic_map){
+        (*values)[heur.first] = m_heuristics[heur.second]->getGoalHeuristic(state);
+        // values[i] = m_heuristics[i]->getGoalHeuristic(state);
     }
-
-    return values;
 }
 
 bool HeuristicMgr::checkIKAtPose(int g_x, int g_y, RobotPosePtr& final_pose){
@@ -370,24 +372,22 @@ bool HeuristicMgr::isValidIKForGoalState(int g_x, int g_y){
         return false;
 }
 
-RightContArmState HeuristicMgr::getRightArmIKSol(int g_x, int g_y){
-    RobotPosePtr final_pose;
-    bool ik_success = checkIKAtPose(g_x, g_y, final_pose);
-    bool collision_free = false;
-    if(ik_success)
-        if(m_cspace_mgr->isValid(*final_pose))
-            collision_free = true;
-    if(collision_free)
-        return final_pose->right_arm();
-    else {
-        return RightContArmState();
-    }
-}
+// RightContArmState HeuristicMgr::getRightArmIKSol(int g_x, int g_y){
+//     RobotPosePtr final_pose;
+//     bool ik_success = checkIKAtPose(g_x, g_y, final_pose);
+//     bool collision_free = false;
+//     if(ik_success)
+//         if(m_cspace_mgr->isValid(*final_pose))
+//             collision_free = true;
+//     if(collision_free)
+//         return final_pose->right_arm();
+//     else {
+//         return RightContArmState();
+//     }
+// }
 
 
-void HeuristicMgr::initNewMHABaseHeur(int g_x, int g_y, RightContArmState& r_arm_state, const int cost_multiplier){
-        // ROS_DEBUG_NAMED(HEUR_LOG, "IK was a success! Wooohoooo!");
-        // Valid - push the state
+void HeuristicMgr::initNewMHABaseHeur(std::string name, int g_x, int g_y, const int cost_multiplier){
         ROS_DEBUG_NAMED(HEUR_LOG, "New MHA Base Heuristic initialized : %d %d", 
             g_x, g_y);
         DiscObjectState state = m_goal.getObjectState(); 
@@ -397,27 +397,24 @@ void HeuristicMgr::initNewMHABaseHeur(int g_x, int g_y, RightContArmState& r_arm
         new_goal_state.setGoal(state);
 
         // Create the new heuristic
-        int heur_num = addMHABaseHeur(cost_multiplier);
+        addBaseWithRotationHeur(name, cost_multiplier);
+
         // Update its costmap
-        m_heuristics[heur_num]->update2DHeuristicMap(m_grid_data);
+        m_heuristics[m_heuristic_map[name]]->update2DHeuristicMap(m_grid_data);
 
         // NOTE: Uncomment this if you want to use the base heuristic with
         // rotation.
-        m_heuristics[heur_num]->setOriginalGoal(m_goal);
-        m_heuristics[heur_num]->setGoal(new_goal_state);
-        
+        m_heuristics[m_heuristic_map[name]]->setOriginalGoal(m_goal);
+        m_heuristics[m_heuristic_map[name]]->setGoal(new_goal_state);
 
-        // m_heuristics[heur_num]->setGoalArmState(r_arm_state);
-        m_mha_heur_ids.push_back(heur_num);
 }
 
-void HeuristicMgr::initializeMHAHeuristics(const int
-    base_heur_id, const int cost_multiplier){
+void HeuristicMgr::initializeMHAHeuristics(const int cost_multiplier){
     
     if(!m_num_mha_heuristics)
         return;
     // Get the radius around the goal from the base heuristic.
-    double radius_around_goal = m_heuristics[base_heur_id]->getRadiusAroundGoal();
+    double radius_around_goal = m_heuristics[m_heuristic_map["admissible_base"]]->getRadiusAroundGoal();
 
     // Get points on the circle around the base heuristic.
     DiscObjectState state = m_goal.getObjectState(); 
@@ -427,12 +424,10 @@ void HeuristicMgr::initializeMHAHeuristics(const int
     int discrete_radius = radius_around_goal/res;
     BFS2DHeuristic::getBresenhamCirclePoints(state.x(), state.y(), discrete_radius, circle_x, circle_y);
 
-    // ROS_DEBUG_NAMED(HEUR_LOG, "[MHAHeur] Radius around goal: %f, resolution: %f, discrete radius: %d", radius_around_goal, res, discrete_radius);
     // No, we cannot have more number of heuristics than there are points on
     // the cirlce. That's just redundant.
     assert(circle_x.size() > m_num_mha_heuristics);
     
-    // ROS_DEBUG_NAMED(HEUR_LOG, "[MHAHeur] Circle points %d", static_cast<int>(circle_x.size()));
     // Sample along the circle.
     /* Get the list of points that are not on an obstacle.
      * Get the size of this list. Sample from a uniform distribution. 
@@ -448,8 +443,6 @@ void HeuristicMgr::initializeMHAHeuristics(const int
             i++;
         }
     }
-
-    // ROS_DEBUG_NAMED(HEUR_LOG, "[MHAHeur] Circle points cropped %d",static_cast<int>(circle_x.size()));
 
     int center_x = state.x();
     int center_y = state.y();
@@ -473,12 +466,10 @@ void HeuristicMgr::initializeMHAHeuristics(const int
                 center_x, center_y, ik_circle_x, ik_circle_y, m_num_mha_heuristics);
     }
 
-    // assert(static_cast<int>(circle_x.size()) >= m_num_mha_heuristics);
     for (size_t i = 0; i < selected_points.size(); ++i) {
-        RightContArmState r_arm_state =
-        getRightArmIKSol(selected_points[i].first, selected_points[i].second);
-        initNewMHABaseHeur(selected_points[i].first, selected_points[i].second,
-            r_arm_state,
+        stringstream ss;
+        ss << "base_with_rot_" << i;
+        initNewMHABaseHeur(ss.str(), selected_points[i].first, selected_points[i].second,
             cost_multiplier);
     }
     

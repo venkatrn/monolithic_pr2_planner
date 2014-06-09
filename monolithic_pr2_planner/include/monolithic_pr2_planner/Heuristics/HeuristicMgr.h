@@ -7,6 +7,7 @@
 #include <monolithic_pr2_planner/LoggerNames.h>
 #include <memory>
 #include <vector>
+#include <unordered_map>
 #include <boost/shared_ptr.hpp>
 #include <monolithic_pr2_planner/Visualizer.h>
 #include <monolithic_pr2_planner/CollisionSpaceMgr.h>
@@ -25,6 +26,9 @@ namespace monolithic_pr2_planner {
         T_EES,
         T_ARA,
     };
+
+    // for the heuristic map
+    typedef std::unordered_map <std::string, int> stringintmap;
     /*! \brief The manager class that handles all the heuristics.
      */
     class HeuristicMgr : public OccupancyGridUser {
@@ -40,16 +44,16 @@ namespace monolithic_pr2_planner {
             // heuristic type is added, a corresponding add<type>Heur() method
             // needs to be added here. Returns the id of the heuristic in the
             // internal m_heuristics vector.
-            int add3DHeur(const int cost_multiplier = 1, double *gripper_radius
+            void add3DHeur(std::string name, const int cost_multiplier = 1, double *gripper_radius
                 = NULL);
-            int add2DHeur(const int cost_multiplier = 1,
+            void add2DHeur(std::string name, const int cost_multiplier = 1,
                             const double radius_m = 0);
-            int addMHABaseHeur(const int cost_multiplier = 1);
-            int addUniformCost2DHeur(const int cost_multiplier = 1, const double
+            void addBaseWithRotationHeur(std::string name, const int cost_multiplier = 1);
+            void addUniformCost2DHeur(std::string name, const double
                 radius_m = 0);
-            int addUniformCost3DHeur();
-            int addEndEffHeur(const int cost_multiplier = 1);
-            int addArmAnglesHeur(const int cost_multiplier = 1);
+            void addUniformCost3DHeur(std::string name);
+            // int addEndEffHeur(std::string name, const int cost_multiplier = 1);
+            // int addArmAnglesHeur(const int cost_multiplier = 1);
 
             // Updates the collision map for the heuristics that need them.
             // Doesn't take in an argument because each 3D heuristic shares the
@@ -63,14 +67,15 @@ namespace monolithic_pr2_planner {
             void setGoal(GoalState& state);
 
             // Get the heuristic value
-            std::vector<int> getGoalHeuristic(const GraphStatePtr& state);
+            void getGoalHeuristic(const GraphStatePtr& state,
+                std::unique_ptr<stringintmap>& values);
 
             // MHA stuff
 
             // Takes in the base heuristic id, and samples the circle for
             // m_num_mha_heuristics number of points. Adds as many 2D heuristics with 0
             // radius
-            void initializeMHAHeuristics(const int base_heur_id, const int cost_multiplier = 1); // No radius support as of now
+            void initializeMHAHeuristics(const int cost_multiplier = 1); // No radius support as of now
 
             // void numberOfMHAHeuristics(int num_mha_heuristics){ m_num_mha_heuristics
             //     = num_mha_heuristics;};
@@ -85,13 +90,14 @@ namespace monolithic_pr2_planner {
             bool isValidIKForGoalState(int g_x, int g_y);
             bool checkIKAtPose(int g_x, int g_y, RobotPosePtr&
                 final_pose);
-            RightContArmState getRightArmIKSol(int g_x, int g_y);
-            void initNewMHABaseHeur(int g_x, int g_y, RightContArmState& r_arm_state, const int
+            // RightContArmState getRightArmIKSol(int g_x, int g_y);
+            void initNewMHABaseHeur(std::string name, int g_x, int g_y, const int
                 cost_multiplier);
 
 
             GoalState m_goal;
             std::vector<AbstractHeuristicPtr> m_heuristics;
+            stringintmap m_heuristic_map;
 
             inline double randomDouble(double min, double max){
                 return min + (max-min) * ( double(rand()) / RAND_MAX );
@@ -100,7 +106,6 @@ namespace monolithic_pr2_planner {
             // MHA stuff
             int m_num_mha_heuristics;
             std::vector<int> m_mha_heur_ids;
-            int m_base_heur_id;
             int m_arm_angles_heur_id;
             int m_planner_type;
             

@@ -164,7 +164,7 @@ for idx=1:length(valid_dirs)
             cumulative_stats.(planner_name).total_ee_length = cumulative_stats.(planner_name).total_ee_length + o_total_ee_length;
             cumulative_stats.(planner_name).ee_length_for_smha = cumulative_stats.(planner_name).ee_length_for_smha + m_total_ee_length;
 
-            if isSBPL
+            % if isSBPL
                 m_total_cost = current_comparison.cost.m_mean*num_both_successes;
                 o_total_cost = current_comparison.cost.o_mean*num_both_successes;
                 cumulative_stats.(planner_name).total_cost = cumulative_stats.(planner_name).total_cost + o_total_cost;
@@ -174,7 +174,7 @@ for idx=1:length(valid_dirs)
                 o_total_expands = current_comparison.expands.o_mean*num_both_successes;
                 cumulative_stats.(planner_name).total_expands = cumulative_stats.(planner_name).total_expands + o_total_expands;
                 cumulative_stats.(planner_name).total_expands_for_smha = cumulative_stats.(planner_name).total_expands_for_smha + m_total_expands;
-            end
+            % end
         end
     end
 end
@@ -199,11 +199,11 @@ for planner_idx = 1:length(planners)
     disp(['End effector ratio (other/smha): ', num2str(cumulative_stats.(planner).ee_ratio)]);
     disp(['Base distance ratio (other/smha): ', num2str(cumulative_stats.(planner).base_ratio)]);
     disp(['Time ratio (other/smha): ', num2str(cumulative_stats.(planner).time_ratio)])
-    if isSBPL
+    % if isSBPL
         disp(['Expands ratio (other/smha): ', num2str(cumulative_stats.(planner).expands_ratio)]);
         disp(['Cost ratio (other/smha): ', num2str(cumulative_stats.(planner).cost_ratio)]);
         disp(['Cumulative Avg Cost (other): ', num2str(cumulative_stats.(planner).total_cost/cumulative_stats.(planner).num_successes_with_smha)]);
-    end
+    % end
     fprintf('\n');
 end
 disp(['smha average cost: ', num2str(smha_cost/cumulative_stats.smha_.num_success)]);

@@ -6,10 +6,10 @@
 #include <memory>
 
 namespace monolithic_pr2_planner {
-    class MHABaseHeuristic : public virtual AbstractHeuristic, public OccupancyGridUser{
+    class BaseWithRotationHeuristic : public virtual AbstractHeuristic, public OccupancyGridUser{
         public:
-            MHABaseHeuristic();
-            ~MHABaseHeuristic();
+            BaseWithRotationHeuristic();
+            ~BaseWithRotationHeuristic();
 
             void setGoal(GoalState& state);
             inline void setOriginalGoal(GoalState& original_state) { m_original_goal
@@ -38,5 +38,5 @@ namespace monolithic_pr2_planner {
             std::vector<double> m_soln_arm_angles;
 
     };
-    typedef boost::shared_ptr<MHABaseHeuristic> MHABaseHeuristicPtr;
+    typedef boost::shared_ptr<BaseWithRotationHeuristic> BaseWithRotationHeuristicPtr;
 }

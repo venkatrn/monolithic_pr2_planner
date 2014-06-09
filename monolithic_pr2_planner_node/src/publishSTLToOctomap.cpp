@@ -273,8 +273,8 @@ vector<Eigen::Vector3d> getVoxelsFromFile(std::string filename){
     // addCuboid(pclCloud, 5.348199056716729, 2.1079581496994748, 0.8, 0.1, 0.2, 0.3,true);
     
     // Doorway
-    // addCuboid(pclCloud, 5, 0, 0, 0.05, 2, 1.8, true);
-    // addCuboid(pclCloud, 5, 3.05, 0, 0.05, 2.2, 1.8, true);
+    addCuboid(pclCloud, 5, 0, 0, 0.05, 2, 1.8, true);
+    addCuboid(pclCloud, 5, 3.05, 0, 0.05, 2.2, 1.8, true);
     // head of doorway; don't add this.
     // addCuboid(pclCloud, 5, 2, 1.6, 0.05, 1, 1.8, true);
     

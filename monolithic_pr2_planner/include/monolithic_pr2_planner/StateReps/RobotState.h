@@ -17,6 +17,7 @@ namespace monolithic_pr2_planner {
 
             RobotState(){};
             RobotState(ContBaseState base_state, RightContArmState r_arm, LeftContArmState l_arm);
+            RobotState(ContBaseState base_state, ContObjectState object_state);
             DiscBaseState base_state() const;
             ContBaseState getContBaseState() const { return m_base_state; };
             RightContArmState right_arm() const { return m_right_arm; };
@@ -49,6 +50,11 @@ namespace monolithic_pr2_planner {
             static bool workspaceInterpolate(const RobotState& start, const RobotState& end,
                                              std::vector<RobotState>* interp_steps);
             static int numInterpSteps(const RobotState& start, const RobotState& end);
+
+            inline double randomDouble(double min, double max){
+                return min + (max-min) * ( double(rand()) / RAND_MAX );
+            }
+
         private:
             static IKFastPR2 m_ikfast_solver;
             static int ik_calls;

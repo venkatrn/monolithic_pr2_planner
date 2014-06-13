@@ -19,9 +19,13 @@
 #include <monolithic_pr2_planner_node/ompl_pr2_planner.h>
 #include <monolithic_pr2_planner/ExperimentFramework/randomStartGoalGenerator.h>
 
+#include <full_body_controller/ExecutePath.h>
+
 namespace monolithic_pr2_planner_node {
     struct InterfaceParams {
         std::string ref_frame;
+        std::string controller_service;
+        bool run_trajectory;
     };
 
     class EnvInterfaces {
@@ -66,6 +70,7 @@ namespace monolithic_pr2_planner_node {
               &langles);
             double getJointAngle(std::string name, sensor_msgs::JointStateConstPtr
               msg);
+            void runTrajectory(std::vector<monolithic_pr2_planner::FullBodyState>& states);
 
             ros::NodeHandle m_nodehandle;
             InterfaceParams m_params;

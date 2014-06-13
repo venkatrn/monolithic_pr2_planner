@@ -54,6 +54,10 @@ bool Environment::configureRequest(SearchRequestParamsPtr search_request_params,
     SearchRequestPtr search_request = SearchRequestPtr(new SearchRequest(
         search_request_params));
     configureQuerySpecificParams(search_request);
+    if(search_request->m_params->underspecified_start) {
+        ROS_DEBUG_NAMED(CONFIG_LOG, "underspecified_start. Will generate start state.");
+        generateStartState(search_request);
+    }
     if (!setStartGoal(search_request, start_id, goal_id)) {
         return false;
     }
@@ -77,9 +81,9 @@ int Environment::GetGoalHeuristic(int stateID, int goal_id) {
     std::unique_ptr<stringintmap> values;
     m_heur_mgr->getGoalHeuristic(successor, values);
     
-    // for (auto& heur : (*values)) {
-    //     ROS_DEBUG_NAMED(HEUR_LOG, "%s : %d", heur.first.c_str(), heur.second);
-    // }
+    for (auto& heur : (*values)) {
+        ROS_DEBUG_NAMED(HEUR_LOG, "%s : %d", heur.first.c_str(), heur.second);
+    }
     switch (m_planner_type) {
         case T_SMHA:
         case T_MHG_REEX:
@@ -87,42 +91,42 @@ int Environment::GetGoalHeuristic(int stateID, int goal_id) {
         case T_ARA:
             switch (goal_id) {
                 case 0:  // Anchor
-                    return std::max((*values)["admissible_endeff"], (*values)["admissible_base"]);
+                    return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
                 case 1:  // ARA Heur
-                    return EPS2*std::max((*values)["admissible_endeff"], (*values)["admissible_base"]);
+                    return EPS2*std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
                 // case 2:
-                //     return EPS2*(*values)["admissible_endeff"];
+                //     return EPS2*(*values).at("admissible_endeff");
                 case 2:  // Base1, Base2 heur
-                    return static_cast<int>(0.5f*(*values)["base_with_rot_0"] +
-                        0.5f*(*values)["admissible_endeff"]);
-                case 4:
-                    return static_cast<int>(0.5f*(*values)["base_with_rot_1"] +
-                        0.5f*(*values)["admissible_endeff"]);
+                    return static_cast<int>(0.5f*(*values).at("base_with_rot_0") +
+                        0.5f*(*values).at("endeff_rot_goal"));
+                case 3:
+                    return static_cast<int>(0.5f*(*values).at("base_with_rot_door") +
+                        0.5f*(*values).at("endeff_rot_vert"));
             }
             break;
         case T_IMHA:
             switch (goal_id) {
                 case 0:  // Anchor
-                    return std::max((*values)["admissible_endeff"], (*values)["admissible_base"]);
+                    return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
                 case 1:  // ARA Heur
-                    return EPS2*std::max((*values)["admissible_endeff"], (*values)["admissible_base"]);
+                    return EPS2*std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
                 case 2:  // Base1, Base2 heur
-                    return static_cast<int>(0.5f*(*values)["base_with_rot_0"] + 0.5f*(*values)["admissible_endeff"]);
+                    return static_cast<int>(0.5f*(*values).at("base_with_rot_0") + 0.5f*(*values).at("admissible_endeff"));
                 case 3:
-                    return static_cast<int>(0.5f*(*values)["base_with_rot_1"] + 0.5f*(*values)["admissible_endeff"]);
+                    return static_cast<int>(0.5f*(*values).at("base_with_rot_1") + 0.5f*(*values).at("admissible_endeff"));
             }
             break;
         case T_MPWA:
             return (goal_id+1)*(EPS1*EPS2/NUM_SMHA_HEUR)*std::max(
-                (*values)["admissible_endeff"], (*values)["admissible_base"]);
+                (*values).at("admissible_endeff"), (*values).at("admissible_base"));
             break;
         case T_EES:
             switch (goal_id) {
                 case 0:  // Anchor
-                    return std::max((*values)["admissible_endeff"], (*values)["admissible_base"]);
+                    return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
                 case 1:  // Inadmissible
-                    return (*values)["base_with_rot_0"] + (*values)["admissible_endeff"];
-                    // return static_cast<int>(0.5f*(*values)[4] + 0.5f*(*values)["admissible_endeff"]);
+                    return (*values).at("base_with_rot_0") + (*values).at("admissible_endeff");
+                    // return static_cast<int>(0.5f*(*values)[4] + 0.5f*(*values).at("admissible_endeff"));
                 case 2:  // Distance function
                     // return (*values)[2];
                     // ROS_DEBUG_NAMED(HEUR_LOG, "Arm : %d, Base : %d", (*values)[2],
@@ -135,7 +139,7 @@ int Environment::GetGoalHeuristic(int stateID, int goal_id) {
     // Post-paper
     // switch(goal_id){
     //     case 0: //Anchor
-    //         return std::max(values["admissible_endeff"], values["admissible_base"]);
+    //         return std::max(values.at("admissible_endeff"), values.at("admissible_base"));
     //     case 1: // base
     //         return values[2];
     //     case 2: // Base + arm
@@ -148,7 +152,7 @@ int Environment::GetGoalHeuristic(int stateID, int goal_id) {
     //     values[3]);
     // EES
 
-    return std::max((*values)["admissible_base"], (*values)["admissible_endeff"]);
+    return std::max((*values).at("admissible_base"), (*values).at("admissible_endeff"));
 }
 
 void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs, 
@@ -159,6 +163,7 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
 void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs, 
                            vector<int>* costs, int ii){
     assert(sourceStateID != GOAL_STATE);
+
     ROS_DEBUG_NAMED(SEARCH_LOG, 
             "==================Expanding state %d==================", 
                     sourceStateID);
@@ -226,6 +231,10 @@ bool Environment::setStartGoal(SearchRequestPtr search_request,
         start_pose.visualize();
         return false;
     }
+
+    start_pose.visualize();
+    m_cspace_mgr->visualizeAttachedObject(start_pose);
+    // std::cin.get();
 
     GraphStatePtr start_graph_state = make_shared<GraphState>(start_pose);
     m_hash_mgr->save(start_graph_state);
@@ -343,4 +352,17 @@ vector<FullBodyState> Environment::reconstructPath(vector<int> soln_path){
         postprocessor.visualizeFinalPath(final_path);
     }
     return final_path;
+}
+
+void Environment::generateStartState(SearchRequestPtr search_request) {
+    ContObjectState start_obj_state(search_request->m_params->obj_start);
+    ContBaseState base_start(search_request->m_params->base_start);
+    RobotState start_robot_state(base_start, start_obj_state);
+    start_robot_state.visualize();
+    m_cspace_mgr->visualizeAttachedObject(start_robot_state);
+    ROS_DEBUG_NAMED(CONFIG_LOG, "Generate start state : Keyboard");
+    // std::cin.get();
+    search_request->m_params->base_start = start_robot_state.getContBaseState();
+    search_request->m_params->right_arm_start = start_robot_state.right_arm();
+    search_request->m_params->left_arm_start = start_robot_state.left_arm();
 }

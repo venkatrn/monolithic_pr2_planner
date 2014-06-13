@@ -20,8 +20,9 @@
   <depend package="sensor_msgs" />
   <depend package="arm_navigation_msgs" />
   <depend package="ompl" />
-  <rosdep name="yaml-cpp" />
   <depend package="costmap_2d"/>
+  <depend package="full_body_controller"/>
+  <rosdep name="yaml-cpp" />
 
 </package>
 

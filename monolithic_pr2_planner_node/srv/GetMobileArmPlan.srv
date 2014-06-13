@@ -1,6 +1,9 @@
 # start
 geometry_msgs/PoseStamped start
 
+#under specified start state
+bool underspecified_start
+
 int8 planning_mode
 float64 allocated_planning_time
 

@@ -1,5 +1,6 @@
 #include <monolithic_pr2_planner/StateReps/DiscObjectState.h>
 #include <monolithic_pr2_planner/LoggerNames.h>
+#include <monolithic_pr2_planner/Visualizer.h>
 
 using namespace monolithic_pr2_planner;
 
@@ -66,4 +67,10 @@ void DiscObjectState::printToDebug(char* log_level){
                     m_coord[ObjectPose::ROLL],
                     m_coord[ObjectPose::PITCH],
                     m_coord[ObjectPose::YAW]);
+}
+
+void DiscObjectState::visualize(std::string name) {
+    std::vector <double> pose;
+    pose.assign(m_coord.begin(), m_coord.end());
+    Visualizer::pviz->visualizePose(pose, name);
 }

@@ -3,6 +3,7 @@
 #include <monolithic_pr2_planner/StateReps/GoalState.h>
 #include <monolithic_pr2_planner/StateReps/ContArmState.h>
 #include <memory>
+#include <kdl/frames.hpp>
 #include <vector>
 #include <boost/shared_ptr.hpp>
 
@@ -37,6 +38,7 @@ namespace monolithic_pr2_planner {
             virtual double getRadiusAroundGoal() {return 0;};
             // For MHABaseHeur
             virtual inline void setOriginalGoal(GoalState& original_state) {};
+            virtual void setDesiredOrientation(KDL::Rotation rot) {};
             // For the ArmAnglesHeur
             virtual void setGoalArmState(RightContArmState& soln_r_arm_state) {};
         private:

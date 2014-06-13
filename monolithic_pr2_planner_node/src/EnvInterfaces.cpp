@@ -43,6 +43,9 @@ EnvInterfaces::EnvInterfaces(boost::shared_ptr<monolithic_pr2_planner::Environme
 void EnvInterfaces::getParams(){
     m_nodehandle.param<string>("reference_frame", m_params.ref_frame, 
                                     string("map"));
+    m_nodehandle.param<bool>("run_trajectory", m_params.run_trajectory, false);
+    m_nodehandle.param<string>("controller_service",
+        m_params.controller_service, "/monolithic_controller/execute_path");
 }
 
 void EnvInterfaces::bindPlanPathToEnv(string service_name){
@@ -267,6 +270,10 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
             total_planning_time);
         ROS_INFO("No plan found in %s!", planner_prefix.c_str());
     }
+    if(m_params.run_trajectory) {
+        ROS_INFO("Running trajectory!");
+        runTrajectory(states);
+    }
     return isPlanFound;
 }
 
@@ -280,6 +287,7 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
     search_request->base_start = req.body_start;
     search_request->left_arm_start = LeftContArmState(req.larm_start);
     search_request->right_arm_start = RightContArmState(req.rarm_start);
+    search_request->underspecified_start = req.underspecified_start;
 
     KDL::Frame rarm_offset, larm_offset;
     rarm_offset.p.x(req.rarm_object.pose.position.x);
@@ -305,10 +313,11 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
     search_request->yaw_tolerance = req.yaw_tolerance;
     search_request->planning_mode = req.planning_mode;
     search_request->obj_goal= req.goal;
+    search_request->obj_start = req.start;
 
     // Uncomment this stuff if you want to send the robot pose as the goal
     // instead of the object pose
-    // RobotState::setPlanningMode(PlanningModes::RIGHT_ARM_MOBILE);
+    // RobotState::setPlanningMode(req.planning_mode);
     // RightContArmState rarm_goal(req.rarm_goal);
     // LeftContArmState larm_goal(req.larm_goal);
     // ContBaseState base_goal(req.body_goal);
@@ -318,11 +327,19 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
     // ContObjectState obj_goal = goal_robot->getObjectStateRelMap();
     // search_request->obj_goal= obj_goal;
     // goal_robot->visualize();
-    
-    
+
+    // RobotState::setPlanningMode(req.planning_mode);
+    // Create the continuous object state.
+    // ContObjectState start_obj_state(req.start);
+    // Create the continous base state.
+    // ContBaseState base_start(req.body_start);
+    // Shove it into a robot state. This should give us the state with IK for
+    // arms and everything.
+
+
     // std::cin.get();
     double object_dim_x = 0.5;
-    double object_dim_y = 0.5;
+    double object_dim_y = 1.0;
     double object_dim_z = 0.1;
     geometry_msgs::Pose attached_object_pose;
     attached_object_pose.position.x = object_dim_x/2 + 0.08;
@@ -347,10 +364,10 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
     bool isPlanFound;
     
     double total_planning_time = clock();
-    bool retVal = m_env->configureRequest(search_request, start_id, goal_id);
-    if(!retVal){
-        return false;
-    }
+    // bool retVal = m_env->configureRequest(search_request, start_id, goal_id);
+    // if(!retVal){
+    //     return false;
+    // }
     bool forward_search = true;
     isPlanFound = runMHAPlanner(monolithic_pr2_planner::T_SMHA, "smha_", req, res, search_request, counter);
     // isPlanFound = runMHAPlanner(monolithic_pr2_planner::T_IMHA, "imha_", req, res, search_request, counter);
@@ -772,4 +789,77 @@ double EnvInterfaces::getJointAngle(std::string name, sensor_msgs::JointStateCon
   }
   ROS_ERROR("joint doesn't exist! (exit)\n");
   exit(1);
+}
+
+/**
+ * @brief calls the monolithic_trajectory controller
+ * @details Converts the FullBodyState objects to a full_body_controller
+ * message and subsequently calls the service given by the parameter.
+ * 
+ * @param controller_service The name of the service to be called
+ * @param states The final path
+ * @return status of the call
+ */
+void EnvInterfaces::runTrajectory(std::vector<FullBodyState>& states) {
+
+    // Create the messages from the full body states
+    trajectory_msgs::JointTrajectory arms_trajectory;
+    trajectory_msgs::JointTrajectory body_trajectory;
+    trajectory_msgs::JointTrajectory gripper_trajectory;
+
+    // prepare arms trajectory
+    arms_trajectory.joint_names.push_back("r_shoulder_pan_joint");
+    arms_trajectory.joint_names.push_back("r_shoulder_lift_joint");
+    arms_trajectory.joint_names.push_back("r_upper_arm_roll_joint");
+    arms_trajectory.joint_names.push_back("r_elbow_flex_joint");
+    arms_trajectory.joint_names.push_back("r_forearm_roll_joint");
+    arms_trajectory.joint_names.push_back("r_wrist_flex_joint");
+    arms_trajectory.joint_names.push_back("r_wrist_roll_joint");
+    arms_trajectory.joint_names.push_back("l_shoulder_pan_joint");
+    arms_trajectory.joint_names.push_back("l_shoulder_lift_joint");
+    arms_trajectory.joint_names.push_back("l_upper_arm_roll_joint");
+    arms_trajectory.joint_names.push_back("l_elbow_flex_joint");
+    arms_trajectory.joint_names.push_back("l_forearm_roll_joint");
+    arms_trajectory.joint_names.push_back("l_wrist_flex_joint");
+    arms_trajectory.joint_names.push_back("l_wrist_roll_joint");
+
+    arms_trajectory.points.resize(states.size());
+    body_trajectory.points.resize(states.size());
+    gripper_trajectory.points.resize(states.size());
+    for (size_t i = 0; i < states.size(); ++i) {
+        // Insert the right arm joint angles
+        auto it = arms_trajectory.points[i].positions.begin();
+        arms_trajectory.points[i].positions.insert(it,
+            states[i].right_arm.begin(), states[i].right_arm.end());
+        // insert the left arm joint angles
+        it = arms_trajectory.points[i].positions.end();
+        arms_trajectory.points[i].positions.insert(it,
+            states[i].left_arm.begin(), states[i].left_arm.end());
+
+        // insert the base X, Y, Z, Theta
+        body_trajectory.points[i].positions.assign(states[i].base.begin(),
+            states[i].base.end());
+
+        // Set the gripper poses
+        gripper_trajectory.points[i].positions.resize(2,0);
+    }
+
+    // Package into full body message
+    full_body_controller::ExecutePath::Request req;
+    full_body_controller::ExecutePath::Response res;
+
+    req.trajectory = arms_trajectory;
+    req.body_trajectory = body_trajectory;
+    req.gripper_trajectory= gripper_trajectory;
+
+    // Check if service has been advertised
+    ros::service::waitForService(m_params.controller_service);
+    ros::ServiceClient client =
+    m_nodehandle.serviceClient<full_body_controller::ExecutePath>(m_params.controller_service,
+        true);
+    if (client.call(req, res)) {
+        ROS_INFO("It ran! Oh yeah!!");
+    } else {
+        ROS_INFO("Trajectory failed.");
+    }
 }

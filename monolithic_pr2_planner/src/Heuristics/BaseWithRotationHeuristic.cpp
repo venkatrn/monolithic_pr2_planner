@@ -63,6 +63,14 @@ void BaseWithRotationHeuristic::setGoal(GoalState& goal_state) {
     // std::vector<std::pair<int,int> > init_points;
     // BFS2DHeuristic::getBresenhamLinePoints(state.x(), state.y(), orig_state.x(), orig_state.y(), init_points);
 
+    // At this point, we can compute the desired angle because we already have
+    // the original goal (the heuristic manager must ensure this).
+    m_desired_orientation  = normalize_angle_positive(std::atan2(
+        static_cast<double>(
+            m_original_goal.getObjectState().y() - m_goal.getObjectState().y()),
+        static_cast<double>(
+            m_original_goal.getObjectState().x() - m_goal.getObjectState().x())));
+
     visualizeLineToOriginalGoal(state.x(), state.y(), orig_state.x(),
         orig_state.y());
 
@@ -87,33 +95,12 @@ int BaseWithRotationHeuristic::getGoalHeuristic(GraphStatePtr state){
     int cost = m_gridsearch->getlowerboundoncostfromstart_inmm(state->base_x(), state->base_y());
 
     // Get the angle to the goal from the sampled point.
-    double goal_angle = normalize_angle_positive(std::atan2(
-        static_cast<double>(
-            m_original_goal.getObjectState().y() - m_goal.getObjectState().y()),
-        static_cast<double>(
-            m_original_goal.getObjectState().x() - m_goal.getObjectState().x())));
-    
     int rot_heur =
         static_cast<int>(1000*std::fabs(shortest_angular_distance(state->robot_pose().getContBaseState().theta(),
-        goal_angle)));
+        m_desired_orientation)));
 
     return getCostMultiplier()*cost + rot_heur;
 }
-
-int BaseWithRotationHeuristic::getArmAnglesHeuristic(RightContArmState& current_state){
-    std::vector<double> angles;
-    current_state.getAngles(&angles);
-    int heur = 0;
-    // for (int i = 0; i < angles.size(); ++i)
-    // {
-        heur +=
-        static_cast<int>(10*std::fabs(shortest_angular_distance(angles[Joints::SHOULDER_LIFT],
-            m_soln_arm_angles[Joints::SHOULDER_LIFT])));
-    // }
-    // ROS_DEBUG_NAMED(HEUR_LOG, "Arm angles heur: %d", heur);
-    return heur;
-}
-
 
 void BaseWithRotationHeuristic::visualizeLineToOriginalGoal(int x0, int y0, int x1, int y1){
     
@@ -145,4 +132,10 @@ void BaseWithRotationHeuristic::visualizeLineToOriginalGoal(int x0, int y0, int 
     std::stringstream ss;
     ss<<"line_goal"<<x0<<y0;
     Visualizer::pviz->visualizeLine(line_points, ss.str(), x0 + y0, 240, 0.01);
+}
+
+void BaseWithRotationHeuristic::setDesiredOrientation(KDL::Rotation desired_orientation){
+    double roll, pitch, yaw;
+    desired_orientation.GetRPY(roll, pitch, yaw);
+    m_desired_orientation = normalize_angle_positive(yaw);
 }

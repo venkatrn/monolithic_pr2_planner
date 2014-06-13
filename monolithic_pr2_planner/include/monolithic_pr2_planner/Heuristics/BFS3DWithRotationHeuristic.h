@@ -1,32 +1,25 @@
 #pragma once
-#include <bfs3d/BFS_3D.h>
-#include <monolithic_pr2_planner/StateReps/DiscObjectState.h>
-#include <monolithic_pr2_planner/StateReps/GraphState.h>
-#include <monolithic_pr2_planner/OccupancyGridUser.h>
-#include <monolithic_pr2_planner/StateReps/GoalState.h>
-#include <monolithic_pr2_planner/Heuristics/AbstractHeuristic.h>
-#include <memory>
-#include <vector>
-#include <boost/shared_ptr.hpp>
+#include <monolithic_pr2_planner/Heuristics/BFS3DHeuristic.h>
 
 namespace monolithic_pr2_planner {
     /*! \brief Manages heuristic computation used by the SBPL planner. Currently
      * implements a 3D breadth first search for the end effector.
      */
-    class BFS3DHeuristic : public virtual AbstractHeuristic, public OccupancyGridUser {
+    class BFS3DWithRotationHeuristic : public virtual AbstractHeuristic, public OccupancyGridUser {
         public:
-            BFS3DHeuristic();
+            BFS3DWithRotationHeuristic();
             int getGoalHeuristic(GraphStatePtr state);
             void setGoal(GoalState& state);
             void loadObstaclesFromOccupGrid();
-            void visualize();
             void update3DHeuristicMap();
             void setGripperRadius(double radius) { m_gripper_sphere_radius =
                 radius; }
+            void setDesiredOrientation(KDL::Rotation desired_orientation);
         private:
             GoalState m_goal;
             double m_gripper_sphere_radius;
             std::unique_ptr<sbpl_arm_planner::BFS_3D> m_bfs;
+            KDL::Rotation m_desired_orientation;
     };
-    typedef boost::shared_ptr<BFS3DHeuristic> BFS3DHeuristicPtr;
+    typedef boost::shared_ptr<BFS3DWithRotationHeuristic> BFS3DWithRotationHeuristicPtr;
 }

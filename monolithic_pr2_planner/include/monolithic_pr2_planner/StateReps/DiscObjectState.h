@@ -35,6 +35,8 @@ namespace monolithic_pr2_planner {
 
             void printToInfo(char* log_level);
             void printToDebug(char* log_level);
+
+            void visualize(std::string name);
             
         private:
             inline int normalizeRPY(int theta){

@@ -175,8 +175,9 @@ void BaseAdaptiveMotionPrimitive::computeIntermSteps(const GraphState& source_st
     ContBaseState end_base_state = successor.robot_pose().base_state();
     start_base_state.printToDebug(MPRIM_LOG);
     end_base_state.printToDebug(MPRIM_LOG);
-    double del_theta = fabs(end_base_state.theta()-start_base_state.theta());
-    int num_interp_steps = static_cast<int>(del_theta / (2.0*M_PI/180));
+    double del_theta = shortest_angular_distance(start_base_state.theta(),
+                                                 end_base_state.theta());
+    int num_interp_steps = static_cast<int>(ceil(fabs(del_theta / (2.0*M_PI/180))));
     ROS_DEBUG_NAMED(MPRIM_LOG, "number of interpolation steps: %d", num_interp_steps);
     ROS_DEBUG_NAMED(MPRIM_LOG, "del theta is %f", del_theta);
 

@@ -39,6 +39,43 @@ RobotState::RobotState(ContBaseState base_state, RightContArmState r_arm,
     }
 }
 
+RobotState::RobotState(ContBaseState base_state, ContObjectState object_state)
+    : m_base_state(base_state) {
+
+    // RightContArmState r_arm;
+    m_right_arm = RightContArmState();
+
+    // LeftContArmState l_arm;
+    m_left_arm = LeftContArmState();
+
+    // RobotState seed_robot_pose(m_base_state, m_right_arm, m_left_arm);
+    RobotPosePtr new_robot_pose_ptr;
+    DiscObjectState disc_obj_state(object_state);
+
+    bool ik_success = computeRobotPose(disc_obj_state, *this, new_robot_pose_ptr);
+    int c = 0;
+    while (!ik_success && c < 10000) {
+        // ROS_ERROR("Failed to compute IK");
+        m_right_arm.setUpperArmRoll(randomDouble(-3.75, 0.65));
+        m_left_arm.setUpperArmRoll(randomDouble(-3.75, 0.65));
+        ik_success = computeRobotPose(disc_obj_state, *this, new_robot_pose_ptr);
+        c++;
+    }
+    if (!ik_success) {
+        ROS_ERROR("Failed to compute IK");
+    }
+
+    m_right_arm = new_robot_pose_ptr->right_arm();
+    m_left_arm = new_robot_pose_ptr->left_arm();
+    bool left_arm_dominant = (m_planning_mode == PlanningModes::LEFT_ARM ||
+                              m_planning_mode == PlanningModes::LEFT_ARM_MOBILE);
+    if (left_arm_dominant){
+        m_obj_state = m_left_arm.getObjectStateRelBody();
+    } else {
+        m_obj_state = m_right_arm.getObjectStateRelBody();
+    }
+}
+
 DiscBaseState RobotState::base_state() const{
     return DiscBaseState(m_base_state);
 }
@@ -193,7 +230,6 @@ bool RobotState::computeRobotPose(const DiscObjectState& disc_obj_state,
         ROS_ERROR("what! not using any arm for IK??");
     }
 
-    // TODO make this work for the left arm as well
 #ifdef USE_KDL_SOLVER
     if (use_right_arm) {
         SBPLArmModelPtr arm_model = seed_r_arm.getArmModel();

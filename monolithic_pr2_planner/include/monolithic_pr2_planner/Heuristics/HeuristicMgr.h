@@ -9,6 +9,7 @@
 #include <vector>
 #include <unordered_map>
 #include <boost/shared_ptr.hpp>
+#include <kdl/frames.hpp>
 #include <monolithic_pr2_planner/Visualizer.h>
 #include <monolithic_pr2_planner/CollisionSpaceMgr.h>
 
@@ -46,6 +47,7 @@ namespace monolithic_pr2_planner {
             // internal m_heuristics vector.
             void add3DHeur(std::string name, const int cost_multiplier = 1, double *gripper_radius
                 = NULL);
+            void addEndEffWithRotHeur(std::string name, KDL::Rotation desired_orientation, const int cost_multiplier = 1);
             void add2DHeur(std::string name, const int cost_multiplier = 1,
                             const double radius_m = 0);
             void addBaseWithRotationHeur(std::string name, const int cost_multiplier = 1);
@@ -93,7 +95,8 @@ namespace monolithic_pr2_planner {
             // RightContArmState getRightArmIKSol(int g_x, int g_y);
             void initNewMHABaseHeur(std::string name, int g_x, int g_y, const int
                 cost_multiplier);
-
+            void initNewMHABaseHeur(std::string name, int g_x, int g_y, const int
+                cost_multiplier, double desired_orientation);
 
             GoalState m_goal;
             std::vector<AbstractHeuristicPtr> m_heuristics;

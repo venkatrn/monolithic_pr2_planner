@@ -7,3 +7,4 @@
 #define SEARCH_LOG ((char*)"search")
 #define MPRIM_LOG ((char*)"motionprimitives")
 #define HEUR_LOG ((char*)"heuristics")
+#define POSTPROCESSOR_LOG ((char*)"pathpostprocessor")

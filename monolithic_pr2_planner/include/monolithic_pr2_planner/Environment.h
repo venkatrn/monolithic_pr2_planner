@@ -13,8 +13,8 @@
 #include <vector>
 #include <memory>
 
-#define NUM_SMHA_HEUR 3 // Used in EnvInterfaces to initialize the planner.
-#define NUM_IMHA_HEUR 3 // Used in EnvInterfaces to initialize the planner.
+#define NUM_SMHA_HEUR 4 // Used in EnvInterfaces to initialize the planner.
+#define NUM_IMHA_HEUR 4 // Used in EnvInterfaces to initialize the planner.
 // This should include the Anchor search -> Total number of searches.
 
 #define EPS1 25
@@ -47,6 +47,7 @@ namespace monolithic_pr2_planner {
             int saveFakeGoalState(const GraphStatePtr& graph_state);
             void configurePlanningDomain();
             void configureQuerySpecificParams(SearchRequestPtr search_request);
+            void generateStartState(SearchRequestPtr search_request);
 
             ParameterCatalog m_param_catalog;
             CSpaceMgrPtr m_cspace_mgr;

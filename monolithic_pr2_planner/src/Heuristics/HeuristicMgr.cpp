@@ -3,6 +3,7 @@
 #include <monolithic_pr2_planner/StateReps/GoalState.h>
 #include <monolithic_pr2_planner/Heuristics/HeuristicMgr.h>
 #include <monolithic_pr2_planner/Heuristics/BFS3DHeuristic.h>
+#include <monolithic_pr2_planner/Heuristics/BFS3DWithRotationHeuristic.h>
 #include <monolithic_pr2_planner/Heuristics/BFS2DHeuristic.h>
 #include <monolithic_pr2_planner/Heuristics/BaseWithRotationHeuristic.h>
 #include <kdl/frames.hpp>
@@ -91,6 +92,39 @@ std::vector<Point> sample_points(int radius, int center_x, int center_y,
     return final_points;
 }
 
+Point get_approach_point(int center_x, int center_y, std::vector<int> circle_x,
+    std::vector<int> circle_y, double goal_yaw) {
+    // The idea is to loop through the valid points on the circle and find the
+    // one that has the minimum angular distance to the center from the goal.
+    // In other words, we want the robot to be facing the same way as the goal, and
+    // not just facing the goal.
+    int min_idx = -1;
+    double min_angular_distance = 2*M_PI;
+    assert(circle_x.size());
+    assert(circle_y.size());
+
+    for (size_t idx = 0; idx < circle_x.size(); ++idx) {
+        // angle that the current point makes with the center of the goal.
+        double angle_with_goal = normalize_angle_positive(std::atan2(
+            static_cast<double>(center_y - circle_y[idx]),
+            static_cast<double>(center_x - circle_x[idx])));
+        // We want the distance of this with the yaw of the original goal.
+        double angular_distance = std::fabs(
+            shortest_angular_distance(
+                goal_yaw,
+                angle_with_goal
+                )
+            );
+        // ROS_DEBUG_NAMED(HEUR_LOG, "Point : %d %d, angular_distance: %f",
+        //     circle_x[idx], circle_y[idx], angular_distance);
+        if (angular_distance < min_angular_distance) {
+            min_angular_distance = angular_distance;
+            min_idx = idx;
+        }
+    }
+    return Point(circle_x[min_idx], circle_y[min_idx]);
+}
+
 HeuristicMgr::HeuristicMgr() : 
     m_num_mha_heuristics(NUM_MHA_BASE_HEUR) {
 }
@@ -147,8 +181,14 @@ void HeuristicMgr::initializeHeuristics() {
     // Already in mm.
     {
         int cost_multiplier = 1;
-        double radius_around_goal = 0.7;
+        double radius_around_goal = 0.75;
         add2DHeur("admissible_base", cost_multiplier, radius_around_goal);
+    }
+
+    {
+        int cost_multiplier = 20;
+        KDL::Rotation rot = KDL::Rotation::RPY(M_PI/2, 0, 0);
+        addEndEffWithRotHeur("endeff_rot_vert", rot, cost_multiplier);
     }
 }
 
@@ -164,6 +204,20 @@ void HeuristicMgr::add3DHeur(std::string name, const int cost_multiplier, double
     new_3d_heur->update3DHeuristicMap();
     // Add it to the list of heuristics
     m_heuristics.push_back(new_3d_heur);
+    m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
+}
+
+void HeuristicMgr::addEndEffWithRotHeur(std::string name, KDL::Rotation desired_orientation, const int cost_multiplier) {
+    // Initialize the new heuristic.
+    BFS3DWithRotationHeuristicPtr new_endeff_with_rot_heur =
+    make_shared<BFS3DWithRotationHeuristic>();
+    // MUST set the cost multiplier here. If not, it is taken as 1.
+    new_endeff_with_rot_heur->setCostMultiplier(cost_multiplier);
+
+    new_endeff_with_rot_heur->update3DHeuristicMap();
+    new_endeff_with_rot_heur->setDesiredOrientation(desired_orientation);
+    // Add it to the list of heuristics
+    m_heuristics.push_back(new_endeff_with_rot_heur);
     m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
 }
 
@@ -333,10 +387,10 @@ bool HeuristicMgr::checkIKAtPose(int g_x, int g_y, RobotPosePtr& final_pose){
 
         ContBaseState cont_seed_base_state = seed_base_state.getContBaseState();
         
-        KDL::Frame to_robot_frame;
-        Visualizer::pviz->getMaptoRobotTransform(cont_seed_base_state.x(),
-            cont_seed_base_state.y(), cont_seed_base_state.theta(), 
-            to_robot_frame);
+        // KDL::Frame to_robot_frame;
+        // Visualizer::pviz->getMaptoRobotTransform(cont_seed_base_state.x(),
+        //     cont_seed_base_state.y(), cont_seed_base_state.theta(), 
+        //     to_robot_frame);
 
         ContObjectState goal_c = m_goal.getObjectState().getContObjectState();
 
@@ -409,6 +463,14 @@ void HeuristicMgr::initNewMHABaseHeur(std::string name, int g_x, int g_y, const 
 
 }
 
+void HeuristicMgr::initNewMHABaseHeur(std::string name, int g_x, int g_y, const int cost_multiplier,
+    double desired_orientation){
+    initNewMHABaseHeur(name, g_x, g_y, cost_multiplier);
+    KDL::Rotation rot = KDL::Rotation::RPY(0, 0, desired_orientation);
+    m_heuristics[m_heuristic_map[name]]->setDesiredOrientation(rot);
+    ROS_DEBUG_NAMED(HEUR_LOG, "Initialized new MHA Base Heuristic with desired_orientation: %f", desired_orientation);
+}
+
 void HeuristicMgr::initializeMHAHeuristics(const int cost_multiplier){
     
     if(!m_num_mha_heuristics)
@@ -457,22 +519,40 @@ void HeuristicMgr::initializeMHAHeuristics(const int cost_multiplier){
         }
     }
 
-    std::vector<Point> selected_points;
-    if (static_cast<int>(ik_circle_x.size()) < m_num_mha_heuristics) {
-        selected_points = sample_points(discrete_radius,
-                center_x, center_y, circle_x, circle_y, m_num_mha_heuristics);
-    } else {
-        selected_points = sample_points(discrete_radius,
-                center_x, center_y, ik_circle_x, ik_circle_y, m_num_mha_heuristics);
-    }
+    // std::vector<Point> selected_points;
+    // if (static_cast<int>(ik_circle_x.size()) < m_num_mha_heuristics) {
+    //     selected_points = sample_points(discrete_radius,
+    //             center_x, center_y, circle_x, circle_y, m_num_mha_heuristics);
+    // } else {
+    //     selected_points = sample_points(discrete_radius,
+    //             center_x, center_y, ik_circle_x, ik_circle_y, m_num_mha_heuristics);
+    // }
 
-    for (size_t i = 0; i < selected_points.size(); ++i) {
+    // Select only the point that is directly behind the goal.
+    std::vector<Point> selected_points;
+    Point selected_point = get_approach_point(center_x, center_y, circle_x,
+        circle_y, m_goal.getObjectState().getContObjectState().yaw());
+    selected_points.push_back(selected_point);
+
+    size_t num_base_heur = 0;
+    for (size_t num_base_heur = 0; num_base_heur < selected_points.size(); ++num_base_heur) {
         stringstream ss;
-        ss << "base_with_rot_" << i;
-        initNewMHABaseHeur(ss.str(), selected_points[i].first, selected_points[i].second,
+        ss << "base_with_rot_" << num_base_heur;
+        initNewMHABaseHeur(ss.str(), selected_points[num_base_heur].first,
+            selected_points[num_base_heur].second,
             cost_multiplier);
     }
-    
+    initNewMHABaseHeur("base_with_rot_door", selected_points[0].first,
+        selected_points[0].second, cost_multiplier, 0.0);
+    {
+        int cost_multiplier = 20;
+        ContObjectState goal_state = m_goal.getObjectState().getContObjectState();
+        KDL::Rotation rot = KDL::Rotation::RPY(goal_state.roll(), goal_state.pitch(),
+            goal_state.yaw());
+        addEndEffWithRotHeur("endeff_rot_goal", rot, cost_multiplier);
+        m_heuristics[m_heuristic_map["endeff_rot_goal"]]->setGoal(m_goal);
+    }
+
     ROS_DEBUG_NAMED(HEUR_LOG, "--------------------");
     ROS_DEBUG_NAMED(HEUR_LOG, "Size of m_heuristics : %d", static_cast<int>
         (m_heuristics.size()));

@@ -50,60 +50,40 @@ int main(int argc, char** argv){
     left_arm_start[4] = -angles::normalize_angle(-22.6616580629);
     left_arm_start[5] = -1.92314290347;
     left_arm_start[6] = angles::normalize_angle(2.85636911006);
-
-    //left_arm_start[0] = (0.8202582499433417);
-    //left_arm_start[1] = (0.8174119480040183);
-    //left_arm_start[2] = (1.175226343713942);
-    //left_arm_start[3] = (-0.9897705605674373);
-    //left_arm_start[4] = angles::normalize_angle(-4.586757274289091);
-    //left_arm_start[5] = (-1.2633349113604524);
-    //left_arm_start[6] = angles::normalize_angle(48.100199487910714);
-
-    //works
-    // right_arm_start[0] = 0.337747;
-    // right_arm_start[1] = 0.361561;
-    // right_arm_start[2] = -2.034540;
-    // right_arm_start[3] = -1.317021;
-    // right_arm_start[4] = 2.922495;
-    // right_arm_start[5] = -1.046692;
-    // right_arm_start[6] = -1.136617;
-
-    // right_arm_start[0] = -0.034127;
-    // right_arm_start[1] = 0.309261;
-    // right_arm_start[2] = 0.000000;
-    // right_arm_start[3] = -1.614009;
-    // right_arm_start[4] = 2.987015;
-    // right_arm_start[5] = -1.413143;
-    // right_arm_start[6] = 2.889659;
-
-
-// 0.038946 1.214670 1.396356 -1.197227 -4.616317 -0.988727 1.175568
-    // Config1
-    // body_start[0] = 1.5;
-    // body_start[1] = 2;
-    // body_start[2] = .1;
-    // body_start[3] = -M_PI;
-    
-    // Config2 - cupboard
-    // body_start[0] = 1.5;
-    // body_start[1] = 3.0;
-    // body_start[2] = 0.1;
-    // body_start[3] = -M_PI;
-
  
-    body_start[0] = 4.000000;
+    body_start[0] = 3.500000;
     body_start[1] = 1.00000;
     body_start[2] = 0.260000;
-    body_start[3] = M_PI/2;
+    body_start[3] = M_PI/2;          // theta
 
-    // body_start[0] = 7.440000;
-    // body_start[1] = 2.460000;
+    // body_start[0] = 4.00000;
+    // body_start[1] = 2.060000;
     // body_start[2] = 0.260000;
-    // body_start[3] = 0;
+    // body_start[3] = 0;          // theta
 
     srv.request.rarm_start = right_arm_start;
     srv.request.larm_start = left_arm_start;
     srv.request.body_start = body_start;
+    srv.request.underspecified_start = true;
+
+    geometry_msgs::PoseStamped start_object_pose_rel_body;
+    {
+        // Set the orientation
+        KDL::Rotation rot = KDL::Rotation::RPY(0,0,0);
+        double qx, qy, qz, qw;
+        rot.GetQuaternion(qx, qy, qz, qw);
+        start_object_pose_rel_body.pose.orientation.x = qx;
+        start_object_pose_rel_body.pose.orientation.y = qy;
+        start_object_pose_rel_body.pose.orientation.z = qz;
+        start_object_pose_rel_body.pose.orientation.w = qw;
+
+        // set the position. Remember that this is with respect to the body.
+        start_object_pose_rel_body.pose.position.x = 0.5;
+        start_object_pose_rel_body.pose.position.y = 0;
+        start_object_pose_rel_body.pose.position.z = 0.1;
+    }
+    srv.request.start = start_object_pose_rel_body;
+
 
     // Config1
     // KDL::Rotation rot = KDL::Rotation::RPY(0,0,-M_PI);
@@ -112,32 +92,23 @@ int main(int argc, char** argv){
     // KDL::Rotation rot = KDL::Rotation::RPY(0,0,M_PI/2);
 
     // Goal pose
-    KDL::Rotation rot = KDL::Rotation::RPY(M_PI/2,0.0,0);
+    KDL::Rotation rot = KDL::Rotation::RPY(0,0.0,M_PI/2);
     double qx, qy, qz, qw;
     rot.GetQuaternion(qx, qy, qz, qw);
 
-    geometry_msgs::PoseStamped pose;
+    geometry_msgs::PoseStamped goal_pose;
 
-    // Config1
-    // pose.pose.position.x = 3.2;
-    // pose.pose.position.y = 1.9;
-    // pose.pose.position.z = 1.1;
-
-    // Config2 - cupboard
-    // pose.pose.position.x = 3.0;
-    // pose.pose.position.y = 4.9;
-    // pose.pose.position.z = 1.0;
-    pose.pose.position.x = 5.50000;
-    pose.pose.position.y = 2.50000;
-    pose.pose.position.z = 0.90000;
+    goal_pose.pose.position.x = 8.00000;
+    goal_pose.pose.position.y = 2.30000;
+    goal_pose.pose.position.z = 0.95000;
 
     // pose.pose.position.x = 6.440000;
     // pose.pose.position.y = 0.460000;
     // pose.pose.position.z = 1.18000;
-    pose.pose.orientation.x = qx;
-    pose.pose.orientation.y = qy;
-    pose.pose.orientation.z = qz;
-    pose.pose.orientation.w = qw;
+    goal_pose.pose.orientation.x = qx;
+    goal_pose.pose.orientation.y = qy;
+    goal_pose.pose.orientation.z = qz;
+    goal_pose.pose.orientation.w = qw;
 
     geometry_msgs::PoseStamped rarm_offset;
     rarm_offset.pose.position.x = 0.0;
@@ -165,7 +136,7 @@ int main(int argc, char** argv){
     srv.request.rarm_object = rarm_offset;
     srv.request.larm_object = larm_offset;
 
-    srv.request.goal = pose;
+    srv.request.goal = goal_pose;
     srv.request.initial_eps = 100;
     srv.request.final_eps = 100;
     srv.request.dec_eps = .1;
@@ -174,7 +145,7 @@ int main(int argc, char** argv){
     srv.request.pitch_tolerance = .1;
     srv.request.yaw_tolerance = .1;
 
-    srv.request.allocated_planning_time = 30;
+    srv.request.allocated_planning_time = 300;
 
     // srv.request.planning_mode = monolithic_pr2_planner::PlanningModes::RIGHT_ARM_MOBILE;
     srv.request.planning_mode =

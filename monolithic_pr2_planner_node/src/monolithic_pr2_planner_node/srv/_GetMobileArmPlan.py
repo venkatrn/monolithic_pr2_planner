@@ -8,11 +8,14 @@ import geometry_msgs.msg
 import std_msgs.msg
 
 class GetMobileArmPlanRequest(genpy.Message):
-  _md5sum = "4b661b4c7b79af2690de8766b5c56ff7"
+  _md5sum = "51eef701aa3df09cf11618a9eca9e9e7"
   _type = "monolithic_pr2_planner_node/GetMobileArmPlanRequest"
   _has_header = False #flag to mark the presence of a Header object
   _full_text = """
 geometry_msgs/PoseStamped start
+
+
+bool underspecified_start
 
 int8 planning_mode
 float64 allocated_planning_time
@@ -92,8 +95,8 @@ float64 z
 float64 w
 
 """
-  __slots__ = ['start','planning_mode','allocated_planning_time','rarm_start','larm_start','body_start','rarm_goal','larm_goal','body_goal','goal','xyz_tolerance','roll_tolerance','pitch_tolerance','yaw_tolerance','rarm_object','larm_object','initial_eps','final_eps','dec_eps']
-  _slot_types = ['geometry_msgs/PoseStamped','int8','float64','float64[]','float64[]','float64[]','float64[]','float64[]','float64[]','geometry_msgs/PoseStamped','float64','float64','float64','float64','geometry_msgs/PoseStamped','geometry_msgs/PoseStamped','float64','float64','float64']
+  __slots__ = ['start','underspecified_start','planning_mode','allocated_planning_time','rarm_start','larm_start','body_start','rarm_goal','larm_goal','body_goal','goal','xyz_tolerance','roll_tolerance','pitch_tolerance','yaw_tolerance','rarm_object','larm_object','initial_eps','final_eps','dec_eps']
+  _slot_types = ['geometry_msgs/PoseStamped','bool','int8','float64','float64[]','float64[]','float64[]','float64[]','float64[]','float64[]','geometry_msgs/PoseStamped','float64','float64','float64','float64','geometry_msgs/PoseStamped','geometry_msgs/PoseStamped','float64','float64','float64']
 
   def __init__(self, *args, **kwds):
     """
@@ -103,7 +106,7 @@ float64 w
     changes.  You cannot mix in-order arguments and keyword arguments.
 
     The available fields are:
-       start,planning_mode,allocated_planning_time,rarm_start,larm_start,body_start,rarm_goal,larm_goal,body_goal,goal,xyz_tolerance,roll_tolerance,pitch_tolerance,yaw_tolerance,rarm_object,larm_object,initial_eps,final_eps,dec_eps
+       start,underspecified_start,planning_mode,allocated_planning_time,rarm_start,larm_start,body_start,rarm_goal,larm_goal,body_goal,goal,xyz_tolerance,roll_tolerance,pitch_tolerance,yaw_tolerance,rarm_object,larm_object,initial_eps,final_eps,dec_eps
 
     :param args: complete set of field values, in .msg order
     :param kwds: use keyword arguments corresponding to message field names
@@ -114,6 +117,8 @@ float64 w
       #message fields cannot be None, assign default values for those that are
       if self.start is None:
         self.start = geometry_msgs.msg.PoseStamped()
+      if self.underspecified_start is None:
+        self.underspecified_start = False
       if self.planning_mode is None:
         self.planning_mode = 0
       if self.allocated_planning_time is None:
@@ -152,6 +157,7 @@ float64 w
         self.dec_eps = 0.
     else:
       self.start = geometry_msgs.msg.PoseStamped()
+      self.underspecified_start = False
       self.planning_mode = 0
       self.allocated_planning_time = 0.
       self.rarm_start = []
@@ -192,7 +198,7 @@ float64 w
         length = len(_x)
       buff.write(struct.pack('<I%ss'%length, length, _x))
       _x = self
-      buff.write(_struct_7dbd.pack(_x.start.pose.position.x, _x.start.pose.position.y, _x.start.pose.position.z, _x.start.pose.orientation.x, _x.start.pose.orientation.y, _x.start.pose.orientation.z, _x.start.pose.orientation.w, _x.planning_mode, _x.allocated_planning_time))
+      buff.write(_struct_7dBbd.pack(_x.start.pose.position.x, _x.start.pose.position.y, _x.start.pose.position.z, _x.start.pose.orientation.x, _x.start.pose.orientation.y, _x.start.pose.orientation.z, _x.start.pose.orientation.w, _x.underspecified_start, _x.planning_mode, _x.allocated_planning_time))
       length = len(self.rarm_start)
       buff.write(_struct_I.pack(length))
       pattern = '<%sd'%length
@@ -276,8 +282,9 @@ float64 w
         self.start.header.frame_id = str[start:end]
       _x = self
       start = end
-      end += 65
-      (_x.start.pose.position.x, _x.start.pose.position.y, _x.start.pose.position.z, _x.start.pose.orientation.x, _x.start.pose.orientation.y, _x.start.pose.orientation.z, _x.start.pose.orientation.w, _x.planning_mode, _x.allocated_planning_time,) = _struct_7dbd.unpack(str[start:end])
+      end += 66
+      (_x.start.pose.position.x, _x.start.pose.position.y, _x.start.pose.position.z, _x.start.pose.orientation.x, _x.start.pose.orientation.y, _x.start.pose.orientation.z, _x.start.pose.orientation.w, _x.underspecified_start, _x.planning_mode, _x.allocated_planning_time,) = _struct_7dBbd.unpack(str[start:end])
+      self.underspecified_start = bool(self.underspecified_start)
       start = end
       end += 4
       (length,) = _struct_I.unpack(str[start:end])
@@ -384,7 +391,7 @@ float64 w
         length = len(_x)
       buff.write(struct.pack('<I%ss'%length, length, _x))
       _x = self
-      buff.write(_struct_7dbd.pack(_x.start.pose.position.x, _x.start.pose.position.y, _x.start.pose.position.z, _x.start.pose.orientation.x, _x.start.pose.orientation.y, _x.start.pose.orientation.z, _x.start.pose.orientation.w, _x.planning_mode, _x.allocated_planning_time))
+      buff.write(_struct_7dBbd.pack(_x.start.pose.position.x, _x.start.pose.position.y, _x.start.pose.position.z, _x.start.pose.orientation.x, _x.start.pose.orientation.y, _x.start.pose.orientation.z, _x.start.pose.orientation.w, _x.underspecified_start, _x.planning_mode, _x.allocated_planning_time))
       length = len(self.rarm_start)
       buff.write(_struct_I.pack(length))
       pattern = '<%sd'%length
@@ -469,8 +476,9 @@ float64 w
         self.start.header.frame_id = str[start:end]
       _x = self
       start = end
-      end += 65
-      (_x.start.pose.position.x, _x.start.pose.position.y, _x.start.pose.position.z, _x.start.pose.orientation.x, _x.start.pose.orientation.y, _x.start.pose.orientation.z, _x.start.pose.orientation.w, _x.planning_mode, _x.allocated_planning_time,) = _struct_7dbd.unpack(str[start:end])
+      end += 66
+      (_x.start.pose.position.x, _x.start.pose.position.y, _x.start.pose.position.z, _x.start.pose.orientation.x, _x.start.pose.orientation.y, _x.start.pose.orientation.z, _x.start.pose.orientation.w, _x.underspecified_start, _x.planning_mode, _x.allocated_planning_time,) = _struct_7dBbd.unpack(str[start:end])
+      self.underspecified_start = bool(self.underspecified_start)
       start = end
       end += 4
       (length,) = _struct_I.unpack(str[start:end])
@@ -561,11 +569,11 @@ float64 w
       raise genpy.DeserializationError(e) #most likely buffer underfill
 
 _struct_I = genpy.struct_I
-_struct_11d3I = struct.Struct("<11d3I")
 _struct_3I = struct.Struct("<3I")
-_struct_7dbd = struct.Struct("<7dbd")
-_struct_7d3I = struct.Struct("<7d3I")
+_struct_11d3I = struct.Struct("<11d3I")
+_struct_7dBbd = struct.Struct("<7dBbd")
 _struct_10d = struct.Struct("<10d")
+_struct_7d3I = struct.Struct("<7d3I")
 """autogenerated by genpy from monolithic_pr2_planner_node/GetMobileArmPlanResponse.msg. Do not edit."""
 import sys
 python3 = True if sys.hexversion > 0x03000000 else False
@@ -1164,6 +1172,6 @@ _struct_3I = struct.Struct("<3I")
 _struct_2i = struct.Struct("<2i")
 class GetMobileArmPlan(object):
   _type          = 'monolithic_pr2_planner_node/GetMobileArmPlan'
-  _md5sum = 'd8a457db824f015e8c2f9227f415879b'
+  _md5sum = '7604db6c2bf89c39a52e5754ee243779'
   _request_class  = GetMobileArmPlanRequest
   _response_class = GetMobileArmPlanResponse

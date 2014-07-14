@@ -111,9 +111,9 @@ int Environment::GetGoalHeuristic(int stateID, int goal_id) {
                 case 1:  // ARA Heur
                     return EPS2*std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
                 case 2:  // Base1, Base2 heur
-                    return static_cast<int>(0.5f*(*values).at("base_with_rot_0") + 0.5f*(*values).at("admissible_endeff"));
+                    return static_cast<int>(0.5f*(*values).at("base_with_rot_0") + 0.5f*(*values).at("endeff_rot_goal"));
                 case 3:
-                    return static_cast<int>(0.5f*(*values).at("base_with_rot_1") + 0.5f*(*values).at("admissible_endeff"));
+                    return static_cast<int>(0.5f*(*values).at("base_with_rot_door") + 0.5f*(*values).at("endeff_rot_vert"));
             }
             break;
         case T_MPWA:
@@ -180,6 +180,7 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
         expansion_pose.visualize(250/NUM_SMHA_HEUR*ii);
         // source_state->robot_pose().visualize(250/NUM_SMHA_HEUR*ii);
         m_cspace_mgr->visualizeAttachedObject(expansion_pose, 250/NUM_SMHA_HEUR*ii);
+        // m_cspace_mgr->visualizeCollisionModel(expansion_pose);
         usleep(5000);
     }
     for (auto mprim : m_mprims.getMotionPrims()) {
@@ -234,7 +235,8 @@ bool Environment::setStartGoal(SearchRequestPtr search_request,
 
     start_pose.visualize();
     m_cspace_mgr->visualizeAttachedObject(start_pose);
-    // std::cin.get();
+    //m_cspace_mgr->visualizeCollisionModel(start_pose);
+    std::cin.get();
 
     GraphStatePtr start_graph_state = make_shared<GraphState>(start_pose);
     m_hash_mgr->save(start_graph_state);

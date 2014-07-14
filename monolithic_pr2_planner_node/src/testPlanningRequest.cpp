@@ -51,8 +51,12 @@ int main(int argc, char** argv){
     left_arm_start[5] = -1.92314290347;
     left_arm_start[6] = angles::normalize_angle(2.85636911006);
  
-    body_start[0] = 3.500000;
-    body_start[1] = 1.00000;
+    // body_start[0] = 3.500000;
+    // body_start[1] = 1.00000;
+    // body_start[2] = 0.260000;
+    // body_start[3] = 0;          // theta
+    body_start[0] = 3.393443;
+    body_start[1] = 1.160656;
     body_start[2] = 0.260000;
     body_start[3] = M_PI/2;          // theta
 
@@ -69,7 +73,7 @@ int main(int argc, char** argv){
     geometry_msgs::PoseStamped start_object_pose_rel_body;
     {
         // Set the orientation
-        KDL::Rotation rot = KDL::Rotation::RPY(0,0,0);
+        KDL::Rotation rot = KDL::Rotation::RPY(1.178097,0,0);
         double qx, qy, qz, qw;
         rot.GetQuaternion(qx, qy, qz, qw);
         start_object_pose_rel_body.pose.orientation.x = qx;
@@ -100,7 +104,7 @@ int main(int argc, char** argv){
 
     goal_pose.pose.position.x = 8.00000;
     goal_pose.pose.position.y = 2.30000;
-    goal_pose.pose.position.z = 0.95000;
+    goal_pose.pose.position.z = 1.2000;
 
     // pose.pose.position.x = 6.440000;
     // pose.pose.position.y = 0.460000;
@@ -113,9 +117,11 @@ int main(int argc, char** argv){
     geometry_msgs::PoseStamped rarm_offset;
     rarm_offset.pose.position.x = 0.0;
     rarm_offset.pose.position.y = -0.15;
-    rarm_offset.pose.position.z = 0;
+    rarm_offset.pose.position.z = 0.0;
+    // rarm_offset.pose.position.y = 0.0;
+    // rarm_offset.pose.position.z = 0.15;
 
-    rot = KDL::Rotation::RPY(0, 0, 0);
+    rot = KDL::Rotation::RPY(M_PI/2, 0, 0);
     rot.GetQuaternion(qx, qy, qz, qw);
 
     rarm_offset.pose.orientation.x = qx;
@@ -126,8 +132,10 @@ int main(int argc, char** argv){
     geometry_msgs::PoseStamped larm_offset;
     larm_offset.pose.position.x = 0.0;
     larm_offset.pose.position.y = 0.15;
-    larm_offset.pose.position.z = 0;
-    rot = KDL::Rotation::RPY(0, 0, 0);
+    larm_offset.pose.position.z = 0.0;
+    // larm_offset.pose.position.y = 0.0;
+    // larm_offset.pose.position.z = -0.15;
+    rot = KDL::Rotation::RPY(M_PI/2, 0, 0);
     rot.GetQuaternion(qx, qy, qz, qw);
     larm_offset.pose.orientation.x = qx;
     larm_offset.pose.orientation.y = qy;

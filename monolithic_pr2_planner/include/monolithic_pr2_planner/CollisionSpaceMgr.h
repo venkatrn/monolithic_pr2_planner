@@ -40,7 +40,7 @@ namespace monolithic_pr2_planner {
             void attachCube(std::string name, std::string reference_frame,
                 geometry_msgs::Pose relative_pose, double dim_x, double dim_y,
                 double dim_z);
-
+            void visualizeCollisionModel(RobotState& robot_state);
 
         private:
             boost::shared_ptr<pr2_collision_checker::PR2CollisionSpace> m_cspace;

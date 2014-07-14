@@ -435,6 +435,7 @@ bool SBPL2DGridSearch::search_withheap(unsigned char** Grid2D, unsigned char obs
             if (searchPredState->iterationaccessed != iteration_ || searchPredState->g > cost + searchExpState->g) {
                 searchPredState->iterationaccessed = iteration_;
                 searchPredState->g = __min(INFINITECOST, cost + searchExpState->g);
+                searchPredState->parent = searchExpState;
                 key = searchPredState->g;
                 if (termination_condition == SBPL_2DGRIDSEARCH_TERM_CONDITION_OPTPATHFOUND)
                     //use h-values only if we are NOT computing all state values
@@ -866,6 +867,17 @@ bool SBPL2DGridSearch::search_withslidingbuckets(unsigned char** Grid2D, unsigne
     SBPL_FCLOSE(f2Dsearch);
 #endif
     return true;
+}
+
+void SBPL2DGridSearch::getParent(int state_x, int state_y, int& parent_x, int&
+    parent_y) {
+    if (!searchStates2D_[state_x][state_y].parent){
+        parent_x = state_x;
+        parent_y = state_y;
+    } else {
+        parent_x = searchStates2D_[state_x][state_y].parent->x;
+        parent_y = searchStates2D_[state_x][state_y].parent->y;
+    }
 }
 
 //----------------------------------------------------------------------------------------------------------------------

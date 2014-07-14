@@ -3,6 +3,7 @@
 #include <monolithic_pr2_planner/StateReps/GoalState.h>
 #include <monolithic_pr2_planner/Heuristics/HeuristicMgr.h>
 #include <monolithic_pr2_planner/Heuristics/BFS3DHeuristic.h>
+#include <monolithic_pr2_planner/Heuristics/EndEffOnlyRotationHeuristic.h>
 #include <monolithic_pr2_planner/Heuristics/BFS3DWithRotationHeuristic.h>
 #include <monolithic_pr2_planner/Heuristics/BFS2DHeuristic.h>
 #include <monolithic_pr2_planner/Heuristics/BaseWithRotationHeuristic.h>
@@ -186,10 +187,15 @@ void HeuristicMgr::initializeHeuristics() {
     }
 
     {
-        int cost_multiplier = 20;
+        int cost_multiplier = 1;
         KDL::Rotation rot = KDL::Rotation::RPY(M_PI/2, 0, 0);
-        addEndEffWithRotHeur("endeff_rot_vert", rot, cost_multiplier);
+        addEndEffOnlyRotationHeur("endeff_rot_vert", rot, cost_multiplier);
     }
+
+    // {
+    //     int cost_multiplier = 1;
+    //     addVoronoiOrientationHeur("voronoi_heur", cost_multiplier);
+    // }
 }
 
 void HeuristicMgr::add3DHeur(std::string name, const int cost_multiplier, double* gripper_radius) {
@@ -218,6 +224,22 @@ void HeuristicMgr::addEndEffWithRotHeur(std::string name, KDL::Rotation desired_
     new_endeff_with_rot_heur->setDesiredOrientation(desired_orientation);
     // Add it to the list of heuristics
     m_heuristics.push_back(new_endeff_with_rot_heur);
+    m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
+}
+
+void HeuristicMgr::addEndEffOnlyRotationHeur(std::string name, KDL::Rotation desired_orientation, const int cost_multiplier) {
+    // Initialize the new heuristic.
+    EndEffOnlyRotationHeuristicPtr new_endeff_only_rot_heur =
+    make_shared<EndEffOnlyRotationHeuristic>();
+
+    // MUST set the cost multiplier here. If not, it is taken as 1.
+    new_endeff_only_rot_heur->setCostMultiplier(cost_multiplier);
+
+    new_endeff_only_rot_heur->update3DHeuristicMap();
+    new_endeff_only_rot_heur->setDesiredOrientation(desired_orientation);
+
+    // Add it to the list of heuristics
+    m_heuristics.push_back(new_endeff_only_rot_heur);
     m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
 }
 
@@ -275,6 +297,16 @@ void HeuristicMgr::addBaseWithRotationHeur(std::string name, const int cost_mult
     m_heuristics.push_back(new_base_with_rot_heur);
     m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
 }
+
+// void HeuristicMgr::addVoronoiOrientationHeur(std::string name, const int cost_multiplier){
+//     // Initialize the new heuristic
+//     VoronoiOrientationHeuristicPtr new_voronoi_heur = make_shared<VoronoiOrientationHeuristic>();
+//     // Set cost multiplier here.
+//     new_voronoi_heur->setCostMultiplier(cost_multiplier);
+//     // Add to the list of heuristics
+//     m_heuristics.push_back(new_voronoi_heur);
+//     m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
+// }
 
 // int HeuristicMgr::addArmAnglesHeur(const int cost_multiplier){
 //     // Initialize the new heuristic
@@ -441,33 +473,26 @@ bool HeuristicMgr::isValidIKForGoalState(int g_x, int g_y){
 // }
 
 
-void HeuristicMgr::initNewMHABaseHeur(std::string name, int g_x, int g_y, const int cost_multiplier){
-        ROS_DEBUG_NAMED(HEUR_LOG, "New MHA Base Heuristic initialized : %d %d", 
-            g_x, g_y);
-        DiscObjectState state = m_goal.getObjectState(); 
-        state.x(g_x);
-        state.y(g_y);
-        GoalState new_goal_state(m_goal);
-        new_goal_state.setGoal(state);
-
-        // Create the new heuristic
-        addBaseWithRotationHeur(name, cost_multiplier);
-
-        // Update its costmap
-        m_heuristics[m_heuristic_map[name]]->update2DHeuristicMap(m_grid_data);
-
-        // NOTE: Uncomment this if you want to use the base heuristic with
-        // rotation.
-        m_heuristics[m_heuristic_map[name]]->setOriginalGoal(m_goal);
-        m_heuristics[m_heuristic_map[name]]->setGoal(new_goal_state);
-
-}
-
 void HeuristicMgr::initNewMHABaseHeur(std::string name, int g_x, int g_y, const int cost_multiplier,
     double desired_orientation){
-    initNewMHABaseHeur(name, g_x, g_y, cost_multiplier);
+    DiscObjectState state = m_goal.getObjectState(); 
+    state.x(g_x);
+    state.y(g_y);
+    GoalState new_goal_state(m_goal);
+    new_goal_state.setGoal(state);
+
+    // Create the new heuristic
+    addBaseWithRotationHeur(name, cost_multiplier);
+
+    // Update its costmap
+    m_heuristics[m_heuristic_map[name]]->update2DHeuristicMap(m_grid_data);
+
+    m_heuristics[m_heuristic_map[name]]->setGoal(new_goal_state);
+
+    // desired_orientation is a KDL frame. We set the yaw for the base.
     KDL::Rotation rot = KDL::Rotation::RPY(0, 0, desired_orientation);
     m_heuristics[m_heuristic_map[name]]->setDesiredOrientation(rot);
+
     ROS_DEBUG_NAMED(HEUR_LOG, "Initialized new MHA Base Heuristic with desired_orientation: %f", desired_orientation);
 }
 
@@ -519,6 +544,10 @@ void HeuristicMgr::initializeMHAHeuristics(const int cost_multiplier){
         }
     }
 
+    // If there are enough points that are valid from the IK test, then select
+    // two points out of that. If not, just discard the whole IK thing and select
+    // from the original circle itself.
+
     // std::vector<Point> selected_points;
     // if (static_cast<int>(ik_circle_x.size()) < m_num_mha_heuristics) {
     //     selected_points = sample_points(discrete_radius,
@@ -528,19 +557,34 @@ void HeuristicMgr::initializeMHAHeuristics(const int cost_multiplier){
     //             center_x, center_y, ik_circle_x, ik_circle_y, m_num_mha_heuristics);
     // }
 
-    // Select only the point that is directly behind the goal.
+    // Select only the point that is directly behind the goal. This is given by
+    // the get_approach_point function
     std::vector<Point> selected_points;
     Point selected_point = get_approach_point(center_x, center_y, circle_x,
         circle_y, m_goal.getObjectState().getContObjectState().yaw());
     selected_points.push_back(selected_point);
 
-    size_t num_base_heur = 0;
     for (size_t num_base_heur = 0; num_base_heur < selected_points.size(); ++num_base_heur) {
         stringstream ss;
         ss << "base_with_rot_" << num_base_heur;
+
+        // Compute the desired orientation.
+        double orientation = normalize_angle_positive(std::atan2(
+            static_cast<double>(m_goal.getObjectState().y() -
+                selected_points[num_base_heur].second),
+            static_cast<double>(m_goal.getObjectState().x() -
+                selected_points[num_base_heur].first)));
+        
+        // Initialize with the desired orientation.
         initNewMHABaseHeur(ss.str(), selected_points[num_base_heur].first,
             selected_points[num_base_heur].second,
-            cost_multiplier);
+            cost_multiplier, orientation);
+
+        // Visualize the line from the sampled point to the original goal point.
+        // BaseWithRotationHeuristic::visualizeLineToOriginalGoal(m_goal.getObjectState().x(),
+        //     m_goal.getObjectState().y(), selected_points[num_base_heur].first,
+        //     selected_points[num_base_heur].second,
+        //     m_occupancy_grid->getResolution());
     }
     initNewMHABaseHeur("base_with_rot_door", selected_points[0].first,
         selected_points[0].second, cost_multiplier, 0.0);

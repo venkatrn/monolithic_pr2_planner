@@ -9,6 +9,7 @@
 #include <geometry_msgs/Pose.h>
 #include <leatherman/utils.h>
 #include <LinearMath/btVector3.h>
+#include <climits>
 
 using namespace monolithic_pr2_planner_node;
 using namespace monolithic_pr2_planner;
@@ -341,12 +342,25 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
     double object_dim_x = 0.5;
     double object_dim_y = 1.0;
     double object_dim_z = 0.1;
+    KDL::Vector req_obj_vector = KDL::Vector(
+        req.rarm_object.pose.position.x - object_dim_x/2 - 0.1,
+        req.rarm_object.pose.position.y,
+        req.rarm_object.pose.position.z);
+    KDL::Rotation req_obj_rot = KDL::Rotation::Quaternion(
+        req.rarm_object.pose.orientation.x,
+        req.rarm_object.pose.orientation.y,
+        req.rarm_object.pose.orientation.z,
+        req.rarm_object.pose.orientation.w);
+    KDL::Frame gripper_wrt_obj(req_obj_rot, req_obj_vector);
+    KDL::Frame obj_wrt_gripper = gripper_wrt_obj.Inverse();
+
     geometry_msgs::Pose attached_object_pose;
-    attached_object_pose.position.x = object_dim_x/2 + 0.08;
-    attached_object_pose.position.y = -req.rarm_object.pose.position.y;
-    attached_object_pose.position.z = 0.0;
+    attached_object_pose.position.x = obj_wrt_gripper.p.x();
+    attached_object_pose.position.y = obj_wrt_gripper.p.y();
+    attached_object_pose.position.z = obj_wrt_gripper.p.z();
     
-    KDL::Rotation rot = KDL::Rotation::RPY(0, 0, 0);
+    KDL::Rotation rot = obj_wrt_gripper.M;
+    
     double qx, qy, qz, qw;
     rot.GetQuaternion(qx, qy, qz, qw);
     attached_object_pose.orientation.x = qx;
@@ -369,8 +383,8 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
     //     return false;
     // }
     bool forward_search = true;
-    isPlanFound = runMHAPlanner(monolithic_pr2_planner::T_SMHA, "smha_", req, res, search_request, counter);
-    // isPlanFound = runMHAPlanner(monolithic_pr2_planner::T_IMHA, "imha_", req, res, search_request, counter);
+    // isPlanFound = runMHAPlanner(monolithic_pr2_planner::T_SMHA, "smha_", req, res, search_request, counter);
+    isPlanFound = runMHAPlanner(monolithic_pr2_planner::T_IMHA, "imha_", req, res, search_request, counter);
     // runMHAPlanner(monolithic_pr2_planner::T_MPWA, "mpwa_", req, res, search_request, counter);
     // runMHAPlanner(monolithic_pr2_planner::T_MHG_REEX, "mhg_reex_",
     //     req, res, search_request, counter);
@@ -422,20 +436,23 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
 bool EnvInterfaces::demoCallback(GetMobileArmPlan::Request &req, 
                                      GetMobileArmPlan::Response &res)
 {
-    ROS_INFO("demoCallback!");
+    
     SearchRequestParamsPtr search_request = make_shared<SearchRequestParams>();
     search_request->initial_epsilon = req.initial_eps;
     search_request->final_epsilon = req.final_eps;
     search_request->decrement_epsilon = req.dec_eps;
+    
+    // Get the current state of the robot from the real robot.
     BodyPose start_body_pos;
     std::vector<double> start_rangles;
     std::vector<double> start_langles;
     getRobotState(m_tf, start_body_pos, start_rangles, start_langles);
-
     search_request->left_arm_start = LeftContArmState(start_langles);
     search_request->right_arm_start = RightContArmState(start_rangles);
     ContBaseState start_base_pose(start_body_pos);
     search_request->base_start = start_base_pose;
+    // Underspecified goal
+    search_request->underspecified_start = req.underspecified_start;
 
     KDL::Frame rarm_offset, larm_offset;
     rarm_offset.p.x(req.rarm_object.pose.position.x);
@@ -461,82 +478,56 @@ bool EnvInterfaces::demoCallback(GetMobileArmPlan::Request &req,
     search_request->yaw_tolerance = req.yaw_tolerance;
     search_request->planning_mode = req.planning_mode;
 
-    // Uncomment this stuff if you want to send the robot pose as the goal
-    // instead of the object pose
+    // relative goal for now.
+    geometry_msgs::PoseStamped goal_pose = req.goal;
+    goal_pose.pose.position.x += start_body_pos.x;
+    goal_pose.pose.position.y += start_body_pos.y;
 
-    // RightContArmState rarm_goal(req.rarm_goal);
-    // LeftContArmState larm_goal(req.larm_goal);
-    // ContBaseState base_goal(req.body_goal);
-    // RobotPosePtr goal_robot = boost::make_shared<RobotState>(base_goal,
-        // rarm_goal, larm_goal);
+    search_request->obj_goal = goal_pose;
+    search_request->obj_start = req.start;
 
-    // ContObjectState obj_goal = goal_robot->getObjectStateRelMap();
-    // search_request->obj_goal= obj_goal;
-    // goal_robot->visualize();
-    
-    
-    search_request->obj_goal= req.goal;
     // std::cin.get();
+    double object_dim_x = 0.5;
+    double object_dim_y = 1.0;
+    double object_dim_z = 0.1;
+    KDL::Vector req_obj_vector = KDL::Vector(
+        req.rarm_object.pose.position.x - object_dim_x/2 - 0.1,
+        req.rarm_object.pose.position.y,
+        req.rarm_object.pose.position.z);
+    KDL::Rotation req_obj_rot = KDL::Rotation::Quaternion(
+        req.rarm_object.pose.orientation.x,
+        req.rarm_object.pose.orientation.y,
+        req.rarm_object.pose.orientation.z,
+        req.rarm_object.pose.orientation.w);
+    KDL::Frame gripper_wrt_obj(req_obj_rot, req_obj_vector);
+    KDL::Frame obj_wrt_gripper = gripper_wrt_obj.Inverse();
+
+    geometry_msgs::Pose attached_object_pose;
+    attached_object_pose.position.x = obj_wrt_gripper.p.x();
+    attached_object_pose.position.y = obj_wrt_gripper.p.y();
+    attached_object_pose.position.z = obj_wrt_gripper.p.z();
+    
+    KDL::Rotation rot = obj_wrt_gripper.M;
+    
+    double qx, qy, qz, qw;
+    rot.GetQuaternion(qx, qy, qz, qw);
+    attached_object_pose.orientation.x = qx;
+    attached_object_pose.orientation.y = qy;
+    attached_object_pose.orientation.z = qz;
+    attached_object_pose.orientation.w = qw;
+
+    m_env->getCollisionSpace()->attachCube("picture", "r_wrist_roll_link",
+        attached_object_pose, object_dim_x, object_dim_y, object_dim_z);
 
     res.stats_field_names.resize(18);
     res.stats.resize(18);
     int start_id, goal_id;
     int counter = 42;
     bool isPlanFound;
-    
-    double total_planning_time = clock();
-    bool retVal = m_env->configureRequest(search_request, start_id, goal_id);
-    if(!retVal){
-        return false;
-    }
+
     bool forward_search = true;
-    runMHAPlanner(monolithic_pr2_planner::T_SMHA, "smha_", req, res, search_request, counter);
-    runMHAPlanner(monolithic_pr2_planner::T_IMHA, "imha_", req, res, search_request, counter);
-    // runMHAPlanner(monolithic_pr2_planner::T_MPWA, "mpwa_", req, res, search_request, counter);
-    // runMHAPlanner(monolithic_pr2_planner::T_MHG_REEX, "mhg_reex_",
-    //     req, res, search_request, counter);
-    // runMHAPlanner(monolithic_pr2_planner::T_MHG_NO_REEX,
-        // "mhg_no_reex_", req, res, search_request, counter);
-    // runMHAPlanner(monolithic_pr2_planner::T_EES, "ees_", req, res, search_request, counter);
-    // m_ara_planner.reset(new MPlanner(m_env.get(), NUM_SMHA_HEUR, forward_search,
-    //     false));
-    // ARA Planner
-    /*** BEGIN ARA PLANNER ****
-    m_env->reset();
-    m_env->setPlannerType(monolithic_pr2_planner::T_ARA);
-    m_ara_planner.reset(new ARAPlanner(m_env.get(), forward_search));
-    total_planning_time = clock();
-    if(!m_env->configureRequest(search_request, start_id, goal_id))
-        ROS_ERROR("Unable to configure request for ARA!"
-            " Trial ID: %d", counter);
+    isPlanFound = runMHAPlanner(monolithic_pr2_planner::T_SMHA, "smha_", req, res, search_request, counter);
 
-    m_ara_planner->set_initialsolution_eps(EPS1*EPS2);
-    m_ara_planner->set_search_mode(return_first_soln);
-    m_ara_planner->set_start(start_id);
-    ROS_INFO("setting ARA goal id to %d", goal_id);
-    m_ara_planner->set_goal(goal_id);
-    m_ara_planner->force_planning_from_scratch();
-    soln.clear();
-    soln_cost = 0;
-    isPlanFound = m_ara_planner->replan(req.allocated_planning_time, 
-                                         &soln, &soln_cost);
-
-    if (isPlanFound){
-        ROS_INFO("Plan found in ARA Planner." 
-            " Moving on to reconstruction.");
-        states =  m_env->reconstructPath(soln);
-        total_planning_time = clock() - total_planning_time;
-        packageStats(stat_names, stats, soln_cost, states.size(),
-            total_planning_time);
-        m_stats_writer.writeARA(stats, states, counter);
-        res.stats_field_names = stat_names;
-        res.stats = stats;
-    } else {
-        packageStats(stat_names, stats, soln_cost, states.size(),
-            total_planning_time);
-        ROS_INFO("No plan found!");
-    }
-    /*** END ARA PLANNER ****/
     return isPlanFound;
 }
 
@@ -615,29 +606,30 @@ void EnvInterfaces::bindNavMapToTopic(string topic){
     m_nav_map = m_nodehandle.subscribe(topic, 1, &EnvInterfaces::loadNavMap, this);
 }
 
-void EnvInterfaces::crop2DMap(const nav_msgs::MapMetaData& map_info, const std::vector<signed char>&
-    v,
-                              double new_origin_x, double new_origin_y,
+void EnvInterfaces::crop2DMap(const nav_msgs::MapMetaData& map_info, const
+    std::vector<unsigned char>& v, double new_origin_x, double new_origin_y,
                               double width, double height){
-    vector<vector<signed char> > tmp_map(map_info.height);
+    ROS_DEBUG_NAMED(CONFIG_LOG, "to be cropped to : %f (width), %f (height)", width, height);
+    vector<vector<unsigned char> > tmp_map(map_info.height);
     for (unsigned int i=0; i < map_info.height; i++){
         for (unsigned int j=0; j < map_info.width; j++){
-            tmp_map[i].push_back(v[i*map_info.height+j]);
+            tmp_map[i].push_back(v[i*map_info.width+j]);
         }
     }
 
     double res = map_info.resolution;
+    ROS_DEBUG_NAMED(CONFIG_LOG, "resolution : %f", res);
     int new_origin_x_idx = (new_origin_x-map_info.origin.position.x)/res;
     int new_origin_y_idx = (new_origin_y-map_info.origin.position.y)/res;
-    int new_width = width/res + 1;
-    int new_height = height/res + 1;
-    ROS_DEBUG_NAMED(HEUR_LOG, "new origin: %d %d, width and height: %d %d",
+    int new_width = static_cast<int>((width/res) + 1 + 0.5);
+    int new_height = static_cast<int>((height/res) + 1 + 0.5);
+    ROS_DEBUG_NAMED(HEUR_LOG, "new origin: %d %d, new_width and new_height: %d %d",
                               new_origin_x_idx, new_origin_y_idx, new_width, 
                               new_height);
     ROS_DEBUG_NAMED(HEUR_LOG, "size of map %lu %lu", tmp_map.size(), 
                                                      tmp_map[0].size());
 
-    vector<vector<signed char> > new_map(new_height);
+    vector<vector<unsigned char> > new_map(new_height);
     int row_count = 0;
     for (int i=new_origin_y_idx; i < new_origin_y_idx + new_height; i++){
         for (int j=new_origin_x_idx; j < new_origin_x_idx + new_width; j++){
@@ -646,13 +638,13 @@ void EnvInterfaces::crop2DMap(const nav_msgs::MapMetaData& map_info, const std::
         row_count++;
     }
     m_final_map.clear();
-    m_final_map.resize(new_width * new_height);
-    ROS_DEBUG_NAMED(HEUR_LOG, "size of final map: %lu", m_final_map.size());
+    // m_final_map.resize(new_width * new_height);
     for (size_t i=0; i < new_map.size(); i++){
         for (size_t j=0; j < new_map[i].size(); j++){
-            m_final_map[i*new_map[i].size() + j] = new_map[i][j];
+            m_final_map.push_back(static_cast<signed char>(new_map[i][j]));
         }
     }
+    ROS_DEBUG_NAMED(HEUR_LOG, "size of final map: %lu", m_final_map.size());
 }
 
 void EnvInterfaces::loadNavMap(const nav_msgs::OccupancyGridPtr& map){
@@ -666,6 +658,8 @@ void EnvInterfaces::loadNavMap(const nav_msgs::OccupancyGridPtr& map){
     int dimX, dimY, dimZ;
     m_collision_space_interface->getOccupancyGridSize(dimX, dimY,
         dimZ);
+    ROS_DEBUG_NAMED(CONFIG_LOG, "Size of OccupancyGrid : %d %d %d", dimX, dimY,
+        dimZ);
     // This costmap_ros object listens to the map topic as defined
     // in the costmap_2d.yaml file.
     m_costmap_ros.reset(new costmap_2d::Costmap2DROS("costmap_2d", m_tf));
@@ -676,7 +670,6 @@ void EnvInterfaces::loadNavMap(const nav_msgs::OccupancyGridPtr& map){
     m_costmap_ros->getCostmapCopy(cost_map);
 
     // Normalize and convert to array.
-    std::vector<signed char> uncropped_map;
     for (unsigned int j = 0; j < cost_map.getSizeInCellsY(); ++j)
     {
         for (unsigned int i = 0; i < cost_map.getSizeInCellsX(); ++i)
@@ -686,7 +679,10 @@ void EnvInterfaces::loadNavMap(const nav_msgs::OccupancyGridPtr& map){
 
             // Set unknowns to free space (we're dealing with static maps for
             // now)
-            c = (c==costmap_2d::NO_INFORMATION)?costmap_2d::FREE_SPACE:c;
+            if (c == costmap_2d::NO_INFORMATION) {
+                c = costmap_2d::FREE_SPACE;
+            }
+            // c = (c == (costmap_2d::NO_INFORMATION)) ? (costmap_2d::FREE_SPACE) : (c);
 
             // Re-set the cost.
             cost_map.setCost(i,j,c);
@@ -694,25 +690,32 @@ void EnvInterfaces::loadNavMap(const nav_msgs::OccupancyGridPtr& map){
     }
 
     // Re-inflate because we modified the unknown cells to be free space.
+    // API : center point of window x, center point of window y, size_x ,
+    // size_y
     cost_map.reinflateWindow(dimX*map->info.resolution/2, dimY*map->info.resolution/2, dimX*map->info.resolution, dimY*map->info.resolution);
 
+    std::vector<unsigned char> uncropped_map;
     for (unsigned int j = 0; j < cost_map.getSizeInCellsY(); ++j)
     {
         for (unsigned int i = 0; i < cost_map.getSizeInCellsX(); ++i)
         {
-            // Normalize the values from 0 to 100. Not absolutely needed, but
+            // Normalize the values from 0 to 100.
             // makes life easier when dealing with the heuristic later.
-            uncropped_map.push_back(static_cast<double>(cost_map.getCost(i,j))/costmap_2d::NO_INFORMATION*100);
+            uncropped_map.push_back(
+                static_cast<unsigned char>(
+                    static_cast<double>(cost_map.getCost(i,j))/UCHAR_MAX*100.0f)
+                );
         }
     }
-    m_costmap_publisher->updateCostmapData(cost_map,
-    m_costmap_ros->getRobotFootprint());
+
+    m_costmap_publisher->updateCostmapData(cost_map, m_costmap_ros->getRobotFootprint());
 
     // Publish the full costmap
+    // topic : /monolithic_pr2_planner_node/inflated_obstacles (RViz: Grid
+    // Cells)
     m_costmap_publisher->publishCostmap();
+    // topic : /monolithic_pr2_planner_node/robot_footprint (RViz: polygon)
     m_costmap_publisher->publishFootprint();
-    
-    // std::vector<signed char> final_map;
 
     // TODO: Check if this is the right thing to do : Take the resolution from
     // the map for the occupancy grid's values.
@@ -728,14 +731,16 @@ void EnvInterfaces::loadNavMap(const nav_msgs::OccupancyGridPtr& map){
     costmap_pub.info.map_load_time = ros::Time::now();
     costmap_pub.info.resolution = map->info.resolution;
     // done in the crop function too.
-    costmap_pub.info.width = (width/map->info.resolution+1);
-    costmap_pub.info.height = (height/map->info.resolution+1);
+    costmap_pub.info.width = (width/map->info.resolution+1 + 0.5);
+    costmap_pub.info.height = (height/map->info.resolution+1 + 0.5);
     costmap_pub.info.origin.position.x = 0;
     costmap_pub.info.origin.position.y = 0;
     costmap_pub.data = m_final_map;
 
     // Publish the cropped version of the costmap; publishes
     // /monolithic_pr2_planner/costmap_pub
+    ROS_INFO_NAMED(CONFIG_LOG, "Publishing the final map that's supposed to fit"
+        " within the occupancy grid.");
     m_costmap_pub.publish(costmap_pub);
 
     m_collision_space_interface->update2DHeuristicMaps(m_final_map);
@@ -827,14 +832,39 @@ void EnvInterfaces::runTrajectory(std::vector<FullBodyState>& states) {
     body_trajectory.points.resize(states.size());
     gripper_trajectory.points.resize(states.size());
     for (size_t i = 0; i < states.size(); ++i) {
+        // // Insert the right arm joint angles
+        // auto it = arms_trajectory.points[i].positions.begin();
+        // arms_trajectory.points[i].positions.insert(it,
+        //     states[i].right_arm.begin(), states[i].right_arm.end());
+        // // insert the left arm joint angles
+        // it = arms_trajectory.points[i].positions.end();
+        // arms_trajectory.points[i].positions.insert(it,
+        //     states[i].left_arm.begin(), states[i].left_arm.end());
+
         // Insert the right arm joint angles
-        auto it = arms_trajectory.points[i].positions.begin();
-        arms_trajectory.points[i].positions.insert(it,
-            states[i].right_arm.begin(), states[i].right_arm.end());
+        for (int r_arm = 0; r_arm < 7; ++r_arm) {
+            arms_trajectory.points[i].positions.push_back(states[i].right_arm[r_arm]);
+        }
         // insert the left arm joint angles
-        it = arms_trajectory.points[i].positions.end();
-        arms_trajectory.points[i].positions.insert(it,
-            states[i].left_arm.begin(), states[i].left_arm.end());
+        for (int l_arm = 0; l_arm < 7; ++l_arm) {
+            arms_trajectory.points[i].positions.push_back(states[i].left_arm[l_arm]);
+        }
+        // ROS_DEBUG_NAMED(POSTPROCESSOR_LOG, "%f %f %f %f %f %f %f %f %f %f %f %f %f %f",
+        //         arms_trajectory.points[i].positions[0],
+        //         arms_trajectory.points[i].positions[1],
+        //         arms_trajectory.points[i].positions[2],
+        //         arms_trajectory.points[i].positions[3],
+        //         arms_trajectory.points[i].positions[4],
+        //         arms_trajectory.points[i].positions[5],
+        //         arms_trajectory.points[i].positions[6],
+        //         arms_trajectory.points[i].positions[7],
+        //         arms_trajectory.points[i].positions[8],
+        //         arms_trajectory.points[i].positions[9],
+        //         arms_trajectory.points[i].positions[10],
+        //         arms_trajectory.points[i].positions[11],
+        //         arms_trajectory.points[i].positions[12],
+        //         arms_trajectory.points[i].positions[13]
+        //         );
 
         // insert the base X, Y, Z, Theta
         body_trajectory.points[i].positions.assign(states[i].base.begin(),

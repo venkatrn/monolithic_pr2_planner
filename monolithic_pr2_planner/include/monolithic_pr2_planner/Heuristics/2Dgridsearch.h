@@ -80,8 +80,13 @@ public:
      */
     int iterationaccessed;
 
+    /**
+     * @brief the parent from which this state was reached
+     */
+    SBPL_2DGridSearchState* parent;
+
 public:
-    SBPL_2DGridSearchState() { iterationaccessed = 0; }
+    SBPL_2DGridSearchState() { iterationaccessed = 0; parent = NULL; }
     ~SBPL_2DGridSearchState() { }
 };
 
@@ -161,6 +166,8 @@ public:
     int getlargestcomputedoptimalf_inmm() { return largestcomputedoptf_; }
 
     void setUniformCostSearch(bool ucs = false) { m_uniform_cost_search = ucs; }
+
+    void getParent(int state_x, int state_y, int& parent_x, int& parent_y);
 
 private:
     inline bool withinMap(int x, int y)

@@ -44,13 +44,13 @@ vector<FullBodyState> PathPostProcessor::reconstructPath(vector<int> soln_path,
     }
     
     ROS_INFO("Finding best transition took %.3f", (clock()-temptime)/(double)CLOCKS_PER_SEC);
-    vector<FullBodyState> final_path = getFinalPath(soln_path, 
-                                                    transition_states,
-                                                    goal_state);
+    // vector<FullBodyState> final_path = getFinalPath(soln_path, 
+    //                                                 transition_states,
+    //                                                 goal_state);
 
     // temptime = clock();
-    // std::vector<FullBodyState> final_path = shortcutPath(soln_path,
-    //     transition_states, goal_state);
+    std::vector<FullBodyState> final_path = shortcutPath(soln_path,
+        transition_states, goal_state);
     // ROS_INFO("Shortcutting took %.3f", (clock()-temptime)/(double)CLOCKS_PER_SEC);
     return final_path;
 }
@@ -170,7 +170,11 @@ void PathPostProcessor::visualizeFinalPath(vector<FullBodyState> path){
         Visualizer::pviz->visualizeRobot(r_arm, l_arm, bp, 150, "robot", 0);
         RobotState robot_state = createRobotState(state);
         m_cspace_mgr->visualizeAttachedObject(robot_state);
-        usleep(10000);        
+        // m_cspace_mgr->visualizeCollisionModel(robot_state);
+        robot_state.printToInfo(POSTPROCESSOR_LOG);
+        robot_state.getObjectStateRelBody().getContObjectState().printToInfo(POSTPROCESSOR_LOG);
+        // std::cin.get();
+        usleep(10000);
     }
 }
 

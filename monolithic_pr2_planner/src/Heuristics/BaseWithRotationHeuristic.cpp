@@ -49,6 +49,7 @@ void BaseWithRotationHeuristic::loadMap(const std::vector<signed char>& data){
     ROS_DEBUG_NAMED(HEUR_LOG, "[BaseWithRotationHeur] updated grid of size %d %d from the map", m_size_col, m_size_row);
 }
 
+// This must be called after setting original goal.
 void BaseWithRotationHeuristic::setGoal(GoalState& goal_state) {
     // Save the goal for future use.
     m_goal = goal_state;
@@ -57,22 +58,9 @@ void BaseWithRotationHeuristic::setGoal(GoalState& goal_state) {
     DiscObjectState state = goal_state.getObjectState(); 
     BFS2DHeuristic::visualizeCenter(state.x(), state.y());
 
-    DiscObjectState orig_state = m_original_goal.getObjectState();
-
     // Get the initial points for the dijkstra search
     // std::vector<std::pair<int,int> > init_points;
     // BFS2DHeuristic::getBresenhamLinePoints(state.x(), state.y(), orig_state.x(), orig_state.y(), init_points);
-
-    // At this point, we can compute the desired angle because we already have
-    // the original goal (the heuristic manager must ensure this).
-    m_desired_orientation  = normalize_angle_positive(std::atan2(
-        static_cast<double>(
-            m_original_goal.getObjectState().y() - m_goal.getObjectState().y()),
-        static_cast<double>(
-            m_original_goal.getObjectState().x() - m_goal.getObjectState().x())));
-
-    visualizeLineToOriginalGoal(state.x(), state.y(), orig_state.x(),
-        orig_state.y());
 
     // Set the goal state to 0,0 - just make sure it's not the start state.
     m_gridsearch->search(m_grid, threshold, state.x(), state.y(),
@@ -102,10 +90,10 @@ int BaseWithRotationHeuristic::getGoalHeuristic(GraphStatePtr state){
     return getCostMultiplier()*cost + rot_heur;
 }
 
-void BaseWithRotationHeuristic::visualizeLineToOriginalGoal(int x0, int y0, int x1, int y1){
+void BaseWithRotationHeuristic::visualizeLineToOriginalGoal(int x0, int y0, int x1, int y1,
+    double res){
     
     std::vector<std::pair<int,int> > points;
-    unsigned char threshold = 80;
     
     BFS2DHeuristic::getBresenhamLinePoints(x0, y0, x1, y1, points);
 
@@ -114,20 +102,14 @@ void BaseWithRotationHeuristic::visualizeLineToOriginalGoal(int x0, int y0, int 
     // circle.header.frame_id = "/map";
     // circle.header.stamp = ros::Time::now();
     std::vector<geometry_msgs::Point> line_points;
-
-    double res = m_occupancy_grid->getResolution();
     
     for (size_t i = 0; i < points.size(); ++i)
     {
-        // Prune the points to display only the ones that are within the
-        // threshold
-        if(m_grid[points[i].first][points[i].second] <= threshold){
-            geometry_msgs::Point out_pt;
-            out_pt.x = points[i].first*res;
-            out_pt.y = points[i].second*res;
-            out_pt.z = 0.0;
-            line_points.push_back(out_pt);
-        }
+        geometry_msgs::Point out_pt;
+        out_pt.x = points[i].first*res;
+        out_pt.y = points[i].second*res;
+        out_pt.z = 0.0;
+        line_points.push_back(out_pt);
     }
     std::stringstream ss;
     ss<<"line_goal"<<x0<<y0;

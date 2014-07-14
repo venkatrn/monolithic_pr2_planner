@@ -57,7 +57,7 @@ namespace monolithic_pr2_planner_node {
 
         private:
             void loadNavMap(const nav_msgs::OccupancyGridPtr& map);
-            void crop2DMap(const nav_msgs::MapMetaData& map_info, const std::vector<signed char>& v,
+            void crop2DMap(const nav_msgs::MapMetaData& map_info, const std::vector<unsigned char>& v,
                            double new_origin_x, double new_origin_y,
                            double width, double height);
             bool runMHAPlanner(int planner_type,

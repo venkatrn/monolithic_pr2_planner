@@ -69,6 +69,7 @@ left_ik_service_name: pr2_left_arm_kinematics/get_ik
 right_fk_service_name: pr2_right_arm_kinematics/get_fk
 right_ik_service_name: pr2_right_arm_kinematics/get_ik
 
-# Controller stuff
+# Controller commands. Set run_trajectory to true to execute the trajectory after planning.
+# controller_service is the name of the rosservice that should be called.
 run_trajectory: false
 controller_service: /monolithic_controller/execute_path

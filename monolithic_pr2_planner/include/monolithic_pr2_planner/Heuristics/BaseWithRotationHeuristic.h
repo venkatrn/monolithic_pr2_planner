@@ -12,8 +12,6 @@ namespace monolithic_pr2_planner {
             ~BaseWithRotationHeuristic();
 
             void setGoal(GoalState& state);
-            inline void setOriginalGoal(GoalState& original_state) { m_original_goal
-                = original_state; };
             void setDesiredOrientation(KDL::Rotation desired_orientation);
 
             void update2DHeuristicMap(const std::vector<signed char>& data);
@@ -21,17 +19,15 @@ namespace monolithic_pr2_planner {
 
             int getGoalHeuristic(GraphStatePtr state);
 
+            static void visualizeLineToOriginalGoal(int x0, int y0, int x1, int y1,
+                double res);
         private:
-            void visualizeLineToOriginalGoal(int x0, int y0, int x1, int y1);
             std::unique_ptr<SBPL2DGridSearch> m_gridsearch;
             unsigned int m_size_col;
             unsigned int m_size_row;
             unsigned char** m_grid;
             GoalState m_goal;
-            GoalState m_original_goal;
             double m_desired_orientation;
-
-            std::vector<double> m_soln_arm_angles;
 
     };
     typedef boost::shared_ptr<BaseWithRotationHeuristic> BaseWithRotationHeuristicPtr;

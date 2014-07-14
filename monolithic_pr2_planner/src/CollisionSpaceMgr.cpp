@@ -216,3 +216,12 @@ void CollisionSpaceMgr::attachCube(std::string name, std::string reference_frame
     m_cspace->attachCube(name, reference_frame, relative_pose,
         dim_x,dim_y,dim_z);
 }
+
+void CollisionSpaceMgr::visualizeCollisionModel(RobotState& robot_state) {
+    std::vector<double> l_arm, r_arm;
+    robot_state.right_arm().getAngles(&r_arm);
+    robot_state.left_arm().getAngles(&l_arm);
+    BodyPose body_pose = robot_state.base_state().getBodyPose();
+    m_cspace->visualizeRobotCollisionModel(r_arm, l_arm, body_pose,
+        "collision_model", 42);
+}

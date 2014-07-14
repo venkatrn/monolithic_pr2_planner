@@ -15,6 +15,7 @@
   <depend package="ikfast_pr2"/>
   <depend package="nav_msgs"/>
   <depend package="kinematics_msgs"/>
+  <depend package="dynamicvoronoi"/>
 
   <export>
       <cpp cflags="-I${prefix}/include" lflags="-L${prefix}/lib -lmonolithic_pr2_planner"/>

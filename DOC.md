@@ -333,6 +333,98 @@ goal_state_ptr->storeAsSolnState(graph_state_ptr);
 ```
 
 
-# 3. Designing new heuristics
+# 3. Adding new heuristics
 
-Coming soon
+All the heuristic-related files go in the `Heuristics` folder in `monolithic_pr2_planner/include` and `monolithic_pr2_planner/src`. The setup is:
+
+```
+planner <-----> environment <------> HeuristicMgr ----> Heuristic_0
+                                                |-----> Heuristic_1
+                                                |-----> ...
+                                                |-----> Heuristic_n
+```
+
+### 3.1. The Heuristic Manager
+
+The `HeuristicMgr` class serves as the interface between all the heuristics and the `Environment`. The environment has an `m_heur_mgr` member.
+
+Adding a new heuristic is as simple as:
+```c++
+// add a 3D heuristic (commonly the end effector heuristic)
+add3DHeur("end_effector_heuristic", cost_multiplier);
+
+// add a 2D heuristic (commonly the base heuristic)
+add2DHeur("base_heuristic", cost_multiplier, radius_around_goal);
+```
+
+The `cost_multiplier` for all the heuristics is simply a scaling factor. It serves as a method to scale the underlying grid search units to units comparable to other heuristics.
+
+The Heuristic manager uses a `std::map` to identify each heuristic. This makes it easy to add and query heuristics. To get the value of a heuristic,
+```c++
+// a map that maps strings to integers - heuristic name -> value pairs
+typedef std::unordered_map <std::string, int> stringintmap;
+// define an empty map
+std::unique_ptr<stringintmap> values;
+
+// get all the values at one go for this graph state
+m_heur_mgr->getGoalHeuristic(GraphState_you_want_heuristic_for, values);
+
+// getting the value you want is now a nice query
+// use the same name that you used when you added the heuristic
+int base_heuristic_value = values->at("base_heuristic");
+```
+
+The internal map of the manager stores a `std::string -> int` mapping, where the string represents the name of the heuristic, and the integer value is an index into the `m_heuristics` vector. Therefore, when a new heuristic is added, it is added to the `m_heuristics` vector, and this index is then stored in the map.
+
+### 3.2. The AbstractHeuristic class
+
+All heuristics inherit from the `AbstractHeuristic` class that has some necessary definitions.
+
+#### 3.2.1. setGoal
+When a planning request is made and the goal state is known, the heuristic manager updates this information in all the heuristics defined via the `heuristic->setGoal(GoalState)` function. Each heuristic can choose to handle this as per its own design requirements.
+
+#### 3.2.2. update3DHeuristicMap() and update2DHeuristicMap()
+These functions are called when the 3D occupancy grid or the 2D NavMap is updated. Depending on the nature of the heuristic, a call to either (or both) of these can trigger an update of the heuristic's map. For instance, the `BFS2DHeuristic` updates the map for the `SBPL2DGridSearch` object upon a call to `update2DHeuristicMap()`.
+
+#### 3.2.3. setCostMultiplier() and getCostMultiplier()
+As the names suggest, these functions are used to set and get the cost multiplier for the heuristic. The final value (again, depends on the implementation) is `getCostMultiplier() * computed_value`. This can come in handy when designing inadmissible heuristics.
+
+#### 3.2.4 getGoalHeuristic(GraphStatePtr)
+The `HeuristicMgr` makes a call to the `getGoalHeuristic` of each heuristic defined in order to return the final values. Therefore, this functions needs to be necessarily implemented to return the (int) value of the heuristic for the query graph state.
+
+### 3.3. Defining new heuristics
+
+To define your own heuristic, create your own `MyNewHeuristic.h` and `MyNewHeuristic.cpp` files. The class needs to inherit from the `AbstractHeurstic` class:
+```c++
+// inherit from AbstractHeuristic
+class MyNewHeuristic : public virtual AbstractHeuristic, public OccupancyGridUser {
+    ...
+};
+
+// define a shared pointer type
+typedef boost::shared_ptr<MyNewHeuristic> MyNewHeuristicPtr;
+```
+
+The `OccupancyGridUser` class gives access to the occupancy grid, from where you can get the resolution and so on.
+
+Depending on what your heuristic does, you can add a helper function to the `HeuristicMgr` that will add the heuristic to the internal map and add it to the vector of heuristics.
+
+```c++
+// this function makes adding an instance of MyNewHeuristic a cakewalk
+HeuristicMgr::addMyNewHeur(std::string name_you_want_to_give_this, ... optional parameters ...) {
+    // create the heuristic
+    MyNewHeuristicPtr new_heuristic = boost::make_shared<MyNewHeuristic>();
+
+    // set some parameters (optionally)
+    new_heuristic->customFunction( ... );
+
+    // update its map
+    new_heuristic->update2DHeuristicMap();
+
+    // add it to the internal vector
+    m_heuristics.push_back(new_heuristic);
+
+    // create the mapping to the index where this is stored.
+    m_heuristic_map[name_you_want_to_give_this] = static_cast<int>(m_heuristics.size() - 1);
+}
+```

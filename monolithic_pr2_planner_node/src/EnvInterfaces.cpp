@@ -34,7 +34,7 @@ EnvInterfaces::EnvInterfaces(boost::shared_ptr<monolithic_pr2_planner::Environme
         getParams();
     bool forward_search = true;
     m_ara_planner.reset(new ARAPlanner(m_env.get(), forward_search));
-    m_mha_planner.reset(new MPlanner(m_env.get(), NUM_SMHA_HEUR, forward_search));
+    m_mha_planner.reset(new MHAPlanner(m_env.get(), NUM_SMHA_HEUR, forward_search));
     m_costmap_pub = m_nodehandle.advertise<nav_msgs::OccupancyGrid>("costmap_pub", 1);
     m_costmap_publisher.reset(new
         costmap_2d::Costmap2DPublisher(m_nodehandle,1,"/map"));
@@ -238,7 +238,7 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
 
     m_env->reset();
     m_env->setPlannerType(planner_type);
-    m_mha_planner.reset(new MPlanner(m_env.get(), planner_queues, forward_search,
+    m_mha_planner.reset(new MHAPlanner(m_env.get(), planner_queues, forward_search,
         planner_type));
     total_planning_time = clock();
     if (!m_env->configureRequest(search_request, start_id, goal_id))
@@ -391,7 +391,7 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
     // runMHAPlanner(monolithic_pr2_planner::T_MHG_NO_REEX,
         // "mhg_no_reex_", req, res, search_request, counter);
     // runMHAPlanner(monolithic_pr2_planner::T_EES, "ees_", req, res, search_request, counter);
-    // m_ara_planner.reset(new MPlanner(m_env.get(), NUM_SMHA_HEUR, forward_search,
+    // m_ara_planner.reset(new MHAPlanner(m_env.get(), NUM_SMHA_HEUR, forward_search,
     //     false));
     // ARA Planner
     /*** BEGIN ARA PLANNER ****

@@ -14,9 +14,9 @@ using namespace std;
 
 CollisionSpaceMgr::CollisionSpaceMgr(SBPLArmModelPtr right_arm,
                                      SBPLArmModelPtr left_arm){
-    m_cspace = make_shared<PR2CollisionSpace>(right_arm,
-                                              left_arm,
-                                              m_occupancy_grid);
+    m_cspace = make_shared<PR2CollisionSpace>(right_arm.get(),
+                                              left_arm.get(),
+                                              m_occupancy_grid.get());
     if (!m_cspace->init()){
         ROS_ERROR("cspace failed to initialize! Exiting.");
         exit(1);

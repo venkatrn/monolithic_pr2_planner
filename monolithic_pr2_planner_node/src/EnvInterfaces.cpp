@@ -10,6 +10,7 @@
 #include <leatherman/utils.h>
 #include <LinearMath/btVector3.h>
 #include <climits>
+#include <sbpl/planners/mha_planner.h>
 
 using namespace monolithic_pr2_planner_node;
 using namespace monolithic_pr2_planner;
@@ -244,8 +245,8 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
     if (!m_env->configureRequest(search_request, start_id, goal_id))
         ROS_ERROR("Unable to configure request for %s! Trial ID: %d",
          planner_prefix.c_str(), counter);
-    m_mha_planner->set_initialsolution_eps1(EPS1);
-    m_mha_planner->set_initialsolution_eps2(EPS2);
+    //m_mha_planner->set_initialsolution_eps1(EPS1); TODO:MIKE
+    //m_mha_planner->set_initialsolution_eps2(EPS2); TODO:MIKE
     m_mha_planner->set_search_mode(return_first_soln);
     m_mha_planner->set_start(start_id);
     ROS_INFO("setting %s goal id to %d", planner_prefix.c_str(), goal_id);

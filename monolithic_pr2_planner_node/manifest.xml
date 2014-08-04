@@ -23,6 +23,8 @@
   <depend package="costmap_2d"/>
   <depend package="full_body_controller"/>
   <rosdep name="yaml-cpp" />
+  <depend package="sbpl_manipulation_components_pr2"/>
+  <depend package="interactive_markers" />
 
 </package>
 

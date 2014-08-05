@@ -303,7 +303,7 @@ ControlPlanner::ControlPlanner(){
   goal_angles0[5] = -0.862352;
   goal_angles0[6] = 3.139786;
 
-  torso_z = 0.3;
+  torso_z = 0.3; //0.26
   angles1.resize(7);
   angles1[0] = 0.2;
   angles1[1] = 1.4;

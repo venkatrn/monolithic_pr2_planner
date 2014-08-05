@@ -19,10 +19,11 @@ SET(CMAKE_CXX_FLAGS "-std=c++0x")
 #add_definitions(-DUSE_IKFAST_SOLVER)
 add_definitions(-DUSE_KDL_SOLVER)
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(SBPL REQUIRED sbpl)
-include_directories(${SBPL_INCLUDE_DIRS})
-link_directories(${SBPL_LIBRARY_DIRS})
+# Depend on sbpl-ros package for now
+#find_package(PkgConfig REQUIRED)
+#pkg_check_modules(SBPL REQUIRED sbpl)
+#include_directories(${SBPL_INCLUDE_DIRS})
+#link_directories(${SBPL_LIBRARY_DIRS})
 
 #set the default path for built executables to the "bin" directory
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)

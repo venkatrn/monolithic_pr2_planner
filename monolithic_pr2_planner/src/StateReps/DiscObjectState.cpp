@@ -20,9 +20,9 @@ DiscObjectState::DiscObjectState(int x, int y,
     m_coord[ObjectPose::X] = x; 
     m_coord[ObjectPose::Y] = y; 
     m_coord[ObjectPose::Z] = z; 
-    m_coord[ObjectPose::ROLL] = roll;
-    m_coord[ObjectPose::PITCH] = pitch;
-    m_coord[ObjectPose::YAW] = yaw;
+    m_coord[ObjectPose::ROLL] = normalizeRPY(roll);
+    m_coord[ObjectPose::PITCH] = normalizeRPY(pitch);
+    m_coord[ObjectPose::YAW] = normalizeRPY(yaw);
 }
 
 DiscObjectState::DiscObjectState(ContObjectState obj_state): m_coord(6){

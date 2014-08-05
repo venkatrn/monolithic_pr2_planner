@@ -29,6 +29,8 @@ namespace monolithic_pr2_planner {
             virtual void setAdditionalCostMult(double cost) { m_additional_cost = cost; };
             virtual int getAdditionalCostMult() { return m_additional_cost; };
 
+            GraphStateMotion getEndCoord(){ return m_end_coord; };
+
         protected:
             double dist(DiscObjectState s1, DiscObjectState s2);
             int m_id;

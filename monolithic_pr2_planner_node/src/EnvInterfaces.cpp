@@ -10,7 +10,6 @@
 #include <leatherman/utils.h>
 #include <LinearMath/btVector3.h>
 #include <climits>
-#include <sbpl/planners/mha_planner.h>
 
 using namespace monolithic_pr2_planner_node;
 using namespace monolithic_pr2_planner;
@@ -240,22 +239,28 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
     m_env->reset();
     m_env->setPlannerType(planner_type);
     m_mha_planner.reset(new MHAPlanner(m_env.get(), planner_queues, forward_search,
-        planner_type));
+        (planner_type==monolithic_pr2_planner::T_IMHA)));
     total_planning_time = clock();
     if (!m_env->configureRequest(search_request, start_id, goal_id))
         ROS_ERROR("Unable to configure request for %s! Trial ID: %d",
          planner_prefix.c_str(), counter);
     //m_mha_planner->set_initialsolution_eps1(EPS1); TODO:MIKE
     //m_mha_planner->set_initialsolution_eps2(EPS2); TODO:MIKE
-    m_mha_planner->set_search_mode(return_first_soln);
+    //m_mha_planner->set_search_mode(return_first_soln); TODO:Venkat
     m_mha_planner->set_start(start_id);
     ROS_INFO("setting %s goal id to %d", planner_prefix.c_str(), goal_id);
     m_mha_planner->set_goal(goal_id);
     m_mha_planner->force_planning_from_scratch();
     vector<int> soln;
     int soln_cost;
-    isPlanFound = m_mha_planner->replan(req.allocated_planning_time, 
-                                         &soln, &soln_cost);
+    ReplanParams replan_params(req.allocated_planning_time);
+    replan_params.initial_eps = EPS1;
+    replan_params.return_first_solution = true;
+    //replan_params.initial_eps2 = EPS2;
+    replan_params.final_eps = EPS1;
+    //isPlanFound = m_mha_planner->replan(req.allocated_planning_time, 
+    //                                     &soln, &soln_cost);
+    isPlanFound = m_mha_planner->replan(&soln, replan_params, &soln_cost);
 
     if (isPlanFound) {
         ROS_INFO("Plan found in %s Planner. Moving on to reconstruction.",
@@ -369,8 +374,8 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
     attached_object_pose.orientation.z = qz;
     attached_object_pose.orientation.w = qw;
 
-    m_env->getCollisionSpace()->attachCube("picture", "r_wrist_roll_link",
-        attached_object_pose, object_dim_x, object_dim_y, object_dim_z);
+    //m_env->getCollisionSpace()->attachCube("picture", "r_wrist_roll_link",
+      //  attached_object_pose, object_dim_x, object_dim_y, object_dim_z);
 
     res.stats_field_names.resize(18);
     res.stats.resize(18);
@@ -517,8 +522,8 @@ bool EnvInterfaces::demoCallback(GetMobileArmPlan::Request &req,
     attached_object_pose.orientation.z = qz;
     attached_object_pose.orientation.w = qw;
 
-    m_env->getCollisionSpace()->attachCube("picture", "r_wrist_roll_link",
-        attached_object_pose, object_dim_x, object_dim_y, object_dim_z);
+    //m_env->getCollisionSpace()->attachCube("picture", "r_wrist_roll_link",
+      //  attached_object_pose, object_dim_x, object_dim_y, object_dim_z);
 
     res.stats_field_names.resize(18);
     res.stats.resize(18);
@@ -554,6 +559,8 @@ void EnvInterfaces::packageStats(vector<string>& stat_names,
 
     // TODO fix the total planning time
     //stats[0] = totalPlanTime;
+    // TODO: Venkat. Handle the inital/final solution eps correctly when this becomes anytime someday.
+    /*
     stats[0] = total_planning_time/static_cast<double>(CLOCKS_PER_SEC);
     stats[1] = m_ara_planner->get_initial_eps_planning_time();
     stats[2] = m_ara_planner->get_initial_eps();
@@ -563,6 +570,20 @@ void EnvInterfaces::packageStats(vector<string>& stat_names,
     stats[6] = m_ara_planner->get_solution_eps();
     stats[7] = m_ara_planner->get_n_expands();
     stats[8] = static_cast<double>(solution_cost);
+    stats[9] = static_cast<double>(solution_size);
+    */
+    vector<PlannerStats> planner_stats;
+    m_mha_planner->get_search_stats(&planner_stats);
+    // Take stats only for the first solution, since this is not anytime currently
+    stats[0] = planner_stats[0].time;
+    stats[1] = stats[0];
+    stats[2] = EPS1*EPS2;
+    stats[3] = planner_stats[0].expands;
+    stats[4] = stats[0];
+    stats[5] = stats[2];
+    stats[6] = stats[2];
+    stats[7] = stats[3];
+    stats[8] = static_cast<double>(planner_stats[0].cost);
     stats[9] = static_cast<double>(solution_size);
 }
 
@@ -584,15 +605,33 @@ void EnvInterfaces::packageMHAStats(vector<string>& stat_names,
     stat_names[8] = "solution cost";
     stat_names[9] = "path length";
 
+    // TODO fix the total planning time
+    //stats[0] = totalPlanTime;
+    // TODO: Venkat. Handle the inital/final solution eps correctly when this becomes anytime someday.
+    /*
     stats[0] = total_planning_time/static_cast<double>(CLOCKS_PER_SEC);
-    stats[1] = m_mha_planner->get_initial_eps_planning_time();
-    stats[2] = m_mha_planner->get_initial_eps();
-    stats[3] = m_mha_planner->get_n_expands_init_solution();
-    stats[4] = m_mha_planner->get_final_eps_planning_time();
-    stats[5] = m_mha_planner->get_final_epsilon();
-    stats[6] = m_mha_planner->get_solution_eps();
-    stats[7] = m_mha_planner->get_n_expands();
+    stats[1] = m_ara_planner->get_initial_eps_planning_time();
+    stats[2] = m_ara_planner->get_initial_eps();
+    stats[3] = m_ara_planner->get_n_expands_init_solution();
+    stats[4] = m_ara_planner->get_final_eps_planning_time();
+    stats[5] = m_ara_planner->get_final_epsilon();
+    stats[6] = m_ara_planner->get_solution_eps();
+    stats[7] = m_ara_planner->get_n_expands();
     stats[8] = static_cast<double>(solution_cost);
+    stats[9] = static_cast<double>(solution_size);
+    */
+    vector<PlannerStats> planner_stats;
+    m_mha_planner->get_search_stats(&planner_stats);
+    // Take stats only for the first solution, since this is not anytime currently
+    stats[0] = planner_stats[0].time;
+    stats[1] = stats[0];
+    stats[2] = EPS1*EPS2;
+    stats[3] = planner_stats[0].expands;
+    stats[4] = stats[0];
+    stats[5] = stats[2];
+    stats[6] = stats[2];
+    stats[7] = stats[3];
+    stats[8] = static_cast<double>(planner_stats[0].cost);
     stats[9] = static_cast<double>(solution_size);
 }
 
@@ -604,6 +643,7 @@ bool EnvInterfaces::bindCollisionSpaceToTopic(string topic_name){
 }
 
 void EnvInterfaces::bindNavMapToTopic(string topic){
+    sleep(3.0);//TODO: ??!!*U8084u
     m_nav_map = m_nodehandle.subscribe(topic, 1, &EnvInterfaces::loadNavMap, this);
 }
 

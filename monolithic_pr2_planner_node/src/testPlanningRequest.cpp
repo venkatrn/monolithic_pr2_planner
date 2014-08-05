@@ -68,8 +68,8 @@ int main(int argc, char** argv){
     srv.request.rarm_start = right_arm_start;
     srv.request.larm_start = left_arm_start;
     srv.request.body_start = body_start;
-    srv.request.underspecified_start = true;
-
+/*
+    srv.request.underspecified_start = false;//TODO
     geometry_msgs::PoseStamped start_object_pose_rel_body;
     {
         // Set the orientation
@@ -87,7 +87,7 @@ int main(int argc, char** argv){
         start_object_pose_rel_body.pose.position.z = 0.1;
     }
     srv.request.start = start_object_pose_rel_body;
-
+  */
 
     // Config1
     // KDL::Rotation rot = KDL::Rotation::RPY(0,0,-M_PI);
@@ -102,9 +102,12 @@ int main(int argc, char** argv){
 
     geometry_msgs::PoseStamped goal_pose;
 
-    goal_pose.pose.position.x = 8.00000;
-    goal_pose.pose.position.y = 2.30000;
-    goal_pose.pose.position.z = 1.2000;
+    //goal_pose.pose.position.x = 8.00000;
+    //goal_pose.pose.position.y = 2.30000;
+    //goal_pose.pose.position.z = 1.2000;
+    goal_pose.pose.position.x = 3.76;
+    goal_pose.pose.position.y = 2.4835;
+    goal_pose.pose.position.z = 1.102;
 
     // pose.pose.position.x = 6.440000;
     // pose.pose.position.y = 0.460000;
@@ -155,9 +158,9 @@ int main(int argc, char** argv){
 
     srv.request.allocated_planning_time = 300;
 
-    // srv.request.planning_mode = monolithic_pr2_planner::PlanningModes::RIGHT_ARM_MOBILE;
-    srv.request.planning_mode =
-    monolithic_pr2_planner::PlanningModes::DUAL_ARM_MOBILE;
+     srv.request.planning_mode = monolithic_pr2_planner::PlanningModes::RIGHT_ARM_MOBILE;
+    //srv.request.planning_mode =
+    //monolithic_pr2_planner::PlanningModes::DUAL_ARM_MOBILE;
 
     ROS_INFO("Sending request at : %s",
         boost::posix_time::to_simple_string(boost::posix_time::microsec_clock::local_time()).c_str());

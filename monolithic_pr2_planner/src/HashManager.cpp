@@ -31,27 +31,12 @@ unsigned int HashManager::intHash(unsigned int key){
 unsigned int HashManager::hash(const GraphStatePtr& graph_state){
     int val = 0;
     int counter = 0;
-    auto obj_state = graph_state->getObjectStateRelBody();
-    for (auto it=obj_state.getCoordBegin(); it!=obj_state.getCoordEnd();++it){
-        val += intHash(*it) << counter;
+    vector<int> coords = graph_state->getCoords();
+    for (auto coord_value : coords){
+        val += coord_value << counter;
         counter++;
     }
 
-    auto robot_pose = graph_state->robot_pose();
-    auto base_state = robot_pose.base_state();
-    for (auto it=base_state.getCoordBegin(); it!=base_state.getCoordEnd();++it){
-        val += intHash(*it) << counter;
-        counter++;
-    }
-
-    val += intHash(robot_pose.right_free_angle()) << counter;
-    counter++;
-
-    val += intHash(robot_pose.left_free_angle()) << counter;
-    counter++;
-
-    // should have used 12 values during the hash function
-    // xyzrpy(obj pose) fa1 fa2 (arm) xyzyaw(base)
     int hash_table_size = HASH_TABLE_SIZE;
     return intHash(val) & (hash_table_size-1);
 }
@@ -62,15 +47,33 @@ GraphStatePtr HashManager::getGraphState(int state_id){
 }
 
 unsigned int HashManager::getStateID(const GraphStatePtr& graph_state){
-    unsigned int bin_idx = hash(graph_state);
-    BOOST_FOREACH(auto g_s, m_coord_to_state_id_table[bin_idx]){
-        if (*g_s == *graph_state){
-            return g_s->id();
-        }
+    int id;
+    if (exists(graph_state, id)){
+        return id;
     }
-    ROS_DEBUG_NAMED(HASH_LOG, "State looking for:");
+    std::vector<int> tmp = graph_state->getCoords();
+    ROS_ERROR("Can't find state %d in hashmanager! %d %d %d %d %d %d %d %d %d %d %d %d",
+              graph_state->id(),
+              tmp[0],
+              tmp[1],
+              tmp[2],
+              tmp[3],
+              tmp[4],
+              tmp[5],
+              tmp[6],
+              tmp[7],
+              tmp[8],
+              tmp[9],
+              tmp[10],
+              tmp[11]);
     graph_state->printToDebug(HASH_LOG);
-    graph_state->robot_pose().printToDebug(HASH_LOG);
+    unsigned int bin_idx = hash(graph_state);
+    ROS_ERROR("bin_idx %u has %lu items", bin_idx, 
+              m_coord_to_state_id_table[bin_idx].size());
+    for (auto& item : m_coord_to_state_id_table[bin_idx]){
+        item->printToDebug(HASH_LOG);
+    }
+    assert(false);
     throw std::out_of_range("Graph state does not exist in heap");
 }
 
@@ -82,15 +85,14 @@ bool HashManager::exists(const GraphStatePtr& graph_state, int& id){
         if (*g_s == *graph_state){
             //ROS_DEBUG_NAMED(HASH_LOG, "exists! the following two match at %d",g_s->id());
             id = g_s->id();
-            //g_s->printToDebug(HASH_LOG);
-            graph_state->printToDebug(HASH_LOG);
-
             return true;
         }
     }
     return false;
 }
 
+// saves a graph state. if it already exists, this returns false, and it fills
+// in the input graph state with the found id WITHOUT overwriting it.
 bool HashManager::save(GraphStatePtr& graph_state){
     // this may not be the desired behavior...
     //ROS_DEBUG_NAMED(HASH_LOG, "Saving graph state");
@@ -104,7 +106,10 @@ bool HashManager::save(GraphStatePtr& graph_state){
     graph_state->id(m_state_id_to_graph_table.size());
     m_state_id_to_graph_table.push_back(graph_state);
     m_coord_to_state_id_table[bin_idx].push_back(graph_state);
-    //ROS_DEBUG_NAMED(HASH_LOG, "Saved new entry with id %d", graph_state->id());
+
+    ROS_DEBUG_NAMED(HASH_LOG, "Saved new entry with id %d and hash %u", 
+                              graph_state->id(), bin_idx);
+    graph_state->printToDebug(HASH_LOG);
 
     // the planner needs this to happen. i have no idea what it's supposed to
     // do.

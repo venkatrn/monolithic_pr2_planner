@@ -79,18 +79,18 @@ void ControlPlanner::processFeedback(const visualization_msgs::InteractiveMarker
     if(feedback->menu_entry_id == MenuItems::PLAN_IMHA_ROUND_ROBIN ||
        feedback->menu_entry_id == MenuItems::PLAN_IMHA_META_A_STAR ||
        feedback->menu_entry_id == MenuItems::PLAN_IMHA_DTS)
-      req.meta_search_type = mha_planner::PlannerType::IMHA;
+      req.planner_type = mha_planner::PlannerType::IMHA;
     else
-      req.meta_search_type = mha_planner::PlannerType::SMHA;
+      req.planner_type = mha_planner::PlannerType::SMHA;
 
     if(feedback->menu_entry_id == MenuItems::PLAN_IMHA_META_A_STAR ||
        feedback->menu_entry_id == MenuItems::PLAN_SMHA_META_A_STAR)
-      req.planner_type = mha_planner::MetaSearchType::META_A_STAR;
+      req.meta_search_type = mha_planner::MetaSearchType::META_A_STAR;
     else if(feedback->menu_entry_id == MenuItems::PLAN_IMHA_DTS ||
             feedback->menu_entry_id == MenuItems::PLAN_SMHA_DTS)
-      req.planner_type = mha_planner::MetaSearchType::DTS;
+      req.meta_search_type = mha_planner::MetaSearchType::DTS;
     else
-      req.planner_type = mha_planner::MetaSearchType::ROUND_ROBIN;
+      req.meta_search_type = mha_planner::MetaSearchType::ROUND_ROBIN;
 
       //position of the wrist in the object's frame
       req.rarm_object.pose.position.x = 0;

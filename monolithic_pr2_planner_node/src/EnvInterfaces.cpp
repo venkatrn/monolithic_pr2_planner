@@ -266,8 +266,8 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
     replan_params.eps2 = EPS2;
     replan_params.return_first_solution = true;
 
-    replan_params.meta_search_type = (mha_planner::MetaSearchType)req.meta_search_type;
-    replan_params.planner_type = (mha_planner::PlannerType)req.planner_type;
+    replan_params.meta_search_type = static_cast<mha_planner::MetaSearchType>(req.meta_search_type);
+    replan_params.planner_type = static_cast<mha_planner::PlannerType>(req.planner_type);
     //isPlanFound = m_mha_planner->replan(req.allocated_planning_time, 
     //                                     &soln, &soln_cost);
     isPlanFound = m_mha_planner->replan(&soln, replan_params, &soln_cost);

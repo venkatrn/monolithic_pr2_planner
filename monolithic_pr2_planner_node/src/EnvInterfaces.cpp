@@ -238,8 +238,7 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
 
     m_env->reset();
     m_env->setPlannerType(planner_type);
-    m_mha_planner.reset(new MHAPlanner(m_env.get(), planner_queues, forward_search,
-        (planner_type==monolithic_pr2_planner::T_IMHA)));
+    m_mha_planner.reset(new MHAPlanner(m_env.get(), planner_queues, forward_search));
     total_planning_time = clock();
     if (!m_env->configureRequest(search_request, start_id, goal_id))
         ROS_ERROR("Unable to configure request for %s! Trial ID: %d",
@@ -253,11 +252,14 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
     m_mha_planner->force_planning_from_scratch();
     vector<int> soln;
     int soln_cost;
-    ReplanParams replan_params(req.allocated_planning_time);
-    replan_params.initial_eps = EPS1;
+    MHAReplanParams replan_params(req.allocated_planning_time);
+    replan_params.eps1 = EPS1;
+    replan_params.eps2 = EPS2;
+    replan_params.final_eps = EPS1; //Doesn't matter for non-anytime search
     replan_params.return_first_solution = true;
-    //replan_params.initial_eps2 = EPS2;
-    replan_params.final_eps = EPS1;
+    replan_params.planner_type = mha_planner::PlannerType::IMHA;
+    replan_params.meta_search_type = mha_planner::MetaSearchType::META_A_STAR;
+
     //isPlanFound = m_mha_planner->replan(req.allocated_planning_time, 
     //                                     &soln, &soln_cost);
     isPlanFound = m_mha_planner->replan(&soln, replan_params, &soln_cost);

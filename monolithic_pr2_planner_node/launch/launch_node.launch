@@ -23,8 +23,9 @@
     <remap from="cloud_in" to="pcl_environment" />
 
   </node>
-  <node pkg="monolithic_pr2_planner_node" type="stlToOctomap"
-  name="stlToOctomap" args="package://monolithic_pr2_planner_node/maps/max_kitchen.dae" />
+  <node pkg="monolithic_pr2_planner_node" type="stlToOctomap" name="stlToOctomap" args="package://monolithic_pr2_planner_node/maps/max_kitchen.dae" />
+  <!--<node pkg="monolithic_pr2_planner_node" type="stlToOctomap"
+  name="stlToOctomap" args="$(find monolithic_pr2_planner_node)/maps/max_kitchen.dae" />-->
   <param name="robot_description" command="$(find xacro)/xacro.py '$(find pr2_description)/robots/pr2.urdf.xacro'" />
   
   <node pkg="monolithic_pr2_planner_node" type="node" name="monolithic_pr2_planner_node" output="screen">

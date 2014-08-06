@@ -31,6 +31,9 @@ EnvInterfaces::EnvInterfaces(boost::shared_ptr<monolithic_pr2_planner::Environme
     m_rrtstar_first_sol(new OMPLPR2Planner(env->getCollisionSpace(),
         RRTSTARFIRSTSOL))
 {
+
+  m_collision_space_interface->mutex = &mutex;
+
         getParams();
     bool forward_search = true;
     m_ara_planner.reset(new ARAPlanner(m_env.get(), forward_search));
@@ -38,8 +41,14 @@ EnvInterfaces::EnvInterfaces(boost::shared_ptr<monolithic_pr2_planner::Environme
     m_costmap_pub = m_nodehandle.advertise<nav_msgs::OccupancyGrid>("costmap_pub", 1);
     m_costmap_publisher.reset(new
         costmap_2d::Costmap2DPublisher(m_nodehandle,1,"/map"));
+
+    interrupt_sub_ = nh.subscribe("/sbpl_planning/interrupt", 1, &EnvInterfaces::interruptPlannerCallback,this);
 }
 
+void EnvInterfaces::interruptPlannerCallback(std_msgs::EmptyConstPtr){
+  ROS_WARN("Planner interrupt received!");
+  m_mha_planner->interrupt();
+}
 
 void EnvInterfaces::getParams(){
     m_nodehandle.param<string>("reference_frame", m_params.ref_frame, 
@@ -238,8 +247,7 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
 
     m_env->reset();
     m_env->setPlannerType(planner_type);
-    m_mha_planner.reset(new MHAPlanner(m_env.get(), planner_queues, forward_search,
-        (planner_type==monolithic_pr2_planner::T_IMHA)));
+    m_mha_planner.reset(new MHAPlanner(m_env.get(), planner_queues, forward_search));
     total_planning_time = clock();
     if (!m_env->configureRequest(search_request, start_id, goal_id))
         ROS_ERROR("Unable to configure request for %s! Trial ID: %d",
@@ -253,11 +261,13 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
     m_mha_planner->force_planning_from_scratch();
     vector<int> soln;
     int soln_cost;
-    ReplanParams replan_params(req.allocated_planning_time);
-    replan_params.initial_eps = EPS1;
+    MHAReplanParams replan_params(req.allocated_planning_time);
+    replan_params.eps1 = EPS1;
+    replan_params.eps2 = EPS2;
     replan_params.return_first_solution = true;
-    //replan_params.initial_eps2 = EPS2;
-    replan_params.final_eps = EPS1;
+
+    replan_params.meta_search_type = (mha_planner::MetaSearchType)req.meta_search_type;
+    replan_params.planner_type = (mha_planner::PlannerType)req.planner_type;
     //isPlanFound = m_mha_planner->replan(req.allocated_planning_time, 
     //                                     &soln, &soln_cost);
     isPlanFound = m_mha_planner->replan(&soln, replan_params, &soln_cost);
@@ -287,6 +297,8 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
 bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req, 
                                      GetMobileArmPlan::Response &res)
 {
+    boost::unique_lock<boost::mutex> lock(mutex);
+
     SearchRequestParamsPtr search_request = make_shared<SearchRequestParams>();
     search_request->initial_epsilon = req.initial_eps;
     search_request->final_epsilon = req.final_eps;
@@ -689,6 +701,7 @@ void EnvInterfaces::crop2DMap(const nav_msgs::MapMetaData& map_info, const
 }
 
 void EnvInterfaces::loadNavMap(const nav_msgs::OccupancyGridPtr& map){
+    boost::unique_lock<boost::mutex> lock(mutex);
     ROS_DEBUG_NAMED(CONFIG_LOG, "received navmap of size %u %u, resolution %f",
                     map->info.width, map->info.height, map->info.resolution);
     ROS_DEBUG_NAMED(CONFIG_LOG, "origin is at %f %f", map->info.origin.position.x,

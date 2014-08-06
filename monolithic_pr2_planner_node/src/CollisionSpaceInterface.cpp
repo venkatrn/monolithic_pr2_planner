@@ -30,6 +30,10 @@ bool CollisionSpaceInterface::bindCollisionSpaceToTopic(string topic_name,
 
 void CollisionSpaceInterface::mapCallback(
         const arm_navigation_msgs::CollisionMapConstPtr &map){
+
+    if(mutex)
+      boost::unique_lock<boost::mutex> lock(*mutex);
+
     ROS_INFO_NAMED(INIT_LOG, "map callback!");
     if(map->header.frame_id.compare(m_ref_frame) != 0)
     {

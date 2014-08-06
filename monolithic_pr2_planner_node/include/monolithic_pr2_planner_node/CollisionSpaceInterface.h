@@ -27,6 +27,8 @@ namespace monolithic_pr2_planner_node {
             }
             inline monolithic_pr2_planner::CSpaceMgrPtr getCollisionSpace(){
                 return m_cspace_mgr;};
+
+            boost::mutex* mutex;
         private:
             std::string m_ref_frame;
             void mapCallback(const arm_navigation_msgs::CollisionMapConstPtr &collision_map);

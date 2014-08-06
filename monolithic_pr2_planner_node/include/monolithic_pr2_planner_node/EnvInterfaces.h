@@ -61,6 +61,7 @@ namespace monolithic_pr2_planner_node {
             void crop2DMap(const nav_msgs::MapMetaData& map_info, const std::vector<unsigned char>& v,
                            double new_origin_x, double new_origin_y,
                            double width, double height);
+            void interruptPlannerCallback(std_msgs::EmptyConstPtr);
             bool runMHAPlanner(int planner_type,
                   std::string planner_prefix,
                   GetMobileArmPlan::Request &req,
@@ -82,10 +83,13 @@ namespace monolithic_pr2_planner_node {
             ros::ServiceServer m_experiment_service;
             ros::ServiceServer m_demo_service;
             std::unique_ptr<SBPLPlanner> m_ara_planner;
-            std::unique_ptr<SBPLPlanner> m_mha_planner;
+            std::unique_ptr<MHAPlanner> m_mha_planner;
             ros::Subscriber m_nav_map;
             ros::Publisher m_costmap_pub;
             std::vector<signed char> m_final_map;
+
+            ros::Subscriber interrupt_sub_;
+            boost::mutex mutex;
             
             // Doesn't have the need to store the Costmap2D object. Simply has
 // to update the costmap of the heurMgr.

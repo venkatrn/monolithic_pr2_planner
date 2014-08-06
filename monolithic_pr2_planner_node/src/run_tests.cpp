@@ -2,6 +2,7 @@
 #include<monolithic_pr2_planner_node/GetMobileArmPlan.h>
 #include <monolithic_pr2_planner/Constants.h>
 #include <monolithic_pr2_planner_node/fbp_stat_writer.h>
+#include <sbpl/planners/mha_planner.h>
 
 int main(int argc, char** argv){
   if(argc < 2){
@@ -13,6 +14,9 @@ int main(int argc, char** argv){
 
   monolithic_pr2_planner_node::GetMobileArmPlan::Request req;
   monolithic_pr2_planner_node::GetMobileArmPlan::Response res;
+
+  req.planner_type = mha_planner::MetaSearchType::META_A_STAR;
+  req.meta_search_type = mha_planner::PlannerType::IMHA;
 
   //planner parameters
   req.initial_eps = 2.0;

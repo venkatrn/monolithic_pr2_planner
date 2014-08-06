@@ -1,6 +1,7 @@
 #include <monolithic_pr2_planner_node/interactFullBodyPlanner.h>
 #include <monolithic_pr2_planner/Constants.h>
 #include <monolithic_pr2_planner_node/fbp_stat_writer.h>
+#include <sbpl/planners/mha_planner.h>
 
 enum MenuItems{PLAN=1,INTERRUPT,WRITE_TO_FILE};
 
@@ -62,6 +63,8 @@ void ControlPlanner::processFeedback(const visualization_msgs::InteractiveMarker
       req.larm_goal = angles1;
       req.body_goal = goal_base;
 
+      req.planner_type = mha_planner::MetaSearchType::META_A_STAR;
+      req.meta_search_type = mha_planner::PlannerType::IMHA;
 
       //position of the wrist in the object's frame
       req.rarm_object.pose.position.x = 0;

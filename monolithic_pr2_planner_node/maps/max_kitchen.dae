@@ -1,0 +1,245 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<title>/monolithic_pr2_planner_node/maps/max_kitchen.dae - Changes - Full Body Planning Environment - Redmine</title>
+<meta name="description" content="Redmine" />
+<meta name="keywords" content="issue,bug,tracker" />
+<meta name="csrf-param" content="authenticity_token"/>
+<meta name="csrf-token" content="aCL4kWf14K8ALqvwkrJYhDCGeYWD9yfJqjFFjpxJ090="/>
+<link rel='shortcut icon' href='/redmine/favicon.ico?1323528820' />
+<link href="/redmine/themes/alternate/stylesheets/application.css?1323528819" media="all" rel="stylesheet" type="text/css" />
+
+<script src="/redmine/javascripts/prototype.js?1289939606" type="text/javascript"></script>
+<script src="/redmine/javascripts/effects.js?1293141307" type="text/javascript"></script>
+<script src="/redmine/javascripts/dragdrop.js?1293141307" type="text/javascript"></script>
+<script src="/redmine/javascripts/controls.js?1293141307" type="text/javascript"></script>
+<script src="/redmine/javascripts/application.js?1323528820" type="text/javascript"></script>
+<script type="text/javascript">
+//<![CDATA[
+Event.observe(window, 'load', function(){ new WarnLeavingUnsaved('The current page contains unsaved text that will be lost if you leave this page.'); });
+//]]>
+</script>
+
+<!--[if IE 6]>
+    <style type="text/css">
+      * html body{ width: expression( document.documentElement.clientWidth < 900 ? '900px' : '100%' ); }
+      body {behavior: url(/redmine/stylesheets/csshover.htc?1323528820);}
+    </style>
+<![endif]-->
+
+<!-- page specific tags -->
+
+
+		<link href="/redmine/plugin_assets/redmine_git_hosting/stylesheets/git_url_display.css" media="screen" rel="stylesheet" type="text/css" />
+		<script src="/redmine/plugin_assets/redmine_git_hosting/javascripts/git_url_display.js" type="text/javascript"></script>
+		
+		<link href="/redmine/plugin_assets/redmine_git_hosting/stylesheets/zero_clipboard.css" media="screen" rel="stylesheet" type="text/css" />
+		<script src="/redmine/plugin_assets/redmine_git_hosting/javascripts/ZeroClipboard.js" type="text/javascript"></script>
+		<script src="/redmine/plugin_assets/redmine_git_hosting/javascripts/zero_clipboard_setup.js" type="text/javascript"></script>
+
+
+		<script type="text/javascript">
+
+			guProjectName= "" + "repositories/fbp.git".replace(/^.*\//, "")
+			guProjectIsPublic= false ;
+			guUser= "venkatrn"
+			guUserIsCommitter= true ;
+			guGitUser="git"
+			guGitServer="sbpl.pc.cs.cmu.edu"
+			guHttpBase="sbpl.pc.cs.cmu.edu/redmine".replace(/\/$/, "")
+			guHttpProto="https"
+
+			window.onload = setGitUrlOnload
+
+			ZeroClipboard.setMoviePath('/redmine/plugin_assets/redmine_git_hosting/images/ZeroClipboard.swf');
+			setZeroClipboardInputSource("git_url_text");
+		</script>
+	
+  <script src="/redmine/javascripts/repository_navigation.js?1323528820" type="text/javascript"></script>
+</head>
+<body class="theme-Alternate controller-repositories action-changes">
+<div id="wrapper">
+<div id="wrapper2">
+<div id="top-menu">
+    <div id="account">
+        <ul><li><a href="/redmine/my/account" class="my-account">My account</a></li>
+<li><a href="/redmine/logout" class="logout">Sign out</a></li></ul>    </div>
+    <div id="loggedas">Logged in as <a href="/redmine/users/8">venkatrn</a></div>
+    <ul><li><a href="/redmine/" class="home">Home</a></li>
+<li><a href="/redmine/my/page" class="my-page">My page</a></li>
+<li><a href="/redmine/projects" class="projects">Projects</a></li>
+<li><a href="http://www.redmine.org/guide" class="help">Help</a></li></ul></div>
+
+<div id="header">
+    
+    <div id="quick-search">
+        <form action="/redmine/search/index/fbp" method="get">
+        <input name="changesets" type="hidden" value="1" />
+        <label for='q'>
+          <a href="/redmine/search/index/fbp" accesskey="4">Search</a>:
+        </label>
+        <input accesskey="f" class="small" id="q" name="q" size="20" type="text" />
+        </form>
+        <select onchange="if (this.value != '') { window.location = this.value; }"><option value=''>Jump to a project...</option><option value="" disabled="disabled">---</option><option value="/redmine/projects/classes?jump=repository">Coursework</option><option value="/redmine/projects/15-780-s12-project?jump=repository">&nbsp;&nbsp;&#187; 15-780 S12 Project</option><option value="/redmine/projects/15-780-s12-report?jump=repository">&nbsp;&nbsp;&nbsp;&nbsp;&#187; 15-780 S12 Report</option><option value="/redmine/projects/16-711kdc?jump=repository">&nbsp;&nbsp;&#187; 16-711 KDC Project</option><option value="/redmine/projects/stats-f11?jump=repository">&nbsp;&nbsp;&#187; 16-831 Hexacopter Project F11</option><option selected="selected" value="/redmine/projects/fbp?jump=repository">Full Body Planning Environment</option><option value="/redmine/projects/lab?jump=repository">Lab-General</option><option value="/redmine/projects/manipulation-pipeline?jump=repository">Manipulation Pipeline</option><option value="/redmine/projects/bartender-tasks?jump=repository">Bartender Demo 2.0 Detection and Tasks API</option><option value="/redmine/projects/bartender-grasping?jump=repository">Bartender Demo 2.0 Grasping Pipeline</option><option value="/redmine/projects/pr2-item-tracker?jump=repository">Item Tracking on the PR2 using AR Markers</option><option value="/redmine/projects/moviepoll20131?jump=repository">MoviePoll</option><option value="/redmine/projects/beh-and-metric?jump=repository">Behaviour and Metric based planning</option><option value="/redmine/projects/blv3?jump=repository">BLv3</option><option value="/redmine/projects/visodo?jump=repository">Visual Odometry</option><option value="/redmine/projects/visioncontroller?jump=repository">vision_controller</option><option value="/redmine/projects/lazy-ara?jump=repository">Lazy ARA*</option><option value="/redmine/projects/iros-2012?jump=repository">IROS 2012</option><option value="/redmine/projects/venkat?jump=repository">Venkat</option><option value="/redmine/projects/icra2013-loop?jump=repository">&nbsp;&nbsp;&#187; ICRA 2013 </option><option value="/redmine/projects/mha-planner?jump=repository">&nbsp;&nbsp;&#187; MHA* </option><option value="/redmine/projects/mha-sbpl?jump=repository">&nbsp;&nbsp;&#187; Multihypothesis A* (MHA*)</option><option value="/redmine/projects/sbplloop?jump=repository">&nbsp;&nbsp;&#187; SBPL Loop Planner</option><option value="/redmine/projects/research?jump=repository">Research</option><option value="/redmine/projects/sbpl-dynamic-uncertain-planner?jump=repository">&nbsp;&nbsp;&#187; Dynamic Uncertain Environment Planner (PPCP)</option><option value="/redmine/projects/ros-ppcp?jump=repository">&nbsp;&nbsp;&#187; Dynamic Uncertain Environment ROS packages</option><option value="/redmine/projects/robots?jump=repository">Robots</option><option value="/redmine/projects/pr2?jump=repository">&nbsp;&nbsp;&#187; ALLEN the PR2</option><option value="/redmine/projects/serve-drinks?jump=repository">&nbsp;&nbsp;&nbsp;&nbsp;&#187; Serve Drinks</option><option value="/redmine/projects/melvin?jump=repository">&nbsp;&nbsp;&#187; Melvin the Segbot</option><option value="/redmine/projects/uav?jump=repository">&nbsp;&nbsp;&#187; UAV's</option><option value="/redmine/projects/dronecollisionavoidance?jump=repository">&nbsp;&nbsp;&nbsp;&nbsp;&#187; Collision Avoidance</option><option value="/redmine/projects/hector-localization-and-slam?jump=repository">&nbsp;&nbsp;&nbsp;&nbsp;&#187; Hector Localization And SLAM</option><option value="/redmine/projects/hexa?jump=repository">&nbsp;&nbsp;&nbsp;&nbsp;&#187; The Man-Hack</option><option value="/redmine/projects/blhexa?jump=repository">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#187; BL for Hexa</option><option value="/redmine/projects/hexacad?jump=repository">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#187; Hexacopter Model</option><option value="/redmine/projects/pwu-hexa?jump=repository">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#187; Planning with Uncertainty</option><option value="/redmine/projects/hexaros?jump=repository">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#187; ROS Hexacopter</option><option value="/redmine/projects/hexaurdf?jump=repository">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#187; ROS Hexacopter URDF files</option><option value="/redmine/projects/quad?jump=repository">&nbsp;&nbsp;&nbsp;&nbsp;&#187; GIVEMEANAME the Quadrotor</option><option value="/redmine/projects/kmel-quad?jump=repository">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#187; Kmel Quadrotor</option><option value="/redmine/projects/quadros?jump=repository">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#187; ROS Quadrotor</option><option value="/redmine/projects/uavros?jump=repository">&nbsp;&nbsp;&nbsp;&nbsp;&#187; ROS UAV Stack</option><option value="/redmine/projects/armarker?jump=repository">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#187; AR Marker Tracker</option><option value="/redmine/projects/drone-interface?jump=repository">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#187; Drone Interface</option><option value="/redmine/projects/pidjoy?jump=repository">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#187; Joystick PID</option><option value="/redmine/projects/motprimgen?jump=repository">&nbsp;&nbsp;&nbsp;&nbsp;&#187; UAV Motion Primative Generator</option><option value="/redmine/projects/sbpl-constrained-mobile-arm?jump=repository">SBPL Constrained Mobile Arm</option><option value="/redmine/projects/sbpl-maintenance?jump=repository">SBPL Maintenance</option><option value="/redmine/projects/utils?jump=repository">Utils</option><option value="/redmine/projects/ddp?jump=repository">&nbsp;&nbsp;&#187; DDP controller</option><option value="/redmine/projects/lidar-tracker2?jump=repository">&nbsp;&nbsp;&#187; Lidar Tracker (Brad's version)</option><option value="/redmine/projects/kinect-multi-tracker?jump=repository">&nbsp;&nbsp;&#187; Multi-Hypothesis Kinect People Tracker and Predictor</option><option value="/redmine/projects/objvis?jump=repository">&nbsp;&nbsp;&#187; ObjVis</option><option value="/redmine/projects/pr2-controllers?jump=repository">&nbsp;&nbsp;&#187; PR2 Controllers</option><option value="/redmine/projects/4dplanner-wrapper?jump=repository">&nbsp;&nbsp;&#187; ROS 4-D planner</option></select>
+    </div>
+    
+
+    <h1>Full Body Planning Environment</h1>
+
+    
+    <div id="main-menu">
+        <ul><li><a href="/redmine/projects/fbp" class="overview">Overview</a></li>
+<li><a href="/redmine/projects/fbp/activity" class="activity">Activity</a></li>
+<li><a href="/redmine/projects/fbp/issues" class="issues">Issues</a></li>
+<li><a href="/redmine/projects/fbp/issues/new" accesskey="7" class="new-issue">New issue</a></li>
+<li><a href="/redmine/projects/fbp/issues/gantt" class="gantt">Gantt</a></li>
+<li><a href="/redmine/projects/fbp/issues/calendar" class="calendar">Calendar</a></li>
+<li><a href="/redmine/projects/fbp/news" class="news">News</a></li>
+<li><a href="/redmine/projects/fbp/documents" class="documents">Documents</a></li>
+<li><a href="/redmine/projects/fbp/wiki" class="wiki">Wiki</a></li>
+<li><a href="/redmine/polls?project_id=fbp" class="polls">Polls</a></li>
+<li><a href="/redmine/projects/fbp/files" class="files">Files</a></li>
+<li><a href="/redmine/projects/fbp/repository" class="repository selected">Repository</a></li>
+<li><a href="/redmine/projects/fbp/settings" class="settings">Settings</a></li></ul>
+    </div>
+    
+</div>
+
+<div class="nosidebar" id="main">
+    <div id="sidebar">
+        
+        
+    </div>
+
+    <div id="content">
+        
+        
+	
+
+	
+		<div id="git_url_box">
+			<ul id="git_url_list" >
+				
+					<li><a id="git_url_ssh"  href="javascript:void(0)">SSH</a></li>
+				
+				
+					<li><a id="git_url_http" href="javascript:void(0)">HTTP</a></li>
+				
+				
+			</ul>
+			<input id="git_url_text" name="git_url_text" readonly="readonly" value="" />
+			<div id="clipboard_container" title="Copy to clipboard" style="display: none;">
+				<div id="clipboard_button"><img alt="Paste" src="/redmine/plugin_assets/redmine_git_hosting/images/paste.png" /></div>
+			</div>
+			<span  id="git_url_desc">This URL has <span id="git_url_access">Read-Only</span> access.</span>
+		</div>
+		<br/>
+	
+
+
+
+<div class="contextual">
+  
+
+<a href="/redmine/projects/fbp/repository/statistics" class="icon icon-stats">Statistics</a>
+
+<form action="/redmine/projects/fbp/repository/changes/monolithic_pr2_planner_node/maps/max_kitchen.dae?rev=" id="revision_selector" method="get">  <!-- Branches Dropdown -->
+      | Branch:
+    <select id="branch" name="branch"><option value="lazy_egraphs_unique_goal_id" selected="selected">lazy_egraphs_unique_goal_id</option>
+<option value="v3">v3</option></select>
+  
+  
+  | Revision:
+  <input id="rev" name="rev" size="8" type="text" value="lazy_egraphs_unique_goal_id" />
+</form>
+</div>
+
+<h2>
+  <a href="/redmine/projects/fbp/repository/revisions/lazy_egraphs_unique_goal_id/show">root</a>
+
+    / <a href="/redmine/projects/fbp/repository/revisions/lazy_egraphs_unique_goal_id/show/monolithic_pr2_planner_node">monolithic_pr2_planner_node</a>
+
+    / <a href="/redmine/projects/fbp/repository/revisions/lazy_egraphs_unique_goal_id/show/monolithic_pr2_planner_node/maps">maps</a>
+
+
+    / <a href="/redmine/projects/fbp/repository/revisions/lazy_egraphs_unique_goal_id/changes/monolithic_pr2_planner_node/maps/max_kitchen.dae">max_kitchen.dae</a>
+
+
+@ lazy_egraphs_unique_goal_id
+
+
+</h2>
+
+<p>
+
+<p>
+History |
+
+    <a href="/redmine/projects/fbp/repository/revisions/lazy_egraphs_unique_goal_id/entry/monolithic_pr2_planner_node/maps/max_kitchen.dae">View</a> |
+
+
+    <a href="/redmine/projects/fbp/repository/revisions/lazy_egraphs_unique_goal_id/annotate/monolithic_pr2_planner_node/maps/max_kitchen.dae">Annotate</a> |
+
+<a href="/redmine/projects/fbp/repository/revisions/lazy_egraphs_unique_goal_id/raw/monolithic_pr2_planner_node/maps/max_kitchen.dae">Download</a>
+(10 MB)
+</p>
+
+
+</p>
+
+
+
+
+<form action="/redmine/projects/fbp/repository/diff/monolithic_pr2_planner_node/maps/max_kitchen.dae" method="get">
+<table class="list changesets">
+<thead><tr>
+
+<th>#</th>
+<th></th>
+<th></th>
+<th>Date</th>
+<th>Author</th>
+<th>Comment</th>
+</tr></thead>
+<tbody>
+
+
+
+<tr class="changeset odd">
+
+<td class="id"><a href="/redmine/projects/fbp/repository/revisions/a857bddbc181164e7cf08665658c9a57ee395af9" title="Revision a857bddb">a857bddb</a></td>
+<td class="checkbox"></td>
+<td class="checkbox"></td>
+<td class="committed_on">07/23/2014 08:51 pm</td>
+<td class="author">Mike Phillips</td>
+
+  <td class="comments"><p>small fixes to make things compile and run</p></td>
+
+</tr>
+
+
+</tbody>
+</table>
+
+</form>
+
+
+
+        
+        <div style="clear:both;"></div>
+    </div>
+</div>
+
+<div id="ajax-indicator" style="display:none;"><span>Loading...</span></div>
+
+<div id="footer">
+  <div class="bgl"><div class="bgr">
+    Powered by <a href="http://www.redmine.org/">Redmine</a> &copy; 2006-2011 Jean-Philippe Lang
+  </div></div>
+</div>
+</div>
+</div>
+
+</body>
+</html>

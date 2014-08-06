@@ -133,6 +133,9 @@ int main(int argc, char** argv){
     setLoggersFromParamServer(nh);
     Node node(nh);
     ROS_INFO("Node is ready to receive planning requests.");
+    ros::MultiThreadedSpinner spinner(4);//need 4 threads to catch a the interrupt (a thread for each blocking callback + the interrupt)
+    spinner.spin();
 
-    ros::spin();
+
+    //ros::spin();
 }

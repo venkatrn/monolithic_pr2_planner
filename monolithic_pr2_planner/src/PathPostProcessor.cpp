@@ -171,8 +171,8 @@ void PathPostProcessor::visualizeFinalPath(vector<FullBodyState> path){
         RobotState robot_state = createRobotState(state);
         m_cspace_mgr->visualizeAttachedObject(robot_state);
         // m_cspace_mgr->visualizeCollisionModel(robot_state);
-        robot_state.printToInfo(POSTPROCESSOR_LOG);
-        robot_state.getObjectStateRelBody().getContObjectState().printToInfo(POSTPROCESSOR_LOG);
+        robot_state.printToDebug(POSTPROCESSOR_LOG);
+        robot_state.getObjectStateRelBody().getContObjectState().printToDebug(POSTPROCESSOR_LOG);
         // std::cin.get();
         usleep(10000);
     }

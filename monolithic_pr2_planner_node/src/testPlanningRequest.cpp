@@ -119,12 +119,12 @@ int main(int argc, char** argv){
 
     geometry_msgs::PoseStamped rarm_offset;
     rarm_offset.pose.position.x = 0.0;
-    rarm_offset.pose.position.y = -0.15;
+    rarm_offset.pose.position.y = 0.0;
     rarm_offset.pose.position.z = 0.0;
     // rarm_offset.pose.position.y = 0.0;
     // rarm_offset.pose.position.z = 0.15;
 
-    rot = KDL::Rotation::RPY(M_PI/2, 0, 0);
+    rot = KDL::Rotation::RPY(0, 0, 0);
     rot.GetQuaternion(qx, qy, qz, qw);
 
     rarm_offset.pose.orientation.x = qx;
@@ -134,11 +134,11 @@ int main(int argc, char** argv){
 
     geometry_msgs::PoseStamped larm_offset;
     larm_offset.pose.position.x = 0.0;
-    larm_offset.pose.position.y = 0.15;
+    larm_offset.pose.position.y = 0.0;
     larm_offset.pose.position.z = 0.0;
     // larm_offset.pose.position.y = 0.0;
     // larm_offset.pose.position.z = -0.15;
-    rot = KDL::Rotation::RPY(M_PI/2, 0, 0);
+    rot = KDL::Rotation::RPY(0, 0, 0);
     rot.GetQuaternion(qx, qy, qz, qw);
     larm_offset.pose.orientation.x = qx;
     larm_offset.pose.orientation.y = qy;
@@ -148,15 +148,15 @@ int main(int argc, char** argv){
     srv.request.larm_object = larm_offset;
 
     srv.request.goal = goal_pose;
-    srv.request.initial_eps = 100;
-    srv.request.final_eps = 100;
+    srv.request.initial_eps = 2.0;
+    srv.request.final_eps = 2.0;
     srv.request.dec_eps = .1;
     srv.request.xyz_tolerance = .02;
     srv.request.roll_tolerance = .1;
     srv.request.pitch_tolerance = .1;
     srv.request.yaw_tolerance = .1;
 
-    srv.request.allocated_planning_time = 300;
+    srv.request.allocated_planning_time = 30;
 
      srv.request.planning_mode = monolithic_pr2_planner::PlanningModes::RIGHT_ARM_MOBILE;
     //srv.request.planning_mode =

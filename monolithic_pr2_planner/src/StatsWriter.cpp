@@ -7,6 +7,13 @@ using namespace std;
 using namespace monolithic_pr2_planner;
 
 StatsWriter::StatsWriter(int planner_id):m_planner_id(planner_id){
+    struct stat stats_path;
+    if (!(stat("/tmp/planning_stats", &stats_path) == 0 && S_ISDIR(stats_path.
+          st_mode))) {
+      // the directory does not exist.
+      ROS_INFO("Creating directory /tmp/planning_stats for dumping stats.");
+      mkdir("/tmp/planning_stats/", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    }
     time_t now = time(0);
     m_current_path << "/tmp/planning_stats/" << time(&now) <<"/";
     int status;

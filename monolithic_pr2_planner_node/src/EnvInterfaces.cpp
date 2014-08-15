@@ -24,12 +24,12 @@ using namespace KDL;
 EnvInterfaces::EnvInterfaces(boost::shared_ptr<monolithic_pr2_planner::Environment> env, ros::NodeHandle nh) :
     m_nodehandle(nh),
     m_env(env), m_collision_space_interface(new CollisionSpaceInterface(env->getCollisionSpace(), env->getHeuristicMgr())),
-    m_generator(new StartGoalGenerator(env->getCollisionSpace())), 
-    m_rrt(new OMPLPR2Planner(env->getCollisionSpace(), RRT)),
-    m_prm(new OMPLPR2Planner(env->getCollisionSpace(), PRM_P)),
-    m_rrtstar(new OMPLPR2Planner(env->getCollisionSpace(), RRTSTAR)),
-    m_rrtstar_first_sol(new OMPLPR2Planner(env->getCollisionSpace(),
-        RRTSTARFIRSTSOL))
+    m_generator(new StartGoalGenerator(env->getCollisionSpace()))
+    // m_rrt(new OMPLPR2Planner(env->getCollisionSpace(), RRT)),
+    // m_prm(new OMPLPR2Planner(env->getCollisionSpace(), PRM_P)),
+    // m_rrtstar(new OMPLPR2Planner(env->getCollisionSpace(), RRTSTAR)),
+    // m_rrtstar_first_sol(new OMPLPR2Planner(env->getCollisionSpace(),
+        // RRTSTARFIRSTSOL))
 {
 
   m_collision_space_interface->mutex = &mutex;
@@ -357,34 +357,34 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
 
 
     // std::cin.get();
-    double object_dim_x = 0.5;
-    double object_dim_y = 1.0;
-    double object_dim_z = 0.1;
-    KDL::Vector req_obj_vector = KDL::Vector(
-        req.rarm_object.pose.position.x - object_dim_x/2 - 0.1,
-        req.rarm_object.pose.position.y,
-        req.rarm_object.pose.position.z);
-    KDL::Rotation req_obj_rot = KDL::Rotation::Quaternion(
-        req.rarm_object.pose.orientation.x,
-        req.rarm_object.pose.orientation.y,
-        req.rarm_object.pose.orientation.z,
-        req.rarm_object.pose.orientation.w);
-    KDL::Frame gripper_wrt_obj(req_obj_rot, req_obj_vector);
-    KDL::Frame obj_wrt_gripper = gripper_wrt_obj.Inverse();
+    // double object_dim_x = 0.5;
+    // double object_dim_y = 1.0;
+    // double object_dim_z = 0.1;
+    // KDL::Vector req_obj_vector = KDL::Vector(
+    //     req.rarm_object.pose.position.x - object_dim_x/2 - 0.1,
+    //     req.rarm_object.pose.position.y,
+    //     req.rarm_object.pose.position.z);
+    // KDL::Rotation req_obj_rot = KDL::Rotation::Quaternion(
+    //     req.rarm_object.pose.orientation.x,
+    //     req.rarm_object.pose.orientation.y,
+    //     req.rarm_object.pose.orientation.z,
+    //     req.rarm_object.pose.orientation.w);
+    // KDL::Frame gripper_wrt_obj(req_obj_rot, req_obj_vector);
+    // KDL::Frame obj_wrt_gripper = gripper_wrt_obj.Inverse();
 
-    geometry_msgs::Pose attached_object_pose;
-    attached_object_pose.position.x = obj_wrt_gripper.p.x();
-    attached_object_pose.position.y = obj_wrt_gripper.p.y();
-    attached_object_pose.position.z = obj_wrt_gripper.p.z();
+    // geometry_msgs::Pose attached_object_pose;
+    // attached_object_pose.position.x = obj_wrt_gripper.p.x();
+    // attached_object_pose.position.y = obj_wrt_gripper.p.y();
+    // attached_object_pose.position.z = obj_wrt_gripper.p.z();
     
-    KDL::Rotation rot = obj_wrt_gripper.M;
+    // KDL::Rotation rot = obj_wrt_gripper.M;
     
-    double qx, qy, qz, qw;
-    rot.GetQuaternion(qx, qy, qz, qw);
-    attached_object_pose.orientation.x = qx;
-    attached_object_pose.orientation.y = qy;
-    attached_object_pose.orientation.z = qz;
-    attached_object_pose.orientation.w = qw;
+    // double qx, qy, qz, qw;
+    // rot.GetQuaternion(qx, qy, qz, qw);
+    // attached_object_pose.orientation.x = qx;
+    // attached_object_pose.orientation.y = qy;
+    // attached_object_pose.orientation.z = qz;
+    // attached_object_pose.orientation.w = qw;
 
     //m_env->getCollisionSpace()->attachCube("picture", "r_wrist_roll_link",
       //  attached_object_pose, object_dim_x, object_dim_y, object_dim_z);
@@ -401,8 +401,8 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
     //     return false;
     // }
     bool forward_search = true;
-    // isPlanFound = runMHAPlanner(monolithic_pr2_planner::T_SMHA, "smha_", req, res, search_request, counter);
-    isPlanFound = runMHAPlanner(monolithic_pr2_planner::T_IMHA, "imha_", req, res, search_request, counter);
+    isPlanFound = runMHAPlanner(monolithic_pr2_planner::T_SMHA, "smha_", req, res, search_request, counter);
+    // isPlanFound = runMHAPlanner(monolithic_pr2_planner::T_IMHA, "imha_", req, res, search_request, counter);
     // runMHAPlanner(monolithic_pr2_planner::T_MPWA, "mpwa_", req, res, search_request, counter);
     // runMHAPlanner(monolithic_pr2_planner::T_MHG_REEX, "mhg_reex_",
     //     req, res, search_request, counter);
@@ -505,34 +505,34 @@ bool EnvInterfaces::demoCallback(GetMobileArmPlan::Request &req,
     search_request->obj_start = req.start;
 
     // std::cin.get();
-    double object_dim_x = 0.5;
-    double object_dim_y = 1.0;
-    double object_dim_z = 0.1;
-    KDL::Vector req_obj_vector = KDL::Vector(
-        req.rarm_object.pose.position.x - object_dim_x/2 - 0.1,
-        req.rarm_object.pose.position.y,
-        req.rarm_object.pose.position.z);
-    KDL::Rotation req_obj_rot = KDL::Rotation::Quaternion(
-        req.rarm_object.pose.orientation.x,
-        req.rarm_object.pose.orientation.y,
-        req.rarm_object.pose.orientation.z,
-        req.rarm_object.pose.orientation.w);
-    KDL::Frame gripper_wrt_obj(req_obj_rot, req_obj_vector);
-    KDL::Frame obj_wrt_gripper = gripper_wrt_obj.Inverse();
+    // double object_dim_x = 0.5;
+    // double object_dim_y = 1.0;
+    // double object_dim_z = 0.1;
+    // KDL::Vector req_obj_vector = KDL::Vector(
+    //     req.rarm_object.pose.position.x - object_dim_x/2 - 0.1,
+    //     req.rarm_object.pose.position.y,
+    //     req.rarm_object.pose.position.z);
+    // KDL::Rotation req_obj_rot = KDL::Rotation::Quaternion(
+    //     req.rarm_object.pose.orientation.x,
+    //     req.rarm_object.pose.orientation.y,
+    //     req.rarm_object.pose.orientation.z,
+    //     req.rarm_object.pose.orientation.w);
+    // KDL::Frame gripper_wrt_obj(req_obj_rot, req_obj_vector);
+    // KDL::Frame obj_wrt_gripper = gripper_wrt_obj.Inverse();
 
-    geometry_msgs::Pose attached_object_pose;
-    attached_object_pose.position.x = obj_wrt_gripper.p.x();
-    attached_object_pose.position.y = obj_wrt_gripper.p.y();
-    attached_object_pose.position.z = obj_wrt_gripper.p.z();
+    // geometry_msgs::Pose attached_object_pose;
+    // attached_object_pose.position.x = obj_wrt_gripper.p.x();
+    // attached_object_pose.position.y = obj_wrt_gripper.p.y();
+    // attached_object_pose.position.z = obj_wrt_gripper.p.z();
     
-    KDL::Rotation rot = obj_wrt_gripper.M;
+    // KDL::Rotation rot = obj_wrt_gripper.M;
     
-    double qx, qy, qz, qw;
-    rot.GetQuaternion(qx, qy, qz, qw);
-    attached_object_pose.orientation.x = qx;
-    attached_object_pose.orientation.y = qy;
-    attached_object_pose.orientation.z = qz;
-    attached_object_pose.orientation.w = qw;
+    // double qx, qy, qz, qw;
+    // rot.GetQuaternion(qx, qy, qz, qw);
+    // attached_object_pose.orientation.x = qx;
+    // attached_object_pose.orientation.y = qy;
+    // attached_object_pose.orientation.z = qz;
+    // attached_object_pose.orientation.w = qw;
 
     //m_env->getCollisionSpace()->attachCube("picture", "r_wrist_roll_link",
       //  attached_object_pose, object_dim_x, object_dim_y, object_dim_z);

@@ -333,6 +333,8 @@ bool Environment::setStartGoal(SearchRequestPtr search_request,
     ContObjectState obj_state = start_pose.getObjectStateRelMap();
     obj_state.printToInfo(SEARCH_LOG);
 
+    m_edges.clear();
+
     if (!search_request->isValid(m_cspace_mgr)){
         obj_state.printToInfo(SEARCH_LOG);
         start_pose.visualize();

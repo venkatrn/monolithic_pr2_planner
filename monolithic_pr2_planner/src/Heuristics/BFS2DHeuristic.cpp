@@ -101,6 +101,7 @@ int BFS2DHeuristic::getGoalHeuristic(GraphStatePtr state){
 }
 
 void BFS2DHeuristic::visualizeCenter(int x, int y) {
+    return; //MIKE: disabled this visualization because it makes my rviz cry
     ROS_DEBUG_NAMED(HEUR_LOG, "[BFS2DHeuristic] Visualizing %d %d,", x, y);
     vector <vector <double> > startpoint;
     std::vector <double> color(4, 1);

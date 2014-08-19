@@ -34,6 +34,7 @@ void Environment::reset() {
     m_heur_mgr->reset();
     // m_heur_mgr->setCollisionSpaceMgr(m_cspace_mgr);
     m_hash_mgr.reset(new HashManager(&StateID2IndexMapping));
+    m_edges.clear();
 
     // Fetch params again, in case they're being modified between calls.
     // m_param_catalog.fetch(m_nodehandle);
@@ -332,6 +333,8 @@ bool Environment::setStartGoal(SearchRequestPtr search_request,
                          search_request->m_params->left_arm_start);
     ContObjectState obj_state = start_pose.getObjectStateRelMap();
     obj_state.printToInfo(SEARCH_LOG);
+
+    m_edges.clear();
 
     if (!search_request->isValid(m_cspace_mgr)){
         obj_state.printToInfo(SEARCH_LOG);

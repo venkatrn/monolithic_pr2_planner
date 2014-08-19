@@ -34,6 +34,7 @@ void Environment::reset() {
     m_heur_mgr->reset();
     // m_heur_mgr->setCollisionSpaceMgr(m_cspace_mgr);
     m_hash_mgr.reset(new HashManager(&StateID2IndexMapping));
+    m_edges.clear();
 
     // Fetch params again, in case they're being modified between calls.
     // m_param_catalog.fetch(m_nodehandle);

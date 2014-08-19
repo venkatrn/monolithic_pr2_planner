@@ -15,8 +15,10 @@ int main(int argc, char** argv){
   monolithic_pr2_planner_node::GetMobileArmPlan::Request req;
   monolithic_pr2_planner_node::GetMobileArmPlan::Response res;
 
-  req.planner_type = mha_planner::MetaSearchType::META_A_STAR;
-  req.meta_search_type = mha_planner::PlannerType::IMHA;
+  req.planner_type = mha_planner::PlannerType::SMHA;
+  //req.meta_search_type = mha_planner::MetaSearchType::DTS;
+  //req.meta_search_type = mha_planner::MetaSearchType::META_A_STAR;
+  req.meta_search_type = mha_planner::MetaSearchType::ROUND_ROBIN;
 
   //planner parameters
   req.initial_eps = 2.0;

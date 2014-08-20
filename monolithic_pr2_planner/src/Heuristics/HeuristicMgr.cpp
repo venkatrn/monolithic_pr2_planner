@@ -186,11 +186,11 @@ void HeuristicMgr::initializeHeuristics() {
         add2DHeur("admissible_base", cost_multiplier, radius_around_goal);
     }
 
-    // {
-    //     int cost_multiplier = 1;
-    //     KDL::Rotation rot = KDL::Rotation::RPY(M_PI/2, 0, 0);
-    //     addEndEffOnlyRotationHeur("endeff_rot_vert", rot, cost_multiplier);
-    // }
+    {
+        int cost_multiplier = 1;
+        KDL::Rotation rot = KDL::Rotation::RPY(M_PI/2, 0, 0);
+        addEndEffOnlyRotationHeur("endeff_rot_vert", rot, cost_multiplier);
+    }
 
     // {
     //     int cost_multiplier = 1;

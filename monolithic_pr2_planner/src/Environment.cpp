@@ -278,8 +278,9 @@ void Environment::GetLazySuccs(int sourceStateID, vector<int>* succIDs,
           m_goal->storeAsSolnState(successor);
           //ROS_DEBUG_NAMED(SEARCH_LOG, "Found potential goal at state %d %d", successor->id(),
             //  mprim->cost());
-          ROS_INFO("Found potential goal at state %d %d", successor->id(),
-              mprim->cost());
+          ROS_INFO("Found potential goal at: source->id %d, successor->id %d,"
+            "cost: %d, mprim type: %d ", source_state->id(), successor->id(),
+              mprim->cost(), mprim->motion_type());
           succIDs->push_back(GOAL_STATE);
           key = Edge(sourceStateID, GOAL_STATE);
         } else {

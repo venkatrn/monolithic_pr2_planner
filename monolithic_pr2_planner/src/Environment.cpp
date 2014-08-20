@@ -72,9 +72,6 @@ int Environment::GetGoalHeuristic(int stateID) {
 }
 
 int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
-    // This vector is of size NUM_MHA_BASE_HEUR + 2
-    // Eg, if NUM_MHA_BASE_HEUR is 2, that means there are 2 additional base
-    // heuristics. So, the values will be endEff, Base, Base1, Base2
     GraphStatePtr successor = m_hash_mgr->getGraphState(stateID);
     if(m_goal->isSatisfiedBy(successor) || stateID == GOAL_STATE){
         return 0;
@@ -102,7 +99,7 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
                         0.5f*(*values).at("endeff_rot_goal"));
                 case 3:
                     return static_cast<int>(0.5f*(*values).at("base_with_rot_door") +
-                        0.5f*(*values).at("endeff_rot_vert"));
+                        0.5f*(*values).at("endeff_rot_goal"));
             }
             break;
         case T_IMHA:
@@ -114,7 +111,7 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
                 case 2:  // Base1, Base2 heur
                     return static_cast<int>(0.5f*(*values).at("base_with_rot_0") + 0.5f*(*values).at("endeff_rot_goal"));
                 case 3:
-                    return static_cast<int>(0.5f*(*values).at("base_with_rot_door") + 0.5f*(*values).at("endeff_rot_vert"));
+                    return static_cast<int>(0.5f*(*values).at("base_with_rot_door") + 0.5f*(*values).at("endeff_rot_goal"));
             }
             break;
         case T_MPWA:

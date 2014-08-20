@@ -186,11 +186,11 @@ void HeuristicMgr::initializeHeuristics() {
         add2DHeur("admissible_base", cost_multiplier, radius_around_goal);
     }
 
-    {
-        int cost_multiplier = 1;
-        KDL::Rotation rot = KDL::Rotation::RPY(M_PI/2, 0, 0);
-        addEndEffOnlyRotationHeur("endeff_rot_vert", rot, cost_multiplier);
-    }
+    // {
+    //     int cost_multiplier = 1;
+    //     KDL::Rotation rot = KDL::Rotation::RPY(M_PI/2, 0, 0);
+    //     addEndEffOnlyRotationHeur("endeff_rot_vert", rot, cost_multiplier);
+    // }
 
     // {
     //     int cost_multiplier = 1;
@@ -458,21 +458,6 @@ bool HeuristicMgr::isValidIKForGoalState(int g_x, int g_y){
         return false;
 }
 
-// RightContArmState HeuristicMgr::getRightArmIKSol(int g_x, int g_y){
-//     RobotPosePtr final_pose;
-//     bool ik_success = checkIKAtPose(g_x, g_y, final_pose);
-//     bool collision_free = false;
-//     if(ik_success)
-//         if(m_cspace_mgr->isValid(*final_pose))
-//             collision_free = true;
-//     if(collision_free)
-//         return final_pose->right_arm();
-//     else {
-//         return RightContArmState();
-//     }
-// }
-
-
 void HeuristicMgr::initNewMHABaseHeur(std::string name, int g_x, int g_y, const int cost_multiplier,
     double desired_orientation){
     DiscObjectState state = m_goal.getObjectState(); 
@@ -597,8 +582,33 @@ void HeuristicMgr::initializeMHAHeuristics(const int cost_multiplier){
         m_heuristics[m_heuristic_map["endeff_rot_goal"]]->setGoal(m_goal);
     }
 
-    ROS_DEBUG_NAMED(HEUR_LOG, "--------------------");
-    ROS_DEBUG_NAMED(HEUR_LOG, "Size of m_heuristics : %d", static_cast<int>
-        (m_heuristics.size()));
-    ROS_DEBUG_NAMED(HEUR_LOG, "--------------------");
+    printSummaryToInfo(HEUR_LOG);
+}
+
+void HeuristicMgr::printSummaryToInfo(char* logger){
+    ROS_INFO_NAMED(logger, "--------------------------");
+    ROS_INFO_NAMED(logger, "Summary of heuristics");
+    ROS_INFO_NAMED(logger, "--------------------------");
+
+    ROS_INFO_NAMED(logger, "Size of m_heuristics: %d", static_cast<int>(
+        m_heuristic_map.size()));
+    ROS_INFO_NAMED(logger, "What they are : ");
+    for (auto& heuristic: m_heuristic_map){
+        ROS_INFO_NAMED(logger, "%s -- id %d",
+            heuristic.first.c_str(), heuristic.second);
+    }
+}
+
+void HeuristicMgr::printSummaryToDebug(char* logger){
+    ROS_DEBUG_NAMED(logger, "--------------------------");
+    ROS_DEBUG_NAMED(logger, "Summary of heuristics");
+    ROS_DEBUG_NAMED(logger, "--------------------------");
+
+    ROS_DEBUG_NAMED(logger, "Size of m_heuristics: %d", static_cast<int>(
+        m_heuristic_map.size()));
+    ROS_DEBUG_NAMED(logger, "What they are : ");
+    for (auto& heuristic: m_heuristic_map){
+        ROS_DEBUG_NAMED(logger, "%s -- id %d",
+            heuristic.first.c_str(), heuristic.second);
+    }
 }

@@ -89,6 +89,10 @@ namespace monolithic_pr2_planner {
             void reset();
             void setPlannerType(int planner_type);
 
+            // prints a complete summary of all the heuristics.
+            void printSummaryToInfo(char* logger);
+            void printSummaryToDebug(char* logger);
+
             // int numberOfMHAHeuristics(){ return m_num_mha_heuristics;};
         inline void setCollisionSpaceMgr(CSpaceMgrPtr cspace_mgr){ m_cspace_mgr = cspace_mgr;};
  

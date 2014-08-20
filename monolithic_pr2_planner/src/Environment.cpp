@@ -82,6 +82,19 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
     for (auto& heur : (*values)) {
         ROS_DEBUG_NAMED(HEUR_LOG, "%s : %d", heur.first.c_str(), heur.second);
     }
+
+    switch (heuristic_id) {
+      case 0:  // Anchor
+        return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
+      case 1:  // ARA Heur 
+        return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
+      case 2:  // Base1, Base2 heur
+        return static_cast<int>(0.5f*(*values).at("base_with_rot_0") + 0.5f*(*values).at("endeff_rot_goal"));
+      case 3:
+        return static_cast<int>(0.5f*(*values).at("base_with_rot_door") + 0.5f*(*values).at("endeff_rot_vert"));
+    }
+
+    /*
     switch (m_planner_type) {
         case T_SMHA:
         case T_MHG_REEX:
@@ -133,6 +146,7 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
             }
             break;
     }
+    */
 
     // Post-paper
     // switch(heuristic_id){

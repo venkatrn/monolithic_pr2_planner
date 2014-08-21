@@ -75,7 +75,7 @@ void addCuboid(pcl::PointCloud<pcl::PointXYZ>::Ptr pclCloud, double X, double Y,
 }
 
 void addRandomObstacles(pcl::PointCloud<pcl::PointXYZ>::Ptr pclCloud, int
-    numSurfaces, int numObstaclesPerSurface){
+    numSurfaces, int numObstaclesPerSurface, int seed){
     ros::NodeHandle nh;
 
     // Add the surface - these are generated only within these bounds.
@@ -111,10 +111,10 @@ void addRandomObstacles(pcl::PointCloud<pcl::PointXYZ>::Ptr pclCloud, int
 
     nh.setParam("/monolithic_pr2_planner_node/experiments/number_of_regions",
         numSurfaces);
-    
-    int seed = clock();
+
     nh.setParam("/monolithic_pr2_planner_node/experiments/seed", seed);
     srand(seed);
+
     for (int i = 0, j = 0; i < numSurfaces; ++i, j+=2){
 
         // Generate position
@@ -203,6 +203,7 @@ void addStartStateRegionToParamServer(){
 
 vector<Eigen::Vector3d> getVoxelsFromFile(std::string filename){
     ros::NodeHandle nh;
+    ros::NodeHandle ph("~");
     ros::Publisher pcl_pub = nh.advertise<sensor_msgs::PointCloud2>("pcl_environment", 1);
     path p(filename);
     if (!exists(p)){
@@ -283,7 +284,51 @@ vector<Eigen::Vector3d> getVoxelsFromFile(std::string filename){
     addCuboid(pclCloud, 7.8, 2.3, 0, 0.4, 0.4, 0.8, true);
     
 
-    // addRandomObstacles(pclCloud, 2, 5);
+    bool addTableObstacles;
+    ph.param("addTableObstacles",addTableObstacles,false);
+   
+    if(addTableObstacles){
+      bool randomizeTableObstacles;
+      ph.param("randomizeTableObstacles",randomizeTableObstacles,true);
+      if(!randomizeTableObstacles){
+        string pathToTableObstacleParamFile;
+        ph.param<string>("pathToTableObstacleParamFile",pathToTableObstacleParamFile,"");
+        if(pathToTableObstacleParamFile.empty()){
+          ROS_ERROR("rosparam randomizeTableObstacles was set to false, but then pathToTableObstacleParamFile was not set!");
+          exit(1);
+        }
+        FILE* fin = fopen(pathToTableObstacleParamFile.c_str(), "r");
+        if(!fin){
+          ROS_ERROR("pathToTableObstacleParamFile did not lead to a file");
+          exit(1);
+        }
+        int seed, numSurfaces, numObstaclesPerSurface;
+        bool success = true;
+        success &= fscanf(fin,"randomSeed: %d\n",&seed) == 1;
+        success &= fscanf(fin,"numSurfaces: %d\n",&numSurfaces) == 1;
+        success &= fscanf(fin,"numObstaclesPerSurface: %d\n",&numObstaclesPerSurface) == 1;
+        if(!success){
+          ROS_ERROR("table obstacle param file formatted incorrectly");
+          exit(1);
+        }
+        addRandomObstacles(pclCloud, numSurfaces, numObstaclesPerSurface, seed);
+        ROS_WARN("loaded environment from file (seed=%d) %d surfaces and %d obstacles on each",seed,numSurfaces,numObstaclesPerSurface);
+      }
+      else{
+        int numSurfaces = 2;
+        int numObstaclesPerSurface = 5;
+        int seed = clock();
+        ROS_WARN("generating random environment (seed=%d) with %d surfaces and %d obstacles on each",seed,numSurfaces,numObstaclesPerSurface);
+        addRandomObstacles(pclCloud, numSurfaces, numObstaclesPerSurface, seed);
+        ROS_WARN("writing tableObstacles.yaml file!");
+        FILE* fout = fopen("tableObstacles.yaml", "w");
+        fprintf(fout,"randomSeed: %d\n",seed);
+        fprintf(fout,"numSurfaces: %d\n",numSurfaces);
+        fprintf(fout,"numObstaclesPerSurface: %d\n",numObstaclesPerSurface);
+        fclose(fout);
+      }
+    }
+
     addStartStateRegionToParamServer();
 
     sensor_msgs::PointCloud2 pc;

@@ -239,9 +239,11 @@ void ControlPlanner::processFeedback(const visualization_msgs::InteractiveMarker
       r_gripper_marker.pose.position.x = fk_pose[0]*cos(base[2])-fk_pose[1]*sin(base[2])+feedback->pose.position.x;
       r_gripper_marker.pose.position.y = fk_pose[0]*sin(base[2])+fk_pose[1]*cos(base[2])+feedback->pose.position.y;
       r_gripper_marker.pose.position.z = fk_pose[2];
-      tf::Quaternion q_hand(fk_pose[5],fk_pose[4],fk_pose[3]);
-      tf::Quaternion q_rot(base[2],0,0);
-      q_hand = q_hand * q_rot;
+      tf::Quaternion q_hand;
+      q_hand.setRPY(fk_pose[3], fk_pose[4], fk_pose[5]);
+      tf::Quaternion q_rot;
+      q_rot.setRPY(0.0, 0.0, base[2]);
+      q_hand = q_rot * q_hand;
       r_gripper_marker.pose.orientation.w = q_hand.getW();
       r_gripper_marker.pose.orientation.x = q_hand.getX();
       r_gripper_marker.pose.orientation.y = q_hand.getY();

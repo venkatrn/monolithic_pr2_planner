@@ -16,6 +16,7 @@
 #include <monolithic_pr2_planner/StatsWriter.h>
 #include <monolithic_pr2_planner/SearchRequest.h>
 #include <monolithic_pr2_planner/PathPostProcessor.h>
+#include <std_srvs/Empty.h>
 
 #include <monolithic_pr2_planner_node/ompl_pr2_planner.h>
 #include <monolithic_pr2_planner/ExperimentFramework/randomStartGoalGenerator.h>
@@ -38,6 +39,7 @@ namespace monolithic_pr2_planner_node {
                                   GetMobileArmPlan::Response &res);
             void bindPlanPathToEnv(std::string service_name);
             void bindExperimentToEnv(std::string service_name);
+            void bindWriteExperimentToEnv(string service_name);
             void bindDemoToEnv(std::string service_name);
             bool bindCollisionSpaceToTopic(std::string topic_name);
             void bindNavMapToTopic(std::string topic_name);
@@ -51,6 +53,7 @@ namespace monolithic_pr2_planner_node {
                               int solution_cost,
                               size_t solution_size,
                               double total_planning_time);
+            bool GenerateExperimentFile(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
             bool experimentCallback(GetMobileArmPlan::Request &req,
                                     GetMobileArmPlan::Response &res);
             bool demoCallback(GetMobileArmPlan::Request &req,
@@ -81,6 +84,7 @@ namespace monolithic_pr2_planner_node {
             std::unique_ptr<CollisionSpaceInterface> m_collision_space_interface;
             ros::ServiceServer m_plan_service;
             ros::ServiceServer m_experiment_service;
+            ros::ServiceServer m_write_experiments_service;
             ros::ServiceServer m_demo_service;
             std::unique_ptr<SBPLPlanner> m_ara_planner;
             std::unique_ptr<MHAPlanner> m_mha_planner;

@@ -13,6 +13,7 @@ Node::Node(ros::NodeHandle nh) : m_env(new Environment(nh)), m_env_interface(m_e
     // m_env_interface.bindNavMapToTopic("/map");
     m_env_interface.bindCollisionSpaceToTopic("collision_map_out");
     m_env_interface.bindExperimentToEnv("/sbpl_planning/run_simulation");
+    m_env_interface.bindWriteExperimentToEnv("/sbpl_planning/generate_experiments_file");
     m_env_interface.bindDemoToEnv("/sbpl_planning/run_demo");
 }
 

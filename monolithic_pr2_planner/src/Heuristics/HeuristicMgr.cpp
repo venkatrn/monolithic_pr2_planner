@@ -182,7 +182,7 @@ void HeuristicMgr::initializeHeuristics() {
     // Already in mm.
     {
         int cost_multiplier = 1;
-        double radius_around_goal = 0.75;
+        double radius_around_goal = 0.6; //0.75;
         add2DHeur("admissible_base", cost_multiplier, radius_around_goal);
     }
 

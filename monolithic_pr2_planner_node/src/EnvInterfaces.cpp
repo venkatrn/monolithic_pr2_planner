@@ -70,10 +70,116 @@ void EnvInterfaces::bindExperimentToEnv(string service_name){
                                                          this);
 }
 
+void EnvInterfaces::bindWriteExperimentToEnv(string service_name){
+    m_write_experiments_service = m_nodehandle.advertiseService(service_name, 
+        &EnvInterfaces::GenerateExperimentFile,
+        this);
+}
+
 void EnvInterfaces::bindDemoToEnv(string service_name){
     m_demo_service = m_nodehandle.advertiseService(service_name, 
                                                 &EnvInterfaces::demoCallback,
                                                 this);
+}
+
+//making experiments:
+//launch file brings up stlToOctomap with rosparams that tell it to randomize environment
+//addTableObstacles
+//randomizeTableObstacles - if this is false we have to provide the next one (when true we have to write configuration to file)
+//pathToTableObstacleParamFile (this file has num_surfaces, num_obs, and seed)
+//
+//service call is made to this function with the number of trials to make
+//this guy makes random trials with checks for rrt-connect feasibility
+//it writes the start/goal pairs to file (in the yaml format)
+//
+//////////
+//
+//running experiments:
+//stlToOctomap is launched with rosparams (and table config file) to re-create the env
+//runTests is run with the yaml file
+bool EnvInterfaces::GenerateExperimentFile(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res){
+  ROS_INFO("generating trials!");
+  vector<pair<RobotState, RobotState> > start_goal_pairs;
+  RobotState::setPlanningMode(PlanningModes::RIGHT_ARM_MOBILE);
+  int number_of_trials = 10;
+  m_generator->initializeRegions();//reads from ros params set by stlToOctomap
+  m_generator->generateUniformPairs(number_of_trials, start_goal_pairs);
+
+  int test_num = 0;
+  FILE* fout = fopen("fbp_tests.yaml","w");
+  fprintf(fout, "experiments:\n\n");
+  for (auto& start_goal : start_goal_pairs){
+    geometry_msgs::Quaternion start_obj_q;
+    leatherman::rpyToQuatMsg(start_goal.first.getObjectStateRelMap().roll(),
+        start_goal.first.getObjectStateRelMap().pitch(),
+        start_goal.first.getObjectStateRelMap().yaw(),
+        start_obj_q);
+    geometry_msgs::Quaternion goal_obj_q;
+    leatherman::rpyToQuatMsg(start_goal.second.getObjectStateRelMap().roll(),
+        start_goal.second.getObjectStateRelMap().pitch(),
+        start_goal.second.getObjectStateRelMap().yaw(),
+        goal_obj_q);
+
+    fprintf(fout,"  - test: test_%d\n", test_num);
+    fprintf(fout,"    start:\n");
+    fprintf(fout,"      object_xyz_wxyz: %f %f %f %f %f %f %f\n",
+        start_goal.first.getObjectStateRelMap().x(),
+        start_goal.first.getObjectStateRelMap().y(),
+        start_goal.first.getObjectStateRelMap().z(),
+        start_obj_q.w, start_obj_q.x, start_obj_q.y, start_obj_q.z);
+    fprintf(fout,"      base_xyzyaw: %f %f %f %f\n",
+        start_goal.first.getContBaseState().x(),
+        start_goal.first.getContBaseState().y(),
+        start_goal.first.getContBaseState().z(),
+        start_goal.first.getContBaseState().theta());
+    fprintf(fout,"      rarm: %f %f %f %f %f %f %f\n",
+        start_goal.first.right_arm().getShoulderPanAngle(),
+        start_goal.first.right_arm().getShoulderLiftAngle(),
+        start_goal.first.right_arm().getUpperArmRollAngle(),
+        start_goal.first.right_arm().getElbowFlexAngle(),
+        start_goal.first.right_arm().getForearmRollAngle(),
+        start_goal.first.right_arm().getWristFlexAngle(),
+        start_goal.first.right_arm().getWristRollAngle());
+    fprintf(fout,"      larm: %f %f %f %f %f %f %f\n",
+        start_goal.first.left_arm().getShoulderPanAngle(),
+        start_goal.first.left_arm().getShoulderLiftAngle(),
+        start_goal.first.left_arm().getUpperArmRollAngle(),
+        start_goal.first.left_arm().getElbowFlexAngle(),
+        start_goal.first.left_arm().getForearmRollAngle(),
+        start_goal.first.left_arm().getWristFlexAngle(),
+        start_goal.first.left_arm().getWristRollAngle());
+    fprintf(fout,"    goal:\n");
+    fprintf(fout,"      object_xyz_wxyz: %f %f %f %f %f %f %f\n",
+        start_goal.second.getObjectStateRelMap().x(),
+        start_goal.second.getObjectStateRelMap().y(),
+        start_goal.second.getObjectStateRelMap().z(),
+        start_obj_q.w, start_obj_q.x, start_obj_q.y, start_obj_q.z);
+    fprintf(fout,"      base_xyzyaw: %f %f %f %f\n",
+        start_goal.second.getContBaseState().x(),
+        start_goal.second.getContBaseState().y(),
+        start_goal.second.getContBaseState().z(),
+        start_goal.second.getContBaseState().theta());
+    fprintf(fout,"      rarm: %f %f %f %f %f %f %f\n",
+        start_goal.second.right_arm().getShoulderPanAngle(),
+        start_goal.second.right_arm().getShoulderLiftAngle(),
+        start_goal.second.right_arm().getUpperArmRollAngle(),
+        start_goal.second.right_arm().getElbowFlexAngle(),
+        start_goal.second.right_arm().getForearmRollAngle(),
+        start_goal.second.right_arm().getWristFlexAngle(),
+        start_goal.second.right_arm().getWristRollAngle());
+    fprintf(fout,"      larm: %f %f %f %f %f %f %f\n",
+        start_goal.second.left_arm().getShoulderPanAngle(),
+        start_goal.second.left_arm().getShoulderLiftAngle(),
+        start_goal.second.left_arm().getUpperArmRollAngle(),
+        start_goal.second.left_arm().getElbowFlexAngle(),
+        start_goal.second.left_arm().getForearmRollAngle(),
+        start_goal.second.left_arm().getWristFlexAngle(),
+        start_goal.second.left_arm().getWristRollAngle());
+    fprintf(fout,"\n");
+    test_num++;
+  }
+  fclose(fout);
+  return true;
 }
 
 /*! \brief this is callback is purely for simulation purposes

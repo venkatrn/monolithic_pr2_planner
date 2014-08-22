@@ -4,9 +4,13 @@
 #include <monolithic_pr2_planner_node/fbp_stat_writer.h>
 #include <sbpl/planners/mha_planner.h>
 
+void printUsage(){
+  printf("usage: runTests [imha | smha] [rr | ma | dts] path_to_test_file.yaml\n");
+}
+
 int main(int argc, char** argv){
-  if(argc < 2){
-    printf("provide a path to a test file!\n");
+  if(argc != 4){
+    printUsage();
     return 1;
   }
   ros::init(argc,argv,"run_tests");
@@ -15,10 +19,40 @@ int main(int argc, char** argv){
   monolithic_pr2_planner_node::GetMobileArmPlan::Request req;
   monolithic_pr2_planner_node::GetMobileArmPlan::Response res;
 
-  req.planner_type = mha_planner::PlannerType::SMHA;
-  //req.meta_search_type = mha_planner::MetaSearchType::DTS;
-  //req.meta_search_type = mha_planner::MetaSearchType::META_A_STAR;
-  req.meta_search_type = mha_planner::MetaSearchType::ROUND_ROBIN;
+  bool gotFilename = false;
+  bool gotPlannerType = false;
+  bool gotMetaType = false;
+  char* filename;
+  for(int i=1; i<4; i++){
+    if(strcmp(argv[i],"imha")==0){
+      req.planner_type = mha_planner::PlannerType::IMHA;
+      gotPlannerType = true;
+    }
+    else if(strcmp(argv[i],"smha")==0){
+      req.planner_type = mha_planner::PlannerType::SMHA;
+      gotPlannerType = true;
+    }
+    else if(strcmp(argv[i],"rr")==0){
+      req.meta_search_type = mha_planner::MetaSearchType::ROUND_ROBIN;
+      gotMetaType = true;
+    }
+    else if(strcmp(argv[i],"ma")==0){
+      req.meta_search_type = mha_planner::MetaSearchType::META_A_STAR;
+      gotMetaType = true;
+    }
+    else if(strcmp(argv[i],"dts")==0){
+      req.meta_search_type = mha_planner::MetaSearchType::DTS;
+      gotMetaType = true;
+    }
+    else{
+      filename = argv[i];
+      gotFilename = true;
+    }
+  }
+  if(!gotFilename || !gotPlannerType || !gotMetaType){
+    printUsage();
+    return 1;
+  }
 
   //planner parameters
   req.initial_eps = 2.0;
@@ -59,7 +93,7 @@ int main(int argc, char** argv){
   ros::ServiceClient planner = ros::NodeHandle().serviceClient<monolithic_pr2_planner_node::GetMobileArmPlan>("/sbpl_planning/plan_path", true);
   sleep(1);
 
-  FILE* fin = fopen(argv[1],"r");
+  FILE* fin = fopen(filename,"r");
   if(!fin){
     printf("file %s does not exist\n", argv[1]);
     return 1;

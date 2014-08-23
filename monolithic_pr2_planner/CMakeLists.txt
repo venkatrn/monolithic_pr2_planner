@@ -56,7 +56,9 @@ rosbuild_add_library(monolithic_pr2_planner src/StateReps/RobotState.cpp
 
                                             src/Heuristics/BFS3DHeuristic.cpp
                                             src/Heuristics/BFS2DHeuristic.cpp
+                                            src/Heuristics/BFS2DRotFootprintHeuristic.cpp
                                             src/Heuristics/EndEffectorHeuristic.cpp
+                                            src/Heuristics/EndEffLocalHeuristic.cpp
                                             src/Heuristics/BaseWithRotationHeuristic.cpp
                                             src/Heuristics/AbstractHeuristic.cpp
                                             src/Heuristics/ArmAnglesHeuristic.cpp

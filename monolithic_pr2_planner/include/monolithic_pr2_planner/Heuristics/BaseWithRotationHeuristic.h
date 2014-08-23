@@ -14,14 +14,14 @@ namespace monolithic_pr2_planner {
             void setGoal(GoalState& state);
             void setDesiredOrientation(KDL::Rotation desired_orientation);
 
-            void update2DHeuristicMap(const std::vector<signed char>& data);
-            void loadMap(const std::vector<signed char>& data);
+            void update2DHeuristicMap(const std::vector<unsigned char>& data);
+            void loadMap(const std::vector<unsigned char>& data);
 
             int getGoalHeuristic(GraphStatePtr state);
 
             static void visualizeLineToOriginalGoal(int x0, int y0, int x1, int y1,
                 double res);
-        private:
+        protected:
             std::unique_ptr<SBPL2DGridSearch> m_gridsearch;
             unsigned int m_size_col;
             unsigned int m_size_row;

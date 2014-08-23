@@ -23,7 +23,7 @@ namespace monolithic_pr2_planner {
             virtual void update3DHeuristicMap() {};
 
             // For 2D heuristics at the base that need only the map - this function has to be implemented for the heuristic to receive the call for map update.
-            virtual void update2DHeuristicMap(const std::vector<signed char>& data) {};
+            virtual void update2DHeuristicMap(const std::vector<unsigned char>& data) {};
 
             // Set the cost_multiplier
             virtual inline void setCostMultiplier(const int cost_multiplier) { m_cost_multiplier

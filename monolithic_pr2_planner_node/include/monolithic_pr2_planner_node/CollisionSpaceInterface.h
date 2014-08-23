@@ -18,7 +18,7 @@ namespace monolithic_pr2_planner_node {
                                            tf::TransformListener& tf, 
                                            std::string ref_frame);
             void update3DHeuristicMaps();
-            void update2DHeuristicMaps(std::vector<signed char>& data);
+            void update2DHeuristicMaps(std::vector<unsigned char>& data);
             void getOccupancyGridSize(int& dimX, int& dimY, int&dimZ){
                 m_cspace_mgr->getOccupancyGridSize(dimX, dimY, dimZ); };
             inline void setHeuristicMgr(monolithic_pr2_planner::HeuristicMgrPtr

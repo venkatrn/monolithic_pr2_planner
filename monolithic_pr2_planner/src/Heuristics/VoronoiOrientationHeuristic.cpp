@@ -6,7 +6,6 @@
 using namespace monolithic_pr2_planner;
 
 VoronoiOrientationHeuristic::VoronoiOrientationHeuristic(){
-    // int threshold = 80;
     int dimX, dimY, dimZ;
     m_occupancy_grid->getGridSize(dimX, dimY, dimZ);
     m_size_col = static_cast<unsigned int>(dimX+1);
@@ -45,16 +44,15 @@ VoronoiOrientationHeuristic::~VoronoiOrientationHeuristic(){
     delete m_obstacle_binary_grid;
 }
 
-void VoronoiOrientationHeuristic::update2DHeuristicMap(const std::vector<signed char>& data){
+void VoronoiOrientationHeuristic::update2DHeuristicMap(const std::vector<unsigned char>& data){
     loadMap(data);
 }
 
-void VoronoiOrientationHeuristic::loadMap(const std::vector<signed char>& data){
-    unsigned char threshold = 80;
+void VoronoiOrientationHeuristic::loadMap(const std::vector<unsigned char>& data){
     for (unsigned int j=0; j < m_size_row; j++){
         for (unsigned int i=0; i < m_size_col; i++){
             m_grid[i][j] = (data[j*m_size_col+i]);
-            m_obstacle_binary_grid[i][j] = (m_grid[i][j] > threshold) ? true :
+            m_obstacle_binary_grid[i][j] = (m_grid[i][j] >= costmap_2d::INSCRIBED_INFLATED_OBSTACLE) ? true :
             false;
         }
     }

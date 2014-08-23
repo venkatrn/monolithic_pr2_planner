@@ -14,8 +14,8 @@ namespace monolithic_pr2_planner {
 
             void setGoal(GoalState& state);
 
-            void update2DHeuristicMap(const std::vector<signed char>& data);
-            void loadMap(const std::vector<signed char>& data);
+            void update2DHeuristicMap(const std::vector<unsigned char>& data);
+            void loadMap(const std::vector<unsigned char>& data);
 
             int getGoalHeuristic(GraphStatePtr state);
 

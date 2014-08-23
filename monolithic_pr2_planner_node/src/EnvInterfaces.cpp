@@ -345,14 +345,27 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
     vector<string> stat_names;
     vector<FullBodyState> states;
 
+    /*
     int planner_queues = NUM_SMHA_HEUR;
     if (planner_type == monolithic_pr2_planner::T_EES)
         planner_queues = 3;
     else if (planner_type == monolithic_pr2_planner::T_IMHA)
         planner_queues = NUM_IMHA_HEUR;
+        */
+
+
+    ros::NodeHandle ph("~");
+    bool use_new_heuristics;
+    ph.param("use_new_heuristics",use_new_heuristics,false);
+    int planner_queues;
+    if(!use_new_heuristics)
+      planner_queues = 4;
+    else
+      planner_queues = 19;
 
     m_env->reset();
     m_env->setPlannerType(planner_type);
+    m_env->setUseNewHeuristics(use_new_heuristics);
     m_mha_planner.reset(new MHAPlanner(m_env.get(), planner_queues, forward_search));
     total_planning_time = clock();
     if (!m_env->configureRequest(search_request, start_id, goal_id))
@@ -798,10 +811,12 @@ void EnvInterfaces::crop2DMap(const nav_msgs::MapMetaData& map_info, const
         row_count++;
     }
     m_final_map.clear();
+    m_cropped_map.clear();
     // m_final_map.resize(new_width * new_height);
     for (size_t i=0; i < new_map.size(); i++){
         for (size_t j=0; j < new_map[i].size(); j++){
-            m_final_map.push_back(static_cast<signed char>(new_map[i][j]));
+            m_final_map.push_back(static_cast<signed char>(double(new_map[i][j])/255.0*100.0));
+            m_cropped_map.push_back(new_map[i][j]);
         }
     }
     ROS_DEBUG_NAMED(HEUR_LOG, "size of final map: %lu", m_final_map.size());
@@ -860,12 +875,16 @@ void EnvInterfaces::loadNavMap(const nav_msgs::OccupancyGridPtr& map){
     {
         for (unsigned int i = 0; i < cost_map.getSizeInCellsX(); ++i)
         {
+          /*
             // Normalize the values from 0 to 100.
             // makes life easier when dealing with the heuristic later.
             uncropped_map.push_back(
                 static_cast<unsigned char>(
                     static_cast<double>(cost_map.getCost(i,j))/UCHAR_MAX*100.0f)
                 );
+          */
+          uncropped_map.push_back(cost_map.getCost(i,j));
+
         }
     }
 
@@ -904,7 +923,7 @@ void EnvInterfaces::loadNavMap(const nav_msgs::OccupancyGridPtr& map){
         " within the occupancy grid.");
     m_costmap_pub.publish(costmap_pub);
 
-    m_collision_space_interface->update2DHeuristicMaps(m_final_map);
+    m_collision_space_interface->update2DHeuristicMaps(m_cropped_map);
 
 }
 

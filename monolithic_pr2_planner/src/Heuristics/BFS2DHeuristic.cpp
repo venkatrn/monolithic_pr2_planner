@@ -3,11 +3,11 @@
 #include <monolithic_pr2_planner/Visualizer.h>
 #include <sbpl/utils/key.h>
 #include <geometry_msgs/PolygonStamped.h>
+#include <costmap_2d/cost_values.h>
 
 using namespace monolithic_pr2_planner;
 
 BFS2DHeuristic::BFS2DHeuristic(){
-    // int threshold = 80;
     int dimX, dimY, dimZ;
     m_occupancy_grid->getGridSize(dimX, dimY, dimZ);
     m_size_col = static_cast<unsigned int>(dimX+1);
@@ -39,11 +39,11 @@ BFS2DHeuristic::~BFS2DHeuristic(){
     }
 }
 
-void BFS2DHeuristic::update2DHeuristicMap(const std::vector<signed char>& data){
+void BFS2DHeuristic::update2DHeuristicMap(const std::vector<unsigned char>& data){
     loadMap(data);
 }
 
-void BFS2DHeuristic::loadMap(const std::vector<signed char>& data){
+void BFS2DHeuristic::loadMap(const std::vector<unsigned char>& data){
     
     for (unsigned int j=0; j < m_size_row; j++){
         for (unsigned int i=0; i < m_size_col; i++){
@@ -59,7 +59,6 @@ void BFS2DHeuristic::setGoal(GoalState& goal_state){
     m_goal = goal_state;
 
 
-    unsigned char threshold = 80;
     DiscObjectState state = goal_state.getObjectState(); 
     visualizeRadiusAroundGoal(state.x(), state.y());
     visualizeCenter(state.x(), state.y());
@@ -71,7 +70,7 @@ void BFS2DHeuristic::setGoal(GoalState& goal_state){
     getBresenhamCirclePoints(state.x(), state.y(), discrete_radius, init_points);
 
     // Set the goal state to 0,0 - just make sure it's not the start state.
-    m_gridsearch->search(m_grid, threshold, state.x(), state.y(),
+    m_gridsearch->search(m_grid, costmap_2d::INSCRIBED_INFLATED_OBSTACLE, state.x(), state.y(),
         0,0, SBPL_2DGRIDSEARCH_TERM_CONDITION_ALLCELLS, init_points);
     ROS_DEBUG_NAMED(HEUR_LOG, "[BFS2D] Setting goal %d %d", state.x(), state.y());
 }
@@ -136,13 +135,12 @@ void BFS2DHeuristic::visualizeRadiusAroundGoal(int x0, int y0) {
 
     // circle.header.frame_id = "/map";
     // circle.header.stamp = ros::Time::now();
-    unsigned char threshold = 80;
     std::vector<geometry_msgs::Point> circle_points;
 
     for (size_t i = 0; i < circle_x.size(); ++i) {
         // Prune the points to display only the ones that are within the
         // threshold
-        if (m_grid[circle_x[i]][circle_y[i]] <= threshold) {
+        if (m_grid[circle_x[i]][circle_y[i]] < costmap_2d::INSCRIBED_INFLATED_OBSTACLE) {
             geometry_msgs::Point out_pt;
             out_pt.x = circle_x[i]*res;
             out_pt.y = circle_y[i]*res;

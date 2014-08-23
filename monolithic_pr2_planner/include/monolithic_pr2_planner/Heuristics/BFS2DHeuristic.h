@@ -16,9 +16,9 @@ namespace monolithic_pr2_planner {
             ~BFS2DHeuristic();
             
             void setGoal(GoalState& state);
-            void loadMap(const std::vector<signed char>& data);
+            void loadMap(const std::vector<unsigned char>& data);
             int getGoalHeuristic(GraphStatePtr state);
-            void update2DHeuristicMap(const std::vector<signed char>& data);
+            void update2DHeuristicMap(const std::vector<unsigned char>& data);
 
             // Set radius for the circle around the goal for which the
             // heuristic will be zero. Default is the PR2's arm reach
@@ -35,7 +35,7 @@ namespace monolithic_pr2_planner {
             static void getBresenhamLinePoints(int x1, int y1, int x2, int y2, std::vector<int>& pts_x, std::vector<int>& pts_y);
             void setUniformCostSearch(bool ucs = false) {
                 m_gridsearch->setUniformCostSearch(ucs); }
-        private:
+        protected:
             std::unique_ptr<SBPL2DGridSearch> m_gridsearch;
             unsigned int m_size_col;
             unsigned int m_size_row;

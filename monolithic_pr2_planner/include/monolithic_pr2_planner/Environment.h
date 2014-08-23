@@ -44,6 +44,7 @@ namespace monolithic_pr2_planner {
                 state_ids);
             void reset();
             void setPlannerType(int planner_type);
+            void setUseNewHeuristics(bool use_new_heuristics){m_use_new_heuristics = use_new_heuristics;};
 
         protected:
             bool setStartGoal(SearchRequestPtr search_request, 
@@ -62,6 +63,7 @@ namespace monolithic_pr2_planner {
             HeuristicMgrPtr m_heur_mgr;
 
             int m_planner_type;
+            bool m_use_new_heuristics;
 
         // SBPL interface stuff
         public:

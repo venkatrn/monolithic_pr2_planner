@@ -83,6 +83,95 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
         ROS_DEBUG_NAMED(HEUR_LOG, "%s : %d", heur.first.c_str(), heur.second);
     }
 
+
+    if(!m_use_new_heuristics){
+      switch (heuristic_id) {
+        case 0:  // Anchor
+          return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
+        case 1:  // ARA Heur 
+          return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
+        case 2:  // Base1, Base2 heur
+          return static_cast<int>(0.5f*(*values).at("base_with_rot_0") + 0.5f*(*values).at("endeff_rot_goal"));
+        case 3:
+          return static_cast<int>(0.5f*(*values).at("base_with_rot_door") + 0.5f*(*values).at("endeff_rot_vert"));
+      }
+    }
+    else{
+      switch (heuristic_id) {
+        case 0:  // Anchor
+          return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
+        case 1:  // ARA Heur 
+          return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
+        case 2:  // Base1, Base2 heur
+          return static_cast<int>(0.5f*(*values).at("base_with_rot_0") + 0.5f*(*values).at("endeff_rot_goal"));
+        case 3:
+          if((*values).at("bfsRotFoot0")==0)
+            return 0;
+          return static_cast<int>(0.5f*(*values).at("bfsRotFoot0") + 0.5f*(*values).at("arm_angles_folded"));
+        case 4:
+          if((*values).at("bfsRotFoot1")==0)
+            return 0;
+          return static_cast<int>(0.5f*(*values).at("bfsRotFoot1") + 0.5f*(*values).at("arm_angles_folded"));
+        case 5:
+          if((*values).at("bfsRotFoot2")==0)
+            return 0;
+          return static_cast<int>(0.5f*(*values).at("bfsRotFoot2") + 0.5f*(*values).at("arm_angles_folded"));
+        case 6:
+          if((*values).at("bfsRotFoot3")==0)
+            return 0;
+          return static_cast<int>(0.5f*(*values).at("bfsRotFoot3") + 0.5f*(*values).at("arm_angles_folded"));
+        case 7:
+          if((*values).at("bfsRotFoot4")==0)
+            return 0;
+          return static_cast<int>(0.5f*(*values).at("bfsRotFoot4") + 0.5f*(*values).at("arm_angles_folded"));
+        case 8:
+          if((*values).at("bfsRotFoot5")==0)
+            return 0;
+          return static_cast<int>(0.5f*(*values).at("bfsRotFoot5") + 0.5f*(*values).at("arm_angles_folded"));
+        case 9:
+          if((*values).at("bfsRotFoot6")==0)
+            return 0;
+          return static_cast<int>(0.5f*(*values).at("bfsRotFoot6") + 0.5f*(*values).at("arm_angles_folded"));
+        case 10:
+          if((*values).at("bfsRotFoot7")==0)
+            return 0;
+          return static_cast<int>(0.5f*(*values).at("bfsRotFoot7") + 0.5f*(*values).at("arm_angles_folded"));
+        case 11:
+          if((*values).at("bfsRotFoot8")==0)
+            return 0;
+          return static_cast<int>(0.5f*(*values).at("bfsRotFoot8") + 0.5f*(*values).at("arm_angles_folded"));
+        case 12:
+          if((*values).at("bfsRotFoot9")==0)
+            return 0;
+          return static_cast<int>(0.5f*(*values).at("bfsRotFoot9") + 0.5f*(*values).at("arm_angles_folded"));
+        case 13:
+          if((*values).at("bfsRotFoot10")==0)
+            return 0;
+          return static_cast<int>(0.5f*(*values).at("bfsRotFoot10") + 0.5f*(*values).at("arm_angles_folded"));
+        case 14:
+          if((*values).at("bfsRotFoot11")==0)
+            return 0;
+          return static_cast<int>(0.5f*(*values).at("bfsRotFoot11") + 0.5f*(*values).at("arm_angles_folded"));
+        case 15:
+          if((*values).at("bfsRotFoot12")==0)
+            return 0;
+          return static_cast<int>(0.5f*(*values).at("bfsRotFoot12") + 0.5f*(*values).at("arm_angles_folded"));
+        case 16:
+          if((*values).at("bfsRotFoot13")==0)
+            return 0;
+          return static_cast<int>(0.5f*(*values).at("bfsRotFoot13") + 0.5f*(*values).at("arm_angles_folded"));
+        case 17:
+          if((*values).at("bfsRotFoot14")==0)
+            return 0;
+          return static_cast<int>(0.5f*(*values).at("bfsRotFoot14") + 0.5f*(*values).at("arm_angles_folded"));
+        case 18:
+          if((*values).at("bfsRotFoot15")==0)
+            return 0;
+          return static_cast<int>(0.5f*(*values).at("bfsRotFoot15") + 0.5f*(*values).at("arm_angles_folded"));
+      }
+    }
+
+    /*
     switch (heuristic_id) {
       case 0:  // Anchor
         return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
@@ -93,6 +182,7 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
       case 3:
         return static_cast<int>(0.5f*(*values).at("base_with_rot_door") + 0.5f*(*values).at("endeff_rot_vert"));
     }
+    */
 
     /*
     switch (m_planner_type) {

@@ -91,6 +91,7 @@ namespace monolithic_pr2_planner_node {
             ros::Subscriber m_nav_map;
             ros::Publisher m_costmap_pub;
             std::vector<signed char> m_final_map;
+            std::vector<unsigned char> m_cropped_map;
 
             ros::Subscriber interrupt_sub_;
             boost::mutex mutex;

@@ -54,6 +54,6 @@ void CollisionSpaceInterface::update3DHeuristicMaps(){
     m_heur_mgr->update3DHeuristicMaps();
 }
 
-void CollisionSpaceInterface::update2DHeuristicMaps(std::vector<signed char>& data){
+void CollisionSpaceInterface::update2DHeuristicMaps(std::vector<unsigned char>& data){
     m_heur_mgr->update2DHeuristicMaps(data);
 }

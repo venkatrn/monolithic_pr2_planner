@@ -1,6 +1,6 @@
 debug:
     logging:
-        configuration: debug
+        configuration: info
         initialization: debug
         collision_space: info
         kinematics: info

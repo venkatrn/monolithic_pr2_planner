@@ -4,9 +4,12 @@
 #include <monolithic_pr2_planner/Heuristics/HeuristicMgr.h>
 #include <monolithic_pr2_planner/Heuristics/BFS3DHeuristic.h>
 #include <monolithic_pr2_planner/Heuristics/EndEffOnlyRotationHeuristic.h>
+#include <monolithic_pr2_planner/Heuristics/EndEffLocalHeuristic.h>
 #include <monolithic_pr2_planner/Heuristics/BFS3DWithRotationHeuristic.h>
 #include <monolithic_pr2_planner/Heuristics/BFS2DHeuristic.h>
 #include <monolithic_pr2_planner/Heuristics/BaseWithRotationHeuristic.h>
+#include <monolithic_pr2_planner/Heuristics/BFS2DRotFootprintHeuristic.h>
+#include <costmap_2d/cost_values.h>
 #include <kdl/frames.hpp>
 #include <memory>
 #include <vector>
@@ -243,6 +246,16 @@ void HeuristicMgr::addEndEffOnlyRotationHeur(std::string name, KDL::Rotation des
     m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
 }
 
+void HeuristicMgr::addEndEffLocalHeur(std::string name, const int cost_multiplier, GoalState eefGoalRelBody){
+    EndEffLocalHeuristicPtr heur = make_shared<EndEffLocalHeuristic>();
+    heur->setCostMultiplier(cost_multiplier);
+    heur->setGoal(eefGoalRelBody);
+  
+    // Add it to the list of heuristics
+    m_heuristics.push_back(heur);
+    m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
+}
+
 void HeuristicMgr::addUniformCost3DHeur(std::string name){
 
     // Initialize the new heuristic.
@@ -298,6 +311,30 @@ void HeuristicMgr::addBaseWithRotationHeur(std::string name, const int cost_mult
     m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
 }
 
+void HeuristicMgr::addBFS2DRotFootprint(std::string name, const int cost_multiplier, 
+                                        const double theta, const vector<sbpl_2Dpt_t>& footprintPolygon,
+                                        const double radius_m){
+    // Initialize the new heuristic
+    BFS2DRotFootprintHeuristicPtr heur = make_shared<BFS2DRotFootprintHeuristic>();
+    // Set cost multiplier here.
+    heur->setCostMultiplier(cost_multiplier);
+    // set the footprint
+    heur->setFootprint(footprintPolygon, theta);
+    heur->setRadiusAroundGoal(radius_m);
+    heur->update2DHeuristicMap(m_grid_data);
+    heur->setGoal(m_goal);
+
+    static bool draw = true;
+    if(draw){
+      draw = false;
+      heur->draw();
+    }
+
+    // Add to the list of heuristics
+    m_heuristics.push_back(heur);
+    m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
+}
+
 // void HeuristicMgr::addVoronoiOrientationHeur(std::string name, const int cost_multiplier){
 //     // Initialize the new heuristic
 //     VoronoiOrientationHeuristicPtr new_voronoi_heur = make_shared<VoronoiOrientationHeuristic>();
@@ -308,22 +345,21 @@ void HeuristicMgr::addBaseWithRotationHeur(std::string name, const int cost_mult
 //     m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
 // }
 
-// int HeuristicMgr::addArmAnglesHeur(const int cost_multiplier){
-//     // Initialize the new heuristic
-//     AbstractHeuristicPtr new_arm_angles_heur =
-//     make_shared<ArmAnglesHeuristic>(m_cspace_mgr);
-//     // Set cost multiplier here.
-//     new_arm_angles_heur->setCostMultiplier(cost_multiplier);
-//     // Add to the list of heuristics
-//     m_heuristics.push_back(new_arm_angles_heur);
-//     return m_heuristics.size() - 1;
-// }
+//int HeuristicMgr::addArmAnglesHeur(const int cost_multiplier){
+//  // Initialize the new heuristic
+//  ArmAnglesHeuristicPtr new_arm_angles_heur = make_shared<ArmAnglesHeuristic>(m_cspace_mgr);
+//  // Set cost multiplier here.
+//  new_arm_angles_heur->setCostMultiplier(cost_multiplier);
+//  // Add to the list of heuristics
+//  m_heuristics.push_back(new_arm_angles_heur);
+//  return m_heuristics.size() - 1;
+//}
 
 // most heuristics won't need both 2d and 3d maps. however, the abstract
 // heuristic type has function stubs for both of them so we don't need to pick
 // and choose who to update. it is up to the implementor to implement a derived
 // function for the following, otherwise they won't do anything.
-void HeuristicMgr::update2DHeuristicMaps(const std::vector<signed char>& data){
+void HeuristicMgr::update2DHeuristicMaps(const std::vector<unsigned char>& data){
     int dimX, dimY, dimZ;
     m_occupancy_grid->getGridSize(dimX, dimY, dimZ);
 
@@ -504,10 +540,9 @@ void HeuristicMgr::initializeMHAHeuristics(const int cost_multiplier){
     /* Get the list of points that are not on an obstacle.
      * Get the size of this list. Sample from a uniform distribution. 
      * Make sure you don't repeat points. */
-    unsigned char threshold = 80;
     for (size_t i = 0; i < circle_x.size();) {
         // Reject points on obstacles.
-        if(m_grid[circle_x[i]][circle_y[i]] > threshold){    //Obstacle!
+        if(m_grid[circle_x[i]][circle_y[i]] >= costmap_2d::INSCRIBED_INFLATED_OBSTACLE){    //Obstacle!
             circle_x.erase(circle_x.begin() + i);
             circle_y.erase(circle_y.begin() + i);
         }
@@ -581,6 +616,43 @@ void HeuristicMgr::initializeMHAHeuristics(const int cost_multiplier){
         addEndEffWithRotHeur("endeff_rot_goal", rot, cost_multiplier);
         m_heuristics[m_heuristic_map["endeff_rot_goal"]]->setGoal(m_goal);
     }
+
+    clock_t new_heur_t0 = clock();
+    vector<sbpl_2Dpt_t> footprint;
+    double halfwidth = 0.325;
+    double halflength = 0.325;
+    sbpl_2Dpt_t pt_m;
+    pt_m.x = -halflength;
+    pt_m.y = -halfwidth;
+    footprint.push_back(pt_m);
+    pt_m.x = -halflength;
+    pt_m.y = halfwidth;
+    footprint.push_back(pt_m);
+    pt_m.x = halflength;
+    pt_m.y = halfwidth;
+    footprint.push_back(pt_m);
+    pt_m.x = halflength;
+    pt_m.y = -halfwidth;
+    footprint.push_back(pt_m);
+    for(int i=0; i<m_resolution_params.num_base_angles; i++){
+      ROS_ERROR("init bfsRotFoot %d",i);
+      double theta = DiscTheta2Cont(i, m_resolution_params.num_base_angles);
+      addBFS2DRotFootprint("bfsRotFoot" + std::to_string(i), 1, theta, footprint, radius_around_goal+0.15);
+    }
+
+    ROS_ERROR("init arm_angles_folded");
+    ContBaseState dummy_base;
+    LeftContArmState dummy_larm;
+    RightContArmState folded_rarm({0.0, 1.1072800, -1.5566882, -2.124408, 0.0, 0.0, 0.0});
+    RobotState rs(dummy_base, folded_rarm, dummy_larm);
+    DiscObjectState localFoldedArmObject = rs.getObjectStateRelBody();
+    GoalState localFoldedArmGoal;
+    localFoldedArmGoal.setGoal(localFoldedArmObject);
+    addEndEffLocalHeur("arm_angles_folded", 100, localFoldedArmGoal);
+
+    clock_t new_heur_t1 = clock();
+    ROS_ERROR("new heuristics took %f time to compute",double(new_heur_t1-new_heur_t0)/CLOCKS_PER_SEC);
+    //std::cin.get();
 
     printSummaryToInfo(HEUR_LOG);
 }

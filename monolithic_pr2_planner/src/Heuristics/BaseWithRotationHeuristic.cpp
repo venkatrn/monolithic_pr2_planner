@@ -2,11 +2,11 @@
 #include <monolithic_pr2_planner/LoggerNames.h>
 #include <monolithic_pr2_planner/Visualizer.h>
 #include <sbpl/utils/key.h>
+#include <costmap_2d/cost_values.h>
 
 using namespace monolithic_pr2_planner;
 
 BaseWithRotationHeuristic::BaseWithRotationHeuristic(){
-    // int threshold = 80;
     int dimX, dimY, dimZ;
     m_occupancy_grid->getGridSize(dimX, dimY, dimZ);
     m_size_col = static_cast<unsigned int>(dimX+1);
@@ -34,11 +34,11 @@ BaseWithRotationHeuristic::~BaseWithRotationHeuristic(){
     }
 }
 
-void BaseWithRotationHeuristic::update2DHeuristicMap(const std::vector<signed char>& data){
+void BaseWithRotationHeuristic::update2DHeuristicMap(const std::vector<unsigned char>& data){
     loadMap(data);
 }
 
-void BaseWithRotationHeuristic::loadMap(const std::vector<signed char>& data){
+void BaseWithRotationHeuristic::loadMap(const std::vector<unsigned char>& data){
     
     for (unsigned int j=0; j < m_size_row; j++){
         for (unsigned int i=0; i < m_size_col; i++){
@@ -54,7 +54,6 @@ void BaseWithRotationHeuristic::setGoal(GoalState& goal_state) {
     // Save the goal for future use.
     m_goal = goal_state;
 
-    unsigned char threshold = 80;
     DiscObjectState state = goal_state.getObjectState(); 
     BFS2DHeuristic::visualizeCenter(state.x(), state.y());
 
@@ -63,7 +62,7 @@ void BaseWithRotationHeuristic::setGoal(GoalState& goal_state) {
     // BFS2DHeuristic::getBresenhamLinePoints(state.x(), state.y(), orig_state.x(), orig_state.y(), init_points);
 
     // Set the goal state to 0,0 - just make sure it's not the start state.
-    m_gridsearch->search(m_grid, threshold, state.x(), state.y(),
+    m_gridsearch->search(m_grid, costmap_2d::INSCRIBED_INFLATED_OBSTACLE, state.x(), state.y(),
         0,0, SBPL_2DGRIDSEARCH_TERM_CONDITION_ALLCELLS);
     ROS_DEBUG_NAMED(HEUR_LOG, "[BaseWithRotationHeur] Setting goal %d %d", state.x(), state.y());
 }

@@ -30,8 +30,10 @@ BaseWithRotationHeuristic::BaseWithRotationHeuristic(){
 
 BaseWithRotationHeuristic::~BaseWithRotationHeuristic(){
     for (unsigned int i=0; i < m_size_col; i++){
-        delete m_grid[i];
+        delete[] m_grid[i];
     }
+    delete[] m_grid;
+    m_grid = NULL;
 }
 
 void BaseWithRotationHeuristic::update2DHeuristicMap(const std::vector<unsigned char>& data){

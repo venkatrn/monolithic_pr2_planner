@@ -133,6 +133,17 @@ HeuristicMgr::HeuristicMgr() :
     m_num_mha_heuristics(NUM_MHA_BASE_HEUR) {
 }
 
+HeuristicMgr::~HeuristicMgr()
+{
+    int dimX, dimY, dimZ;
+    m_occupancy_grid->getGridSize(dimX, dimY, dimZ);
+
+    for (int i=0; i < dimX + 1; i++){
+        delete[] m_grid[i];
+    }
+    delete[] m_grid;
+}
+
 /**
  * @brief Resets the heuristic manager.
  */

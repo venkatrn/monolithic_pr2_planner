@@ -13,9 +13,9 @@ BFS3DWithRotationHeuristic::BFS3DWithRotationHeuristic(){
 }
 
 int BFS3DWithRotationHeuristic::getGoalHeuristic(GraphStatePtr state){
-    if (m_goal.withinXYZTol(state)){
-        return 0;
-    }
+    //if (m_goal.withinXYZTol(state)){
+        //return 0;
+    //}
     DiscObjectState obj_state = state->getObjectStateRelMap();
     int cost = m_bfs->getDistance(obj_state.x(), obj_state.y(), obj_state.z());
 

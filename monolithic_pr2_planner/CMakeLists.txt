@@ -52,6 +52,8 @@ rosbuild_add_library(monolithic_pr2_planner src/StateReps/RobotState.cpp
                                             src/MotionPrimitives/MotionPrimitivesMgr.cpp
                                             src/MotionPrimitives/BaseAdaptiveMotionPrimitive.cpp
                                             src/MotionPrimitives/ArmAdaptiveMotionPrimitive.cpp
+                                            src/MotionPrimitives/ArmTuckMotionPrimitive.cpp
+                                            src/MotionPrimitives/ArmUntuckMotionPrimitive.cpp
                                             src/MotionPrimitives/TorsoMotionPrimitive.cpp
 
                                             src/Heuristics/BFS3DHeuristic.cpp

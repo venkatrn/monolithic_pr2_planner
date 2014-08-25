@@ -75,7 +75,7 @@ void addCuboid(pcl::PointCloud<pcl::PointXYZ>::Ptr pclCloud, double X, double Y,
 }
 
 void addRandomObstacles(pcl::PointCloud<pcl::PointXYZ>::Ptr pclCloud, int
-    numSurfaces, int numObstaclesPerSurface, int seed){
+    numSurfaces, int numObstaclesPerSurface, unsigned int seed){
     ros::NodeHandle nh;
 
     // Add the surface - these are generated only within these bounds.
@@ -112,7 +112,7 @@ void addRandomObstacles(pcl::PointCloud<pcl::PointXYZ>::Ptr pclCloud, int
     nh.setParam("/monolithic_pr2_planner_node/experiments/number_of_regions",
         numSurfaces);
 
-    nh.setParam("/monolithic_pr2_planner_node/experiments/seed", seed);
+    nh.setParam("/monolithic_pr2_planner_node/experiments/seed", int(seed));
     srand(seed);
 
     for (int i = 0, j = 0; i < numSurfaces; ++i, j+=2){
@@ -302,9 +302,10 @@ vector<Eigen::Vector3d> getVoxelsFromFile(std::string filename){
           ROS_ERROR("pathToTableObstacleParamFile did not lead to a file");
           exit(1);
         }
-        int seed, numSurfaces, numObstaclesPerSurface;
+        unsigned int seed;
+        int numSurfaces, numObstaclesPerSurface;
         bool success = true;
-        success &= fscanf(fin,"randomSeed: %d\n",&seed) == 1;
+        success &= fscanf(fin,"randomSeed: %u\n",&seed) == 1;
         success &= fscanf(fin,"numSurfaces: %d\n",&numSurfaces) == 1;
         success &= fscanf(fin,"numObstaclesPerSurface: %d\n",&numObstaclesPerSurface) == 1;
         if(!success){
@@ -317,12 +318,12 @@ vector<Eigen::Vector3d> getVoxelsFromFile(std::string filename){
       else{
         int numSurfaces = 2;
         int numObstaclesPerSurface = 5;
-        int seed = clock();
+        unsigned int seed = clock();
         ROS_WARN("generating random environment (seed=%d) with %d surfaces and %d obstacles on each",seed,numSurfaces,numObstaclesPerSurface);
         addRandomObstacles(pclCloud, numSurfaces, numObstaclesPerSurface, seed);
         ROS_WARN("writing tableObstacles.yaml file!");
         FILE* fout = fopen("tableObstacles.yaml", "w");
-        fprintf(fout,"randomSeed: %d\n",seed);
+        fprintf(fout,"randomSeed: %u\n",seed);
         fprintf(fout,"numSurfaces: %d\n",numSurfaces);
         fprintf(fout,"numObstaclesPerSurface: %d\n",numObstaclesPerSurface);
         fclose(fout);

@@ -185,7 +185,7 @@ void HeuristicMgr::initializeHeuristics() {
     // Already in mm.
     {
         int cost_multiplier = 1;
-        double radius_around_goal = 0.6; //0.75;
+        double radius_around_goal = 0.60; //0.75;
         add2DHeur("admissible_base", cost_multiplier, radius_around_goal);
     }
 
@@ -619,8 +619,8 @@ void HeuristicMgr::initializeMHAHeuristics(const int cost_multiplier){
 
     clock_t new_heur_t0 = clock();
     vector<sbpl_2Dpt_t> footprint;
-    double halfwidth = 0.325;
-    double halflength = 0.325;
+    double halfwidth = 0.39;
+    double halflength = 0.39;
     sbpl_2Dpt_t pt_m;
     pt_m.x = -halflength;
     pt_m.y = -halfwidth;
@@ -643,12 +643,14 @@ void HeuristicMgr::initializeMHAHeuristics(const int cost_multiplier){
     ROS_ERROR("init arm_angles_folded");
     ContBaseState dummy_base;
     LeftContArmState dummy_larm;
-    RightContArmState folded_rarm({0.0, 1.1072800, -1.5566882, -2.124408, 0.0, 0.0, 0.0});
+    //RightContArmState folded_rarm({0.0, 1.1072800, -1.5566882, -2.124408, 0.0, 0.0, 0.0});
+    RightContArmState folded_rarm({-0.2, 1.1072800, -1.5566882, -2.124408, 0.0, -1.57, 0.0});
+
     RobotState rs(dummy_base, folded_rarm, dummy_larm);
     DiscObjectState localFoldedArmObject = rs.getObjectStateRelBody();
     GoalState localFoldedArmGoal;
     localFoldedArmGoal.setGoal(localFoldedArmObject);
-    addEndEffLocalHeur("arm_angles_folded", 100, localFoldedArmGoal);
+    addEndEffLocalHeur("arm_angles_folded", 500, localFoldedArmGoal);
 
     clock_t new_heur_t1 = clock();
     ROS_ERROR("new heuristics took %f time to compute",double(new_heur_t1-new_heur_t0)/CLOCKS_PER_SEC);

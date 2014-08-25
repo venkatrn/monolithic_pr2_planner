@@ -58,7 +58,7 @@ collision_space:
     origin_x: 0.0
     origin_y: 0.0   # 1.25 - changed to see if there is a bug in the distance_field class
     origin_z: 0.0   # -0.05 - ditto
-    size_x: 9.0
+    size_x: 10.0
     size_y: 6.0
     size_z: 2.0
 

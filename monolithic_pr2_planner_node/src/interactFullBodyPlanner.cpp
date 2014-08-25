@@ -622,6 +622,16 @@ ControlPlanner::ControlPlanner(){
   planner_thread = new boost::thread(boost::bind(&ControlPlanner::callPlanner, this));
   planner = ros::NodeHandle().serviceClient<monolithic_pr2_planner_node::GetMobileArmPlan>("/sbpl_planning/plan_path", true);
   interrupt_pub = ros::NodeHandle().advertise<std_msgs::Empty>("/sbpl_planning/interrupt", 1);
+
+  for(int i=0; i<10; i++){
+    //vector<double> rarm({0.0, 1.1072800, -1.5566882, -2.124408, 0.0, -1.57, 1.57});
+    //vector<double> rarm({0.0, 1.1072800, -1.3, -2.124408, 0.0, -1.57, 1.57});
+    vector<double> rarm({-0.2, 1.1072800, -1.5566882, -2.124408, 0.0, -1.57, 0.0});
+    vector<double> larm({0.038946, 1.214670, 1.396356, -1.197227, -4.616317, -0.988727, 1.175568});
+    vector<double> body({0.0, 0.0, 0.0});
+    pviz.visualizeRobot(rarm, larm, body, 0.1, 127, "weee", 0, false);
+    sleep(1);
+  }
 }
 
 ControlPlanner::~ControlPlanner(){

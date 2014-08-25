@@ -97,77 +97,82 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
       }
     }
     else{
+      double w_bfsRot = 0.5;
+      double w_armFold = 0.5;
+
       switch (heuristic_id) {
         case 0:  // Anchor
           return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
-        case 1:  // ARA Heur 
-          return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
+        //case 1:  // ARA Heur 
+          //return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
+        case 1:  // Base1, Base2 heur
+          return static_cast<int>(0.5*(*values).at("base_with_rot_0") + 0.5*(*values).at("endeff_rot_goal"));
         case 2:  // Base1, Base2 heur
-          return static_cast<int>(0.5f*(*values).at("base_with_rot_0") + 0.5f*(*values).at("endeff_rot_goal"));
+          return static_cast<int>(1.0*(*values).at("base_with_rot_0") + 0.0*(*values).at("endeff_rot_goal"));
         case 3:
           if((*values).at("bfsRotFoot0")==0)
             return 0;
-          return static_cast<int>(0.5f*(*values).at("bfsRotFoot0") + 0.5f*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot0") + w_armFold*(*values).at("arm_angles_folded"));
         case 4:
           if((*values).at("bfsRotFoot1")==0)
             return 0;
-          return static_cast<int>(0.5f*(*values).at("bfsRotFoot1") + 0.5f*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot1") + w_armFold*(*values).at("arm_angles_folded"));
         case 5:
           if((*values).at("bfsRotFoot2")==0)
             return 0;
-          return static_cast<int>(0.5f*(*values).at("bfsRotFoot2") + 0.5f*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot2") + w_armFold*(*values).at("arm_angles_folded"));
         case 6:
           if((*values).at("bfsRotFoot3")==0)
             return 0;
-          return static_cast<int>(0.5f*(*values).at("bfsRotFoot3") + 0.5f*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot3") + w_armFold*(*values).at("arm_angles_folded"));
         case 7:
           if((*values).at("bfsRotFoot4")==0)
             return 0;
-          return static_cast<int>(0.5f*(*values).at("bfsRotFoot4") + 0.5f*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot4") + w_armFold*(*values).at("arm_angles_folded"));
         case 8:
           if((*values).at("bfsRotFoot5")==0)
             return 0;
-          return static_cast<int>(0.5f*(*values).at("bfsRotFoot5") + 0.5f*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot5") + w_armFold*(*values).at("arm_angles_folded"));
         case 9:
           if((*values).at("bfsRotFoot6")==0)
             return 0;
-          return static_cast<int>(0.5f*(*values).at("bfsRotFoot6") + 0.5f*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot6") + w_armFold*(*values).at("arm_angles_folded"));
         case 10:
           if((*values).at("bfsRotFoot7")==0)
             return 0;
-          return static_cast<int>(0.5f*(*values).at("bfsRotFoot7") + 0.5f*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot7") + w_armFold*(*values).at("arm_angles_folded"));
         case 11:
           if((*values).at("bfsRotFoot8")==0)
             return 0;
-          return static_cast<int>(0.5f*(*values).at("bfsRotFoot8") + 0.5f*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot8") + w_armFold*(*values).at("arm_angles_folded"));
         case 12:
           if((*values).at("bfsRotFoot9")==0)
             return 0;
-          return static_cast<int>(0.5f*(*values).at("bfsRotFoot9") + 0.5f*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot9") + w_armFold*(*values).at("arm_angles_folded"));
         case 13:
           if((*values).at("bfsRotFoot10")==0)
             return 0;
-          return static_cast<int>(0.5f*(*values).at("bfsRotFoot10") + 0.5f*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot10") + w_armFold*(*values).at("arm_angles_folded"));
         case 14:
           if((*values).at("bfsRotFoot11")==0)
             return 0;
-          return static_cast<int>(0.5f*(*values).at("bfsRotFoot11") + 0.5f*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot11") + w_armFold*(*values).at("arm_angles_folded"));
         case 15:
           if((*values).at("bfsRotFoot12")==0)
             return 0;
-          return static_cast<int>(0.5f*(*values).at("bfsRotFoot12") + 0.5f*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot12") + w_armFold*(*values).at("arm_angles_folded"));
         case 16:
           if((*values).at("bfsRotFoot13")==0)
             return 0;
-          return static_cast<int>(0.5f*(*values).at("bfsRotFoot13") + 0.5f*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot13") + w_armFold*(*values).at("arm_angles_folded"));
         case 17:
           if((*values).at("bfsRotFoot14")==0)
             return 0;
-          return static_cast<int>(0.5f*(*values).at("bfsRotFoot14") + 0.5f*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot14") + w_armFold*(*values).at("arm_angles_folded"));
         case 18:
           if((*values).at("bfsRotFoot15")==0)
             return 0;
-          return static_cast<int>(0.5f*(*values).at("bfsRotFoot15") + 0.5f*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot15") + w_armFold*(*values).at("arm_angles_folded"));
       }
     }
 
@@ -347,16 +352,21 @@ void Environment::GetLazySuccs(int sourceStateID, vector<int>* succIDs,
         if (mprim->motion_type() == MPrim_Types::ARM){
             successor.reset(new GraphState(*source_state));
             successor->lazyApplyMPrim(mprim->getEndCoord());
-            //ROS_INFO("source/successor");
-            //mprim->printEndCoord();
-            //source_state->printToInfo(MPRIM_LOG);
-            //successor->printToInfo(MPRIM_LOG);
-            //ROS_INFO("done");
+            ROS_DEBUG_NAMED(SEARCH_LOG, "arm mprim/source/successor");
+            mprim->printEndCoord();
+            source_state->printToDebug(MPRIM_LOG);
+            successor->printToDebug(MPRIM_LOG);
+            ROS_DEBUG_NAMED(SEARCH_LOG, "done");
         } else {
             if (!mprim->apply(*source_state, successor, t_data)){
                 //ROS_DEBUG_NAMED(MPRIM_LOG, "couldn't apply mprim");
                 continue;
             }
+            ROS_DEBUG_NAMED(SEARCH_LOG, "non-arm mprim/source/successor");
+            mprim->printEndCoord();
+            source_state->printToDebug(MPRIM_LOG);
+            successor->printToDebug(MPRIM_LOG);
+            ROS_DEBUG_NAMED(SEARCH_LOG, "done");
         }
         m_hash_mgr->save(successor);
         Edge key; 
@@ -406,7 +416,8 @@ int Environment::GetTrueCost(int parentID, int childID){
     if (!mprim->apply(*source_state, successor, t_data)){
         return -1;
     }
-    //mprim->printEndCoord();
+    mprim->printEndCoord();
+    mprim->print();
     //source_state->printToInfo(SEARCH_LOG);
     //successor->printToInfo(SEARCH_LOG);
     successor->id(m_hash_mgr->getStateID(successor));

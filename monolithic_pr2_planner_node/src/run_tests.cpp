@@ -147,6 +147,7 @@ int main(int argc, char** argv){
               &req.larm_goal[6]) <= 0)
       break;
 
+    printf("Running test %d\n",test_num);
     planner.call(req,res);
     FBPStatWriter::writeStatsToFile("mha_stats.csv", first, res.stats_field_names, res.stats);
     first = false;

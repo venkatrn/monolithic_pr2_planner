@@ -67,9 +67,25 @@ int BFS2DRotFootprintHeuristic::getGoalHeuristic(GraphStatePtr state){
   //cache==2 means we evaluated this cell and found no collision
   if(cache_[base_x][base_y] == 2){
     int transCost = BFS2DHeuristic::getGoalHeuristic(state);
-    int rotCost = 1000*std::fabs(shortest_angular_distance(state->robot_pose().getContBaseState().theta(), theta_));
+    int rotCost = 500*std::fabs(shortest_angular_distance(state->robot_pose().getContBaseState().theta(), theta_));
     if(transCost == 0)//if we are already near the goal, this heuristic is done
       return 0;
+
+    //translation has a max gradient of about 28
+    //rotation has a max gradient of about 196
+
+    static bool print = true;
+    if(print){
+      print = false;
+      vector<double> v = state->getContCoords();
+      v[GraphStateElement::BASE_X] += 0.02;
+      GraphStatePtr tmp = boost::make_shared<GraphState>(v);
+      ROS_ERROR("transCost=%d transCost+1dx=%d rotCost=%d robot_theta=%f theta_=%f cost=%d",
+          transCost, BFS2DHeuristic::getGoalHeuristic(tmp), rotCost, state->robot_pose().getContBaseState().theta(), theta_,
+          getCostMultiplier() * (transCost + rotCost));
+      std::cin.get();
+    }
+
     return getCostMultiplier() * (transCost + rotCost);
   }
   

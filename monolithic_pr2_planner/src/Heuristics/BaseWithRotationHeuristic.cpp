@@ -82,9 +82,11 @@ int BaseWithRotationHeuristic::getGoalHeuristic(GraphStatePtr state){
     int cost = m_gridsearch->getlowerboundoncostfromstart_inmm(state->base_x(), state->base_y());
 
     // Get the angle to the goal from the sampled point.
-    int rot_heur =
-        static_cast<int>(1000*std::fabs(shortest_angular_distance(state->robot_pose().getContBaseState().theta(),
-        m_desired_orientation)));
+    double rot_dist = std::fabs(shortest_angular_distance(state->robot_pose().getContBaseState().theta(),
+                                                          m_desired_orientation));
+    if(rot_dist < 2*M_PI/m_resolution_params.num_base_angles)
+      rot_dist = 0;
+    int rot_heur = 1000*rot_dist;
 
     return getCostMultiplier()*cost + rot_heur;
 }

@@ -273,7 +273,8 @@ void ControlPlanner::processFeedback(const visualization_msgs::InteractiveMarker
                             feedback->pose.orientation.y,
                             feedback->pose.orientation.z,
                             feedback->pose.orientation.w);
-      tf::Quaternion q_rot(-base_yaw,0,0);
+      tf::Quaternion q_rot;
+      q_rot.setRPY(0, 0, -base_yaw);
       q_hand = q_hand * q_rot;
       ik_pose[3] = q_hand.getX();
       ik_pose[4] = q_hand.getY();
@@ -416,6 +417,9 @@ ControlPlanner::ControlPlanner(){
 
     int_marker.controls.push_back(menu_control);
 
+    // set the z a little higher so that it doesn't z-fight with the map
+    int_marker.pose.position.z = 0.1;
+
     // add the interactive marker to our collection &
     // tell the server to call processFeedback() when feedback arrives for it
     int_marker_server->insert(int_marker, boost::bind(&ControlPlanner::processFeedback, this, _1));
@@ -459,6 +463,9 @@ ControlPlanner::ControlPlanner(){
     int_marker.controls.push_back(control);
 
     int_marker.controls.push_back(menu_control);
+
+    // set the z a little higher so that it doesn't z-fight with the map
+    int_marker.pose.position.z = 0.1;
 
     // add the interactive marker to our collection &
     // tell the server to call processFeedback() when feedback arrives for it

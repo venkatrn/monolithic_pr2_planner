@@ -422,3 +422,47 @@ bool RobotState::workspaceInterpolate(const RobotState& start, const RobotState&
 
     return true;
 }
+
+bool RobotState::jointSpaceInterpolate(const RobotState& start,
+                                        const RobotState& end,
+                                        vector<RobotState>* interp_steps){
+    // clear the vector passed in
+    interp_steps->clear();
+    // get the base states. This interpolation is always in workspace.
+    ContBaseState start_base = start.base_state();
+    ContBaseState end_base = end.base_state();
+
+    // for now, just use the number of steps required in workspace.
+    // TODO : Check if this looks smooth enough and change numInterpSteps
+    // accordingly
+    int num_interp_steps = numInterpSteps(start, end);
+
+    // interpolate the base steps
+    std::vector<ContBaseState> interp_base_steps;
+    interp_base_steps = ContBaseState::interpolate(start_base, end_base, num_interp_steps);
+    // interpolate the arm steps
+    std::vector<LeftContArmState> left_cont_arm_interp_steps;
+    left_cont_arm_interp_steps = LeftContArmState::joint_space_interpolate(
+        start.left_arm(), end.left_arm(), num_interp_steps);
+    std::vector<RightContArmState> right_cont_arm_interp_steps;
+    right_cont_arm_interp_steps = RightContArmState::joint_space_interpolate(
+        start.right_arm(), end.right_arm(), num_interp_steps);
+
+    // should at least return the same start and end poses
+    if (num_interp_steps < 2) {
+        assert(interp_base_steps.size() == 2);
+        assert(left_cont_arm_interp_steps.size() == 2);
+        assert(right_cont_arm_interp_steps.size() == 2);
+    } else {
+        assert(interp_base_steps.size() == static_cast<size_t>(num_interp_steps));
+        assert(left_cont_arm_interp_steps.size() == static_cast<size_t>(num_interp_steps));
+        assert(right_cont_arm_interp_steps.size() == static_cast<size_t>(num_interp_steps));
+    }
+
+    for (size_t i = 0; i < interp_base_steps.size(); i++){
+        RobotState state(interp_base_steps[i], right_cont_arm_interp_steps[i],
+                        left_cont_arm_interp_steps[i]);
+        interp_steps->push_back(state);
+    }
+    return true;
+}

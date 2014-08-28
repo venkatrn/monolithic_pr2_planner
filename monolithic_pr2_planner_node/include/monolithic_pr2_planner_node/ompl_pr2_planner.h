@@ -34,6 +34,7 @@ class OMPLPR2Planner{
             StatsWriter& m_stats_writer);
         bool checkRequest(monolithic_pr2_planner::SearchRequestParams& search_request);
         bool createStartGoal(FullState& start, FullState& goal, monolithic_pr2_planner::SearchRequestParams& req);
+        void setPlanningTime(double t){m_allocated_planning_time = t;};
     private:
         bool convertFullState(ompl::base::State* state,
                               monolithic_pr2_planner::RobotState& robot_state,
@@ -45,4 +46,5 @@ class OMPLPR2Planner{
         omplFullBodyCollisionChecker* m_collision_checker;
         // StatsWriter m_stats_writer;
         int m_planner_id;
+        double m_allocated_planning_time;
 };

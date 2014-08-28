@@ -33,7 +33,7 @@ OMPLPR2Planner::OMPLPR2Planner(const CSpaceMgrPtr& cspace, int planner_id):
     ompl::base::SE2StateSpace* se2 = new ompl::base::SE2StateSpace();
     ompl::base::RealVectorBounds base_bounds(2);
     base_bounds.setLow(0,0);
-    base_bounds.setHigh(0,9);//3
+    base_bounds.setHigh(0,10);//3
     base_bounds.setLow(1,0);
     base_bounds.setHigh(1,6);//3
     se2->setBounds(base_bounds);
@@ -90,7 +90,7 @@ OMPLPR2Planner::OMPLPR2Planner(const CSpaceMgrPtr& cspace, int planner_id):
 
     ompl::base::StateValidityChecker* temp2 = m_collision_checker;
     si->setStateValidityChecker(ompl::base::StateValidityCheckerPtr(temp2));
-    si->setStateValidityCheckingResolution(0.0009); // 0.1%
+    si->setStateValidityCheckingResolution(0.002/si->getMaximumExtent());
     si->setup();
 
     //Define a ProblemDefinition (a start/goal pair)
@@ -240,9 +240,9 @@ bool OMPLPR2Planner::planPathCallback(SearchRequestParams& search_request, int t
     //}
     double t0 = ros::Time::now().toSec();
     if(m_planner_id == RRTSTAR || m_planner_id == RRTSTARFIRSTSOL)
-        planner->solve(60.0);
+        planner->solve(m_allocated_planning_time);
     else
-        planner->solve(60.0);
+        planner->solve(m_allocated_planning_time);
     double t1 = ros::Time::now().toSec();
     double planning_time = t1-t0;
     ompl::base::PathPtr path = planner->getProblemDefinition()->getSolutionPath();

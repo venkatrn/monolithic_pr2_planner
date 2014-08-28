@@ -91,6 +91,11 @@ void ArmAdaptiveMotionPrimitive::computeIntermSteps(const GraphState& source_sta
         robot_state.printToDebug(MPRIM_LOG);
     }
     t_data.interm_robot_steps(interp_steps);
+    // fill in the cont base steps to be the same throughout; this is an arm
+    // only motion
+    ContBaseState c_base = source_state.robot_pose().base_state();
+    std::vector<ContBaseState> cont_base_states(interp_steps.size(), c_base);
+    t_data.cont_base_interm_steps(cont_base_states);
 
 }
 

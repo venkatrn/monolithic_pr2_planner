@@ -170,6 +170,12 @@ bool CollisionSpaceMgr::isValidTransitionStates(const TransitionData& t_data){
                                                  verbose, dist, debug)) {
                 return false;
             }
+        } else if (t_data.motion_type() == MPrim_Types::TORSO) {
+            BodyPose body_pose = robot_state.getContBaseState().body_pose();
+            if (!m_cspace->checkSpineMotion(l_arm, r_arm, body_pose, verbose, 
+                                                      dist, debug)) {
+                return false;
+            }
         } else {
             throw std::invalid_argument("not a valid motion primitive type");
         }

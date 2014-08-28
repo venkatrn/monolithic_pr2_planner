@@ -6,10 +6,11 @@
 
 void printUsage(){
   printf("usage: runTests [imha | smha] [rr | ma | dts] path_to_test_file.yaml\n");
+  printf("usage: runTests [rrt | prm | rrtstar] path_to_test_file.yaml\n");
 }
 
 int main(int argc, char** argv){
-  if(argc != 4){
+  if(argc != 4 && argc != 3){
     printUsage();
     return 1;
   }
@@ -22,8 +23,9 @@ int main(int argc, char** argv){
   bool gotFilename = false;
   bool gotPlannerType = false;
   bool gotMetaType = false;
+  req.use_ompl = false;
   char* filename;
-  for(int i=1; i<4; i++){
+  for(int i=1; i<argc; i++){
     if(strcmp(argv[i],"imha")==0){
       req.planner_type = mha_planner::PlannerType::IMHA;
       gotPlannerType = true;
@@ -44,12 +46,17 @@ int main(int argc, char** argv){
       req.meta_search_type = mha_planner::MetaSearchType::DTS;
       gotMetaType = true;
     }
+    else if(strcmp(argv[i],"rrt")==0){
+      req.use_ompl = true;
+      gotMetaType = true;
+    }
     else{
       filename = argv[i];
       gotFilename = true;
     }
   }
-  if(!gotFilename || !gotPlannerType || !gotMetaType){
+
+  if(!gotFilename || !( (gotPlannerType && gotMetaType) || req.use_ompl)){
     printUsage();
     return 1;
   }
@@ -78,7 +85,7 @@ int main(int argc, char** argv){
   req.roll_tolerance = .1;
   req.pitch_tolerance = .1;
   req.yaw_tolerance = .1;
-  req.allocated_planning_time = 30;
+  req.allocated_planning_time = 300;
   req.planning_mode = monolithic_pr2_planner::PlanningModes::RIGHT_ARM_MOBILE;
 
   req.body_start.resize(4);

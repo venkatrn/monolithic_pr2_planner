@@ -55,6 +55,7 @@ vector<FullBodyState> PathPostProcessor::reconstructPath(vector<int> soln_path,
     return final_path;
 }
 
+
 std::vector<FullBodyState> PathPostProcessor::shortcutPath(const vector<int>&
     state_ids, const vector<TransitionData>& transition_states, GoalState& goal_state){
     ROS_DEBUG_NAMED(HEUR_LOG, "Original request : States : %ld, transition data : %ld",
@@ -66,39 +67,47 @@ std::vector<FullBodyState> PathPostProcessor::shortcutPath(const vector<int>&
     
     { // throw in the first point : NOTE: Probably not needed.
         GraphStatePtr source_state = m_hash_mgr->getGraphState(state_ids[0]);
-        final_path.push_back(createFBState(source_state->robot_pose()));
+        final_path.push_back(PathPostProcessor::createFBState(source_state->robot_pose()));
     }
 
     std::vector<FullBodyState> interp_states;
     while(j < state_ids.size()){
         assert(i<j);
+        ROS_DEBUG_NAMED(POSTPROCESSOR_LOG, "Shortcutting : %lu - %lu", i, j);
         // Get the two states between which we are going to try interpolating.
         GraphStatePtr source_state = m_hash_mgr->getGraphState(state_ids[i]);
         GraphStatePtr end_state = m_hash_mgr->getGraphState(state_ids[j]);
         RobotState first_pose = source_state->robot_pose();
         RobotState second_pose = end_state->robot_pose();
-
+        // first_pose.visualize(120);
+        // second_pose.visualize(180);
         // Store the previous interpolation results. In case the current
         // attempt fails.
         std::vector<FullBodyState> interp_states_prev(interp_states.begin(),
             interp_states.end());
         // Attempt to interpolate.
         interp_states.clear();
-        bool interpolate = stateInterpolate(first_pose, second_pose, &interp_states);
-        ROS_DEBUG_NAMED(POSTPROCESSOR_LOG, "Interp_states size : %d ",
+        bool interpolate = PathPostProcessor::stateInterpolate(first_pose, second_pose, &interp_states);
+        ROS_DEBUG_NAMED(POSTPROCESSOR_LOG, "Interp_states size : %lu ",
             interp_states.size());
         // Check if the interpolation was successful and has no collisions.
         bool no_collision = true;
         if(interpolate) {
-            for (size_t k = 0; k < interp_states.size(); ++k)
+            for (size_t k = 0; k < interp_states.size() && no_collision; ++k)
             {
                 if(!m_cspace_mgr->isValidContState(interp_states[k].left_arm,interp_states[k].right_arm,
                     interp_states[k].base)) {
+                    ROS_DEBUG_NAMED(POSTPROCESSOR_LOG, "invalid state found");
+                    RobotState failed_state = PathPostProcessor::createRobotState(interp_states[k]);
                     no_collision = false;
+                    // failed_state.visualize(0);
+                    // std::cin.get();
                 }
             }
         }
         if(interpolate && no_collision){
+            ROS_DEBUG_NAMED(POSTPROCESSOR_LOG, "Successful shortcutting %lu - %lu",
+                i, j);
             // If it was successful and there were no collisions, try until the
             // next state from the current source state.
             j++;
@@ -108,32 +117,38 @@ std::vector<FullBodyState> PathPostProcessor::shortcutPath(const vector<int>&
             // use the transition data. If not, we would have interpolated earlier. We use
             // the results from the last interpolation then.
             if(i == (j - 1)){
+                if (!interpolate)
+                    ROS_DEBUG_NAMED(POSTPROCESSOR_LOG, "failed interpolate");
+                if (!no_collision)
+                    ROS_DEBUG_NAMED(POSTPROCESSOR_LOG, "collision!");
                 // This part is the same as from getFinalPath
-                int motion_type = transition_states[i].motion_type();
-                bool isInterpBaseMotion = (motion_type == MPrim_Types::BASE || 
-                                           motion_type == MPrim_Types::BASE_ADAPTIVE);
-                if(!isInterpBaseMotion){
+                // int motion_type = transition_states[i].motion_type();
+                bool has_t_data = !transition_states[i].interm_robot_steps().empty();
+                // bool isInterpBaseMotion = (motion_type == MPrim_Types::BASE || 
+                                   // motion_type == MPrim_Types::BASE_ADAPTIVE);
+                if(!has_t_data){
                     // This is for the arm motions. They don't have transition
                     // data.
                     GraphStatePtr arm_state = m_hash_mgr->getGraphState(state_ids[i]);
-                    final_path.push_back(createFBState(arm_state->robot_pose()));
+                    final_path.push_back(PathPostProcessor::createFBState(arm_state->robot_pose()));
                 }
-                for (int t=0; t < transition_states[i].interm_robot_steps().size(); t++){
+                for (size_t t=0; t < transition_states[i].interm_robot_steps().size(); t++){
                     RobotState robot = transition_states[i].interm_robot_steps()[t];
-                    FullBodyState state = createFBState(robot);
-                    if(isInterpBaseMotion){
-                        assert(transition_states[i].interm_robot_steps().size() == 
-                               transition_states[i].cont_base_interm_steps().size());
-                        ContBaseState cont_base = transition_states[i].cont_base_interm_steps()[t];
-                        std::vector<double> base;
-                        cont_base.getValues(&base);
-                        state.base = base;
-                    }
+                    FullBodyState state = PathPostProcessor::createFBState(robot);
+                    // if(isInterpBaseMotion){
+                    assert(transition_states[i].interm_robot_steps().size() == 
+                           transition_states[i].cont_base_interm_steps().size());
+                    ContBaseState cont_base = transition_states[i].cont_base_interm_steps()[t];
+                    std::vector<double> base;
+                    cont_base.getValues(&base);
+                    state.base = base;
+                    // }
                     final_path.push_back(state);
                 }
                 ++i;
                 ++j;
             } else {
+                ROS_DEBUG_NAMED(POSTPROCESSOR_LOG, "failed interpolation. shoving in [%lu, %lu)", i, j);
                 // Shove things in.
                 // [) format. We'll shove the last point in the end or in the
                 // next cycle
@@ -142,16 +157,18 @@ std::vector<FullBodyState> PathPostProcessor::shortcutPath(const vector<int>&
                 i = j - 1;
             }
         }
+        ROS_DEBUG_NAMED(POSTPROCESSOR_LOG, "final path size : %lu", final_path.size());
+        // std::cin.get();
     }
     if(i != state_ids.size() - 1){
         final_path.insert(final_path.end(), interp_states.begin(),
             interp_states.end());
     }
-    ROS_DEBUG_NAMED(HEUR_LOG, "Size of shortcutPath: %d",
+    ROS_DEBUG_NAMED(POSTPROCESSOR_LOG, "Size of shortcutPath: %d",
         static_cast<int>(final_path.size()));
     { // throw in the last point
         GraphStatePtr soln_state = goal_state.getSolnState();
-        final_path.push_back(createFBState(soln_state->robot_pose()));
+        final_path.push_back(PathPostProcessor::createFBState(soln_state->robot_pose()));
     }
     return final_path;
 }
@@ -168,13 +185,13 @@ void PathPostProcessor::visualizeFinalPath(vector<FullBodyState> path){
         bp.z = base[2];
         bp.theta = base[3];
         Visualizer::pviz->visualizeRobot(r_arm, l_arm, bp, 150, "robot", 0);
-        RobotState robot_state = createRobotState(state);
+        RobotState robot_state = PathPostProcessor::createRobotState(state);
         m_cspace_mgr->visualizeAttachedObject(robot_state);
         // m_cspace_mgr->visualizeCollisionModel(robot_state);
         robot_state.printToDebug(POSTPROCESSOR_LOG);
         robot_state.getObjectStateRelBody().getContObjectState().printToDebug(POSTPROCESSOR_LOG);
         // std::cin.get();
-        usleep(10000);
+        usleep(30000);
     }
 }
 
@@ -306,7 +323,7 @@ std::vector<FullBodyState> PathPostProcessor::getFinalPath(const vector<int>& st
     vector<FullBodyState> fb_states;
     // { // throw in the first point
     //     GraphStatePtr source_state = m_hash_mgr->getGraphState(state_ids[0]);
-    //     fb_states.push_back(createFBState(source_state->robot_pose()));
+    //     fb_states.push_back(PathPostProcessor::createFBState(source_state->robot_pose()));
     // }
     for (size_t i=0; i < transition_states.size(); i++){
         int motion_type = transition_states[i].motion_type();
@@ -314,7 +331,7 @@ std::vector<FullBodyState> PathPostProcessor::getFinalPath(const vector<int>& st
                                    motion_type == MPrim_Types::BASE_ADAPTIVE);
         if (!isInterpBaseMotion) {
             GraphStatePtr current_state = m_hash_mgr->getGraphState(state_ids[i]);
-            fb_states.push_back(createFBState(current_state->robot_pose()));
+            fb_states.push_back(PathPostProcessor::createFBState(current_state->robot_pose()));
         }
         // ROS_DEBUG_NAMED(SEARCH_LOG, "Transition number : %d; Type: %d; intermediate states: %d", i, motion_type, transition_states[i].interm_robot_steps().size());
         // The interm_robot_steps() has the start and the end state included.
@@ -323,7 +340,7 @@ std::vector<FullBodyState> PathPostProcessor::getFinalPath(const vector<int>& st
         // interm_robot_steps().size() - 1
         for (int j=0; j < static_cast<int>(transition_states[i].interm_robot_steps().size()-1); j++){
             RobotState robot = transition_states[i].interm_robot_steps()[j];
-            FullBodyState state = createFBState(robot);
+            FullBodyState state = PathPostProcessor::createFBState(robot);
             if (isInterpBaseMotion){
                 assert(transition_states[i].interm_robot_steps().size() == 
                        transition_states[i].cont_base_interm_steps().size());
@@ -332,7 +349,7 @@ std::vector<FullBodyState> PathPostProcessor::getFinalPath(const vector<int>& st
                 cont_base.getValues(&base);
                 state.base = base;
             }
-            // RobotState robot_state = createRobotState(state);
+            // RobotState robot_state = PathPostProcessor::createRobotState(state);
             // robot_state.visualize();
             // m_cspace_mgr->visualizeAttachedObject(robot_state);
             // std::cin.get();
@@ -342,7 +359,7 @@ std::vector<FullBodyState> PathPostProcessor::getFinalPath(const vector<int>& st
     }
     { // throw in the last point
         GraphStatePtr soln_state = goal_state.getSolnState();
-        fb_states.push_back(createFBState(soln_state->robot_pose()));
+        fb_states.push_back(PathPostProcessor::createFBState(soln_state->robot_pose()));
     }
     return fb_states;
 }
@@ -359,48 +376,18 @@ std::vector<FullBodyState> PathPostProcessor::getFinalPath(const vector<int>& st
  * Bug alert! Returns only the end states even for a base motion. NEED TO DEBUG
  */
 bool PathPostProcessor::stateInterpolate(const RobotState& start, const RobotState& end, vector<FullBodyState>* interp_steps){
-
-    // Need this relbody - not relmap
-    ContObjectState start_obj = start.getObjectStateRelBody();
-    ContObjectState end_obj = end.getObjectStateRelBody();
-
-    ContBaseState start_base = start.base_state();
-    ContBaseState end_base = end.base_state();
-
-    int num_interp_steps = RobotState::numInterpSteps(start, end);
-    vector<ContObjectState> interp_obj_steps;
-    vector<ContBaseState> interp_base_steps;
-    ROS_DEBUG_NAMED(MPRIM_LOG, "start obj");
-    start_obj.printToDebug(MPRIM_LOG);
-    ROS_DEBUG_NAMED(MPRIM_LOG, "end obj");
-    end_obj.printToDebug(MPRIM_LOG);
-    interp_obj_steps = ContObjectState::interpolate(start_obj, end_obj, 
-                                                    num_interp_steps);
-    interp_base_steps = ContBaseState::interpolate(start_base, end_base, 
-                                                   num_interp_steps);
-    assert(interp_obj_steps.size() == interp_base_steps.size());
-    ROS_DEBUG_NAMED(MPRIM_LOG, "size of returned interp %lu", interp_obj_steps.size());
-
-    // should at least return the same start and end poses
-    if (num_interp_steps < 2){
-        assert(interp_obj_steps.size() == 2);
-    } else {
-        assert(interp_obj_steps.size() == static_cast<size_t>(num_interp_steps));
+    std::vector<RobotState> robot_states;
+    // try workspace interpolate. This is what we prefer.
+    bool interpolate = RobotState::workspaceInterpolate(start, end, &robot_states);
+    if (!interpolate) {
+        robot_states.clear();
+        RobotState::jointSpaceInterpolate(start, end, &robot_states);
     }
 
-    // Returns all the full body states in between. It's continuous.
-    for (size_t i=0; i < interp_obj_steps.size(); i++){
-        interp_obj_steps[i].printToDebug(MPRIM_LOG);
-        RobotState seed(interp_base_steps[i], start.right_arm(), start.left_arm());
-        RobotPosePtr new_robot_state;
-        if (!RobotState::computeRobotPose(interp_obj_steps[i], seed, new_robot_state)){
-            return false;
-        }
-        FullBodyState fb_state = createFBState(*new_robot_state);
-        std::vector<double> base;
-        interp_base_steps[i].getValues(&base);
-        fb_state.base = base;
-        interp_steps->push_back(fb_state);
+    // now we should have all the robot states. Convert them to FBStates
+    interp_steps->clear();
+    for (auto& state : robot_states) {
+        interp_steps->push_back(PathPostProcessor::createFBState(state));
     }
     return true;
 }

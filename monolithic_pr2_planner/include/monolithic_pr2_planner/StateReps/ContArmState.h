@@ -68,7 +68,6 @@ namespace monolithic_pr2_planner {
 
             DiscObjectState getObjectStateRelBody();
 
-
         private:
             //static SBPLArmModelPtr m_arm_model;
             //static KDL::Frame m_object_offset;
@@ -92,6 +91,10 @@ namespace monolithic_pr2_planner {
 
             static void initArmModel(ArmDescriptionParams& params);
 
+            static std::vector<LeftContArmState> joint_space_interpolate(
+                const LeftContArmState&& start, const LeftContArmState&& end,
+                int num_interp_steps);
+
         private:
             static int m_arm_side;
             static SBPLArmModelPtr m_arm_model;
@@ -109,6 +112,10 @@ namespace monolithic_pr2_planner {
             virtual void setArmModel(SBPLArmModelPtr arm_model) { m_arm_model = arm_model; };
 
             static void initArmModel(ArmDescriptionParams& params);
+
+            static std::vector<RightContArmState> joint_space_interpolate(
+                const RightContArmState&& start, const RightContArmState&& end,
+                int num_interp_steps);
 
         private:
             static int m_arm_side;

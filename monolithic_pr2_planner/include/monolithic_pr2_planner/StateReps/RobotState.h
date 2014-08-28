@@ -49,6 +49,8 @@ namespace monolithic_pr2_planner {
                                          bool free_angle_search=false);
             static bool workspaceInterpolate(const RobotState& start, const RobotState& end,
                                              std::vector<RobotState>* interp_steps);
+            static bool jointSpaceInterpolate(const RobotState& start,
+                    const RobotState& end, std::vector<RobotState>* interp_steps);
             static int numInterpSteps(const RobotState& start, const RobotState& end);
 
             inline double randomDouble(double min, double max){

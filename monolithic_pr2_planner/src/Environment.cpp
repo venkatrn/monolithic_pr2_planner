@@ -427,7 +427,7 @@ int Environment::GetTrueCost(int parentID, int childID){
     // ik and all that). this call updates the stored robot pose.
     real_next_successor->robot_pose(successor->robot_pose());
 
-    bool matchesEndID = successor->id() == childID;
+    bool matchesEndID = (successor->id() == childID) || (childID == GOAL_STATE);
     assert(matchesEndID);
 
     bool valid_successor = (m_cspace_mgr->isValidSuccessor(*successor, t_data) && 

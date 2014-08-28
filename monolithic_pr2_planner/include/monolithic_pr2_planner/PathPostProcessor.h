@@ -19,10 +19,13 @@ namespace monolithic_pr2_planner {
                                                        GoalState& goal_state,
                                                        std::vector<MotionPrimitivePtr> mprims);
             void visualizeFinalPath(std::vector<FullBodyState> path);
-            bool stateInterpolate(const RobotState& start, const RobotState& end,
+            static bool stateInterpolate(const RobotState& start, const RobotState& end,
                                              std::vector<FullBodyState>* interp_steps);
             static bool isBasePathBetter(std::vector<FullBodyState> &new_path,
                 std::vector<FullBodyState> &original_path);
+            static FullBodyState createFBState(const RobotState& robot);
+            static RobotState createRobotState(const FullBodyState& fb_state);
+            static ContBaseState createContBaseState(const FullBodyState& state);
         private:
             std::vector<FullBodyState> getFinalPath(const vector<int>& state_ids,
                                             const vector<TransitionData>& transition_states,
@@ -31,9 +34,6 @@ namespace monolithic_pr2_planner {
                                             GoalState& goal_state);
             bool findBestTransition(int start_id, int end_id, TransitionData& t_data,
                                     std::vector<MotionPrimitivePtr> mprims);
-            FullBodyState createFBState(const RobotState& robot);
-            RobotState createRobotState(const FullBodyState& fb_state);
-            ContBaseState createContBaseState(const FullBodyState& state);
             CSpaceMgrPtr m_cspace_mgr;
             HashManagerPtr m_hash_mgr;
     };

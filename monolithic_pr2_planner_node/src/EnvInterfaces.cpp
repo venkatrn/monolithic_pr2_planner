@@ -363,55 +363,95 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
     else
       planner_queues = 19;
 
+    printf("\n");
+    ROS_INFO("Initialize environment");
     m_env->reset();
     m_env->setPlannerType(planner_type);
     m_env->setUseNewHeuristics(use_new_heuristics);
     m_mha_planner.reset(new MHAPlanner(m_env.get(), planner_queues, forward_search));
     total_planning_time = clock();
-    if (!m_env->configureRequest(search_request, start_id, goal_id))
+    ROS_INFO("configuring request");
+    if (!m_env->configureRequest(search_request, start_id, goal_id)){
         ROS_ERROR("Unable to configure request for %s! Trial ID: %d",
          planner_prefix.c_str(), counter);
-    //m_mha_planner->set_initialsolution_eps1(EPS1); TODO:MIKE
-    //m_mha_planner->set_initialsolution_eps2(EPS2); TODO:MIKE
-    //m_mha_planner->set_search_mode(return_first_soln); TODO:Venkat
-    m_mha_planner->set_start(start_id);
-    ROS_INFO("setting %s goal id to %d", planner_prefix.c_str(), goal_id);
-    m_mha_planner->set_goal(goal_id);
-    m_mha_planner->force_planning_from_scratch();
-    vector<int> soln;
-    int soln_cost;
-    MHAReplanParams replan_params(req.allocated_planning_time);
-    replan_params.inflation_eps = EPS1;
-    replan_params.anchor_eps = EPS2;
-    replan_params.use_anchor = false;
-    replan_params.return_first_solution = true;
 
-    replan_params.meta_search_type = static_cast<mha_planner::MetaSearchType>(req.meta_search_type);
-    replan_params.planner_type = static_cast<mha_planner::PlannerType>(req.planner_type);
-    //isPlanFound = m_mha_planner->replan(req.allocated_planning_time, 
-    //                                     &soln, &soln_cost);
-    isPlanFound = m_mha_planner->replan(&soln, replan_params, &soln_cost);
-
-    if (isPlanFound) {
-        ROS_INFO("Plan found in %s Planner. Moving on to reconstruction.",
-            planner_prefix.c_str());
-        states =  m_env->reconstructPath(soln);
-        total_planning_time = clock() - total_planning_time;
-        packageMHAStats(stat_names, stats, soln_cost, states.size(),
-            total_planning_time);
+        total_planning_time = -1;
+        int soln_cost = -1;
+        packageMHAStats(stat_names, stats, soln_cost, 0, total_planning_time);
+        for(unsigned int i=0; i<stats.size(); i++)
+          stats[i] = -1;
         m_stats_writer.writeSBPL(stats, states, counter, planner_prefix);
         res.stats_field_names = stat_names;
         res.stats = stats;
-    } else {
-        packageMHAStats(stat_names, stats, soln_cost, states.size(),
-            total_planning_time);
-        ROS_INFO("No plan found in %s!", planner_prefix.c_str());
+        return true;
     }
-    if(m_params.run_trajectory) {
-        ROS_INFO("Running trajectory!");
-        runTrajectory(states);
+
+    if(req.use_ompl){
+      ROS_INFO("rrt init");
+      RobotState::setPlanningMode(PlanningModes::RIGHT_ARM_MOBILE);
+      m_rrt.reset(new OMPLPR2Planner(m_env->getCollisionSpace(), RRT));
+      ROS_INFO("rrt check request");
+      if (!m_rrt->checkRequest(*search_request))
+        ROS_WARN("bad start goal for ompl");
+      ROS_INFO("rrt plan");
+      m_rrt->setPlanningTime(req.allocated_planning_time);
+      double t0 = ros::Time::now().toSec();
+      bool found_path = m_rrt->planPathCallback(*search_request, counter, m_stats_writer);
+      double t1 = ros::Time::now().toSec();
+      ROS_INFO("rrt done planning");
+
+      res.stats_field_names.clear();
+      res.stats_field_names.push_back("total_plan_time");
+      res.stats.clear();
+      if(found_path)
+        res.stats.push_back(t1-t0);
+      else
+        res.stats.push_back(-1.0);
+
+      sleep(5);
+      return true;
     }
-    return isPlanFound;
+    else{
+      m_mha_planner->set_start(start_id);
+      ROS_INFO("setting %s goal id to %d", planner_prefix.c_str(), goal_id);
+      m_mha_planner->set_goal(goal_id);
+      m_mha_planner->force_planning_from_scratch();
+      vector<int> soln;
+      int soln_cost;
+      ROS_INFO("allocated time is %f",req.allocated_planning_time);
+      MHAReplanParams replan_params(req.allocated_planning_time);
+      replan_params.inflation_eps = EPS1;
+      replan_params.anchor_eps = EPS2;
+      replan_params.use_anchor = false;
+      replan_params.return_first_solution = false;
+
+      replan_params.meta_search_type = static_cast<mha_planner::MetaSearchType>(req.meta_search_type);
+      replan_params.planner_type = static_cast<mha_planner::PlannerType>(req.planner_type);
+      //isPlanFound = m_mha_planner->replan(req.allocated_planning_time, 
+      //                                     &soln, &soln_cost);
+      isPlanFound = m_mha_planner->replan(&soln, replan_params, &soln_cost);
+
+      if (isPlanFound) {
+          ROS_INFO("Plan found in %s Planner. Moving on to reconstruction.",
+              planner_prefix.c_str());
+          states =  m_env->reconstructPath(soln);
+          total_planning_time = clock() - total_planning_time;
+          packageMHAStats(stat_names, stats, soln_cost, states.size(),
+              total_planning_time);
+          m_stats_writer.writeSBPL(stats, states, counter, planner_prefix);
+          res.stats_field_names = stat_names;
+          res.stats = stats;
+      } else {
+          packageMHAStats(stat_names, stats, soln_cost, states.size(),
+              total_planning_time);
+          ROS_INFO("No plan found in %s!", planner_prefix.c_str());
+      }
+      if(m_params.run_trajectory) {
+          ROS_INFO("Running trajectory!");
+          runTrajectory(states);
+      }
+      return isPlanFound;
+    }
 }
 
 bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req, 
@@ -427,6 +467,10 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
     search_request->left_arm_start = LeftContArmState(req.larm_start);
     search_request->right_arm_start = RightContArmState(req.rarm_start);
     search_request->underspecified_start = req.underspecified_start;
+
+    search_request->base_goal = req.body_goal;
+    search_request->left_arm_goal = LeftContArmState(req.larm_goal);
+    search_request->right_arm_goal = RightContArmState(req.rarm_goal);
 
     KDL::Frame rarm_offset, larm_offset;
     rarm_offset.p.x(req.rarm_object.pose.position.x);
@@ -754,17 +798,31 @@ void EnvInterfaces::packageMHAStats(vector<string>& stat_names,
     */
     vector<PlannerStats> planner_stats;
     m_mha_planner->get_search_stats(&planner_stats);
-    // Take stats only for the first solution, since this is not anytime currently
-    stats[0] = planner_stats[0].time;
-    stats[1] = stats[0];
-    stats[2] = EPS1*EPS2;
-    stats[3] = planner_stats[0].expands;
-    stats[4] = stats[0];
-    stats[5] = stats[2];
-    stats[6] = stats[2];
-    stats[7] = stats[3];
-    stats[8] = static_cast<double>(planner_stats[0].cost);
-    stats[9] = static_cast<double>(solution_size);
+    if(planner_stats.empty()){
+      stats[0] = -1;
+      stats[1] = -1;
+      stats[2] = -1;
+      stats[3] = -1;
+      stats[4] = -1;
+      stats[5] = -1;
+      stats[6] = -1;
+      stats[7] = -1;
+      stats[8] = -1;
+      stats[9] = -1;
+    }
+    else{
+      // Take stats only for the first solution, since this is not anytime currently
+      stats[0] = planner_stats[0].time;
+      stats[1] = stats[0];
+      stats[2] = EPS1*EPS2;
+      stats[3] = planner_stats[0].expands;
+      stats[4] = stats[0];
+      stats[5] = stats[2];
+      stats[6] = stats[2];
+      stats[7] = stats[3];
+      stats[8] = static_cast<double>(planner_stats[0].cost);
+      stats[9] = static_cast<double>(solution_size);
+    }
 }
 
 bool EnvInterfaces::bindCollisionSpaceToTopic(string topic_name){

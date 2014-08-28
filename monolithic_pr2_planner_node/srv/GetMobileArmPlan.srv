@@ -36,6 +36,7 @@ float64 dec_eps
 
 int8 planner_type
 int8 meta_search_type
+bool use_ompl
 
 ---
 

@@ -83,7 +83,7 @@ int BFS2DRotFootprintHeuristic::getGoalHeuristic(GraphStatePtr state){
       ROS_ERROR("transCost=%d transCost+1dx=%d rotCost=%d robot_theta=%f theta_=%f cost=%d",
           transCost, BFS2DHeuristic::getGoalHeuristic(tmp), rotCost, state->robot_pose().getContBaseState().theta(), theta_,
           getCostMultiplier() * (transCost + rotCost));
-      std::cin.get();
+      //std::cin.get();
     }
 
     return getCostMultiplier() * (transCost + rotCost);

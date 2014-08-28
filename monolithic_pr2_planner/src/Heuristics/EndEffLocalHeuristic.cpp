@@ -32,7 +32,7 @@ int EndEffLocalHeuristic::getGoalHeuristic(GraphStatePtr state){
   if(print){
     print = false;
     ROS_ERROR("eef local dist=%f cost=%d",dist,dist*getCostMultiplier());
-    std::cin.get();
+    //std::cin.get();
   }
 
   return dist * getCostMultiplier();

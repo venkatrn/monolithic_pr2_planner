@@ -20,6 +20,7 @@ Environment::Environment(ros::NodeHandle nh)
     :   m_hash_mgr(new HashManager(&StateID2IndexMapping)),
         m_nodehandle(nh), m_mprims(m_goal),
         m_heur_mgr(new HeuristicMgr()),
+        m_using_lazy(false),
         m_planner_type(T_SMHA) {
         m_param_catalog.fetch(nh);
         configurePlanningDomain();
@@ -108,7 +109,8 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
         case 1:  // Base1, Base2 heur
           return static_cast<int>(0.5*(*values).at("base_with_rot_0") + 0.5*(*values).at("endeff_rot_goal"));
         case 2:  // Base1, Base2 heur
-          return static_cast<int>(1.0*(*values).at("base_with_rot_0") + 0.0*(*values).at("endeff_rot_goal"));
+          //return static_cast<int>(1.0*(*values).at("base_with_rot_0") + 0.0*(*values).at("endeff_rot_goal"));
+          return static_cast<int>(0.5*(*values).at("base_with_rot_0") + 0.5*(*values).at("arm_angles_folded"));
         case 3:
           if((*values).at("bfsRotFoot0")==0)
             return 0;
@@ -264,11 +266,11 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
 
 void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs, 
                            vector<int>* costs){
-    GetSuccs(sourceStateID, succIDs, costs, 0);
+    GetSuccs(0, sourceStateID, succIDs, costs);
 }
 
-void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs, 
-                           vector<int>* costs, int ii){
+void Environment::GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs, 
+                           vector<int>* costs){
     assert(sourceStateID != GOAL_STATE);
 
     ROS_DEBUG_NAMED(SEARCH_LOG, 
@@ -284,9 +286,9 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
     source_state->robot_pose().printToDebug(SEARCH_LOG);
     if (m_param_catalog.m_visualization_params.expansions) {
         RobotState expansion_pose = source_state->robot_pose();
-        expansion_pose.visualize(250/NUM_SMHA_HEUR*ii);
-        // source_state->robot_pose().visualize(250/NUM_SMHA_HEUR*ii);
-        m_cspace_mgr->visualizeAttachedObject(expansion_pose, 250/NUM_SMHA_HEUR*ii);
+        expansion_pose.visualize(250/NUM_SMHA_HEUR*q_id);
+        // source_state->robot_pose().visualize(250/NUM_SMHA_HEUR*q_id);
+        m_cspace_mgr->visualizeAttachedObject(expansion_pose, 250/NUM_SMHA_HEUR*q_id);
         // m_cspace_mgr->visualizeCollisionModel(expansion_pose);
         usleep(5000);
     }
@@ -327,8 +329,31 @@ void Environment::GetSuccs(int sourceStateID, vector<int>* succIDs,
 }
 
 void Environment::GetLazySuccs(int sourceStateID, vector<int>* succIDs, 
+                           vector<int>* costs, std::vector<bool>* isTrueCost)
+{
+  if (!m_using_lazy)
+  {
+    GetSuccs(0, sourceStateID, succIDs, costs);
+    isTrueCost->clear();
+    isTrueCost->resize(succIDs->size(), 1);
+    return;
+  }
+  GetLazySuccs(0, sourceStateID, succIDs, costs, isTrueCost);
+}
+
+void Environment::GetLazySuccs(int q_id, int sourceStateID, vector<int>* succIDs, 
                            vector<int>* costs, std::vector<bool>* isTrueCost){
-    vector<MotionPrimitivePtr> all_mprims = m_mprims.getMotionPrims();
+    
+  if (!m_using_lazy)
+  {
+    GetSuccs(q_id, sourceStateID, succIDs, costs);
+    isTrueCost->clear();
+    isTrueCost->resize(succIDs->size(), 1);
+    return;
+  }
+
+  double expansion_color = 250/NUM_SMHA_HEUR*q_id;
+  vector<MotionPrimitivePtr> all_mprims = m_mprims.getMotionPrims();
     ROS_DEBUG_NAMED(SEARCH_LOG, "==================Expanding state %d==================", 
                     sourceStateID);
     succIDs->clear();
@@ -340,7 +365,7 @@ void Environment::GetLazySuccs(int sourceStateID, vector<int>* succIDs,
     ROS_DEBUG_NAMED(SEARCH_LOG, "Source state is:");
     source_state->robot_pose().printToDebug(SEARCH_LOG);
     if(m_param_catalog.m_visualization_params.expansions){
-        source_state->robot_pose().visualize();
+        source_state->robot_pose().visualize(expansion_color);
         usleep(10000);
     }
     for (auto mprim : all_mprims){

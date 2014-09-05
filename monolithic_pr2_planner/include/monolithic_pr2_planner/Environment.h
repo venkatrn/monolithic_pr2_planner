@@ -35,11 +35,15 @@ namespace monolithic_pr2_planner {
                                   int& start_id, int& goal_id);
             void GetSuccs(int sourceStateID, vector<int>* succIDs, 
                 vector<int>* costs);
-            void GetSuccs(int sourceStateID, vector<int>* succIDs, 
-                vector<int>* costs, int ii);
-            virtual void GetLazySuccs(int sourceStateID, vector<int>* succIDs, 
+            void GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs, 
+                vector<int>* costs);
+
+            void GetLazySuccs(int sourceStateID, vector<int>* succIDs, 
                 vector<int>* costs, std::vector<bool>* isTrueCost);
-            virtual int GetTrueCost(int parentID, int childID);
+            void GetLazySuccs(int q_id, int sourceStateID, vector<int>* succIDs, 
+                vector<int>* costs, std::vector<bool>* isTrueCost);
+
+            int GetTrueCost(int parentID, int childID);
             std::vector<FullBodyState> reconstructPath(std::vector<int> 
                 state_ids);
             void reset();
@@ -59,6 +63,7 @@ namespace monolithic_pr2_planner {
             HashManagerPtr m_hash_mgr;
             ros::NodeHandle m_nodehandle;
             GoalStatePtr m_goal;
+            bool m_using_lazy;
             MotionPrimitivesMgr m_mprims;
             HeuristicMgrPtr m_heur_mgr;
 

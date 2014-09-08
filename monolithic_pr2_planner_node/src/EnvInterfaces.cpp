@@ -263,62 +263,6 @@ bool EnvInterfaces::experimentCallback(GetMobileArmPlan::Request &req,
                 start_goal.first.visualize();
                 runMHAPlanner(monolithic_pr2_planner::T_SMHA, "smha_", req, res, search_request, counter);
                 runMHAPlanner(monolithic_pr2_planner::T_IMHA, "imha_", req, res, search_request, counter);
-                // runMHAPlanner(monolithic_pr2_planner::T_MPWA, "mpwa_", req, res, search_request, counter);
-                // runMHAPlanner(monolithic_pr2_planner::T_MHG_REEX, "mhg_reex_", req, res, search_request, counter);
-                // runMHAPlanner(monolithic_pr2_planner::T_MHG_NO_REEX, "mhg_no_reex_", req, res, search_request, counter);
-                // runMHAPlanner(monolithic_pr2_planner::T_EES, "ees_", req, res, search_request, counter);
-
-                // ARA Planner
-                /*** BEGIN ARA PLANNER ****
-                m_env->reset();
-                m_env->setPlannerType(monolithic_pr2_planner::T_ARA);
-                m_ara_planner.reset(new ARAPlanner(m_env.get(), forward_search));
-                total_planning_time = clock();
-                if(!m_env->configureRequest(search_request, start_id, goal_id))
-                    ROS_ERROR("Unable to configure request for ARA!"
-                        " Trial ID: %d", counter);
-
-                m_ara_planner->set_initialsolution_eps(EPS1*EPS2);
-                m_ara_planner->set_search_mode(return_first_soln);
-                m_ara_planner->set_start(start_id);
-                ROS_INFO("setting ARA goal id to %d", goal_id);
-                m_ara_planner->set_goal(goal_id);
-                m_ara_planner->force_planning_from_scratch();
-                soln.clear();
-                soln_cost = 0;
-                isPlanFound = m_ara_planner->replan(req.allocated_planning_time, 
-                                                     &soln, &soln_cost);
-
-                if (isPlanFound){
-                    ROS_INFO("Plan found in ARA Planner." 
-                        " Moving on to reconstruction.");
-                    states =  m_env->reconstructPath(soln);
-                    total_planning_time = clock() - total_planning_time;
-                    packageStats(stat_names, stats, soln_cost, states.size(),
-                        total_planning_time);
-                    m_stats_writer.writeARA(stats, states, counter);
-                    res.stats_field_names = stat_names;
-                    res.stats = stats;
-                } else {
-                    packageStats(stat_names, stats, soln_cost, states.size(),
-                        total_planning_time);
-                    ROS_INFO("No plan found!");
-                }
-                /*** END ARA PLANNER ****/
-
-                // OMPL
-                // m_env->reset();
-                // if(!m_env->configureRequest(search_request, start_id, goal_id)){
-                //     ROS_ERROR("Unable to configure request for OMPL! Trial ID: %d", counter);
-                // }
-
-                // Run OMPL
-                /*** OMPL PLANNERS ****
-                m_rrt->planPathCallback(*search_request, counter, m_stats_writer);
-                m_prm->planPathCallback(*search_request, counter, m_stats_writer);
-                m_rrtstar->planPathCallback(*search_request, counter, m_stats_writer);
-                m_rrtstar_first_sol->planPathCallback(*search_request, counter, m_stats_writer);
-                /**** END OMPL PLANNERS ***/
                 
                 // Write env if the whole thing didn't crash.
                 m_stats_writer.writeStartGoal(counter, start_goal, environment_seed);
@@ -444,13 +388,15 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
       } else {
           packageMHAStats(stat_names, stats, soln_cost, states.size(),
               total_planning_time);
+          res.stats_field_names = stat_names;
+          res.stats = stats;
           ROS_INFO("No plan found in %s!", planner_prefix.c_str());
       }
       if(m_params.run_trajectory) {
           ROS_INFO("Running trajectory!");
           runTrajectory(states);
       }
-      return isPlanFound;
+      return true;
     }
 }
 
@@ -498,121 +444,17 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
     search_request->obj_goal= req.goal;
     search_request->obj_start = req.start;
 
-    // Uncomment this stuff if you want to send the robot pose as the goal
-    // instead of the object pose
-    // RobotState::setPlanningMode(req.planning_mode);
-    // RightContArmState rarm_goal(req.rarm_goal);
-    // LeftContArmState larm_goal(req.larm_goal);
-    // ContBaseState base_goal(req.body_goal);
-    // RobotPosePtr goal_robot = boost::make_shared<RobotState>(base_goal,
-    //     rarm_goal, larm_goal);
-
-    // ContObjectState obj_goal = goal_robot->getObjectStateRelMap();
-    // search_request->obj_goal= obj_goal;
-    // goal_robot->visualize();
-
-    // RobotState::setPlanningMode(req.planning_mode);
-    // Create the continuous object state.
-    // ContObjectState start_obj_state(req.start);
-    // Create the continous base state.
-    // ContBaseState base_start(req.body_start);
-    // Shove it into a robot state. This should give us the state with IK for
-    // arms and everything.
-
-
-    // std::cin.get();
-    // double object_dim_x = 0.5;
-    // double object_dim_y = 1.0;
-    // double object_dim_z = 0.1;
-    // KDL::Vector req_obj_vector = KDL::Vector(
-    //     req.rarm_object.pose.position.x - object_dim_x/2 - 0.1,
-    //     req.rarm_object.pose.position.y,
-    //     req.rarm_object.pose.position.z);
-    // KDL::Rotation req_obj_rot = KDL::Rotation::Quaternion(
-    //     req.rarm_object.pose.orientation.x,
-    //     req.rarm_object.pose.orientation.y,
-    //     req.rarm_object.pose.orientation.z,
-    //     req.rarm_object.pose.orientation.w);
-    // KDL::Frame gripper_wrt_obj(req_obj_rot, req_obj_vector);
-    // KDL::Frame obj_wrt_gripper = gripper_wrt_obj.Inverse();
-
-    // geometry_msgs::Pose attached_object_pose;
-    // attached_object_pose.position.x = obj_wrt_gripper.p.x();
-    // attached_object_pose.position.y = obj_wrt_gripper.p.y();
-    // attached_object_pose.position.z = obj_wrt_gripper.p.z();
-    
-    // KDL::Rotation rot = obj_wrt_gripper.M;
-    
-    // double qx, qy, qz, qw;
-    // rot.GetQuaternion(qx, qy, qz, qw);
-    // attached_object_pose.orientation.x = qx;
-    // attached_object_pose.orientation.y = qy;
-    // attached_object_pose.orientation.z = qz;
-    // attached_object_pose.orientation.w = qw;
-
-    //m_env->getCollisionSpace()->attachCube("picture", "r_wrist_roll_link",
-      //  attached_object_pose, object_dim_x, object_dim_y, object_dim_z);
-
     res.stats_field_names.resize(18);
     res.stats.resize(18);
     int start_id, goal_id;
-    int counter = 42;
+    static int counter = 0;
     bool isPlanFound;
     
     double total_planning_time = clock();
-    // bool retVal = m_env->configureRequest(search_request, start_id, goal_id);
-    // if(!retVal){
-    //     return false;
-    // }
     bool forward_search = true;
     isPlanFound = runMHAPlanner(monolithic_pr2_planner::T_SMHA, "smha_", req, res, search_request, counter);
-    // isPlanFound = runMHAPlanner(monolithic_pr2_planner::T_IMHA, "imha_", req, res, search_request, counter);
-    // runMHAPlanner(monolithic_pr2_planner::T_MPWA, "mpwa_", req, res, search_request, counter);
-    // runMHAPlanner(monolithic_pr2_planner::T_MHG_REEX, "mhg_reex_",
-    //     req, res, search_request, counter);
-    // runMHAPlanner(monolithic_pr2_planner::T_MHG_NO_REEX,
-        // "mhg_no_reex_", req, res, search_request, counter);
-    // runMHAPlanner(monolithic_pr2_planner::T_EES, "ees_", req, res, search_request, counter);
-    // m_ara_planner.reset(new MHAPlanner(m_env.get(), NUM_SMHA_HEUR, forward_search,
-    //     false));
-    // ARA Planner
-    /*** BEGIN ARA PLANNER ****
-    m_env->reset();
-    m_env->setPlannerType(monolithic_pr2_planner::T_ARA);
-    m_ara_planner.reset(new ARAPlanner(m_env.get(), forward_search));
-    total_planning_time = clock();
-    if(!m_env->configureRequest(search_request, start_id, goal_id))
-        ROS_ERROR("Unable to configure request for ARA!"
-            " Trial ID: %d", counter);
-
-    m_ara_planner->set_initialsolution_eps(EPS1*EPS2);
-    m_ara_planner->set_search_mode(return_first_soln);
-    m_ara_planner->set_start(start_id);
-    ROS_INFO("setting ARA goal id to %d", goal_id);
-    m_ara_planner->set_goal(goal_id);
-    m_ara_planner->force_planning_from_scratch();
-    soln.clear();
-    soln_cost = 0;
-    isPlanFound = m_ara_planner->replan(req.allocated_planning_time, 
-                                         &soln, &soln_cost);
-
-    if (isPlanFound){
-        ROS_INFO("Plan found in ARA Planner." 
-            " Moving on to reconstruction.");
-        states =  m_env->reconstructPath(soln);
-        total_planning_time = clock() - total_planning_time;
-        packageStats(stat_names, stats, soln_cost, states.size(),
-            total_planning_time);
-        m_stats_writer.writeARA(stats, states, counter);
-        res.stats_field_names = stat_names;
-        res.stats = stats;
-    } else {
-        packageStats(stat_names, stats, soln_cost, states.size(),
-            total_planning_time);
-        ROS_INFO("No plan found!");
-    }
-    /*** END ARA PLANNER ****/
-    return isPlanFound;
+    counter++;
+    return true;
 }
 
 bool EnvInterfaces::demoCallback(GetMobileArmPlan::Request &req, 
@@ -667,39 +509,6 @@ bool EnvInterfaces::demoCallback(GetMobileArmPlan::Request &req,
 
     search_request->obj_goal = goal_pose;
     search_request->obj_start = req.start;
-
-    // std::cin.get();
-    // double object_dim_x = 0.5;
-    // double object_dim_y = 1.0;
-    // double object_dim_z = 0.1;
-    // KDL::Vector req_obj_vector = KDL::Vector(
-    //     req.rarm_object.pose.position.x - object_dim_x/2 - 0.1,
-    //     req.rarm_object.pose.position.y,
-    //     req.rarm_object.pose.position.z);
-    // KDL::Rotation req_obj_rot = KDL::Rotation::Quaternion(
-    //     req.rarm_object.pose.orientation.x,
-    //     req.rarm_object.pose.orientation.y,
-    //     req.rarm_object.pose.orientation.z,
-    //     req.rarm_object.pose.orientation.w);
-    // KDL::Frame gripper_wrt_obj(req_obj_rot, req_obj_vector);
-    // KDL::Frame obj_wrt_gripper = gripper_wrt_obj.Inverse();
-
-    // geometry_msgs::Pose attached_object_pose;
-    // attached_object_pose.position.x = obj_wrt_gripper.p.x();
-    // attached_object_pose.position.y = obj_wrt_gripper.p.y();
-    // attached_object_pose.position.z = obj_wrt_gripper.p.z();
-    
-    // KDL::Rotation rot = obj_wrt_gripper.M;
-    
-    // double qx, qy, qz, qw;
-    // rot.GetQuaternion(qx, qy, qz, qw);
-    // attached_object_pose.orientation.x = qx;
-    // attached_object_pose.orientation.y = qy;
-    // attached_object_pose.orientation.z = qz;
-    // attached_object_pose.orientation.w = qw;
-
-    //m_env->getCollisionSpace()->attachCube("picture", "r_wrist_roll_link",
-      //  attached_object_pose, object_dim_x, object_dim_y, object_dim_z);
 
     res.stats_field_names.resize(18);
     res.stats.resize(18);
@@ -781,21 +590,6 @@ void EnvInterfaces::packageMHAStats(vector<string>& stat_names,
     stat_names[8] = "solution cost";
     stat_names[9] = "path length";
 
-    // TODO fix the total planning time
-    //stats[0] = totalPlanTime;
-    // TODO: Venkat. Handle the inital/final solution eps correctly when this becomes anytime someday.
-    /*
-    stats[0] = total_planning_time/static_cast<double>(CLOCKS_PER_SEC);
-    stats[1] = m_ara_planner->get_initial_eps_planning_time();
-    stats[2] = m_ara_planner->get_initial_eps();
-    stats[3] = m_ara_planner->get_n_expands_init_solution();
-    stats[4] = m_ara_planner->get_final_eps_planning_time();
-    stats[5] = m_ara_planner->get_final_epsilon();
-    stats[6] = m_ara_planner->get_solution_eps();
-    stats[7] = m_ara_planner->get_n_expands();
-    stats[8] = static_cast<double>(solution_cost);
-    stats[9] = static_cast<double>(solution_size);
-    */
     vector<PlannerStats> planner_stats;
     m_mha_planner->get_search_stats(&planner_stats);
     if(planner_stats.empty()){

@@ -31,7 +31,7 @@
 #include <ompl_full_body_planner_node/ompl_full_body_planner_node.h>
 //#include <ompl_full_body_planner_node/planner_id_.h>
 #include <LinearMath/btVector3.h>
-#include <sbpl_geometry_utils/mesh.h>
+//#include <sbpl_geometry_utils/mesh.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <sensor_msgs/PointCloud2.h>

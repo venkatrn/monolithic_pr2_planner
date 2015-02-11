@@ -16,12 +16,12 @@ int BFS3DWithRotationHeuristic::getGoalHeuristic(GraphStatePtr state){
     //if (m_goal.withinXYZTol(state)){
         //return 0;
     //}
-    DiscObjectState obj_state = state->getObjectStateRelMap();
+    DiscObjectState obj_state = state->getObjectStateRelMapFromState();
     int cost = m_bfs->getDistance(obj_state.x(), obj_state.y(), obj_state.z());
 
     double roll, pitch, yaw;
     m_desired_orientation.GetRPY(roll, pitch, yaw);
-    ContObjectState robot_obj = state->robot_pose().getObjectStateRelMap();
+    ContObjectState robot_obj(state->getObjectStateRelMapFromState());
     double angular_dist = std::fabs(shortest_angular_distance(robot_obj.roll(),
                                                             roll)) + 
                           std::fabs(shortest_angular_distance(robot_obj.pitch(),

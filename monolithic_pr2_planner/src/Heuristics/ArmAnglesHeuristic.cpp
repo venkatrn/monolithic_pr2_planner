@@ -20,8 +20,8 @@ int ArmAnglesHeuristic::getGoalHeuristic(GraphStatePtr state){
         > m_ik_range*m_ik_range )
         return INFINITECOST;
 
-    RobotState robot_pose = state->robot_pose();
-    ContBaseState cont_seed_base_state = robot_pose.getContBaseState();
+    DiscBaseState disc_seed_base_state(state->base_x(), state->base_y(), state->base_z(), state->base_theta());
+    ContBaseState cont_seed_base_state(disc_seed_base_state);
     ContObjectState goal_state = d_goal_state.getContObjectState();
 
     RobotPosePtr final_pose;
@@ -38,6 +38,8 @@ int ArmAnglesHeuristic::getGoalHeuristic(GraphStatePtr state){
     obj_frame.M = KDL::Rotation::RPY(goal_state.roll(), 
                                      goal_state.pitch(),
                                      goal_state.yaw());
+    //TODO: This heurisic MUST NOT be used with the lazy planner because it uses the continuous robot pose
+    RobotState robot_pose = state->robot_pose();
     KDL::Frame internal_tf =
     robot_pose.right_arm().getArmModel()->computeBodyFK(cont_seed_base_state.body_pose());
     KDL::Frame transform = internal_tf.Inverse() * obj_frame;

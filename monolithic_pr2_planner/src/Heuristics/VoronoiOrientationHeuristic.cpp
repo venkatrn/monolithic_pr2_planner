@@ -74,7 +74,7 @@ void VoronoiOrientationHeuristic::setGoal(GoalState& goal_state) {
 }
 
 int VoronoiOrientationHeuristic::getGoalHeuristic(GraphStatePtr state){
-    DiscObjectState obj_state = state->getObjectStateRelMap();
+    DiscObjectState obj_state = state->getObjectStateRelMapFromState();
     
     // Check if within bounds. We need to do this here because the bfs2d
     // implementation doesn't take care of this.

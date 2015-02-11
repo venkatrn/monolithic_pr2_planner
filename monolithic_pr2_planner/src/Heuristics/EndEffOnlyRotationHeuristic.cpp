@@ -16,7 +16,7 @@ int EndEffOnlyRotationHeuristic::getGoalHeuristic(GraphStatePtr state){
     }
     double roll, pitch, yaw;
     m_desired_orientation.GetRPY(roll, pitch, yaw);
-    ContObjectState robot_obj = state->robot_pose().getObjectStateRelMap();
+    ContObjectState robot_obj(state->getObjectStateRelMapFromState());
     double angular_dist = std::fabs(shortest_angular_distance(robot_obj.roll(),
                                                             roll)) + 
                           std::fabs(shortest_angular_distance(robot_obj.pitch(),

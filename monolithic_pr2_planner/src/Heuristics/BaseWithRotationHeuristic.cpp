@@ -1,4 +1,6 @@
 #include <monolithic_pr2_planner/Heuristics/BaseWithRotationHeuristic.h>
+#include <monolithic_pr2_planner/StateReps/ContBaseState.h>
+#include <monolithic_pr2_planner/StateReps/DiscBaseState.h>
 #include <monolithic_pr2_planner/LoggerNames.h>
 #include <monolithic_pr2_planner/Visualizer.h>
 #include <sbpl/utils/key.h>
@@ -70,7 +72,8 @@ void BaseWithRotationHeuristic::setGoal(GoalState& goal_state) {
 }
 
 int BaseWithRotationHeuristic::getGoalHeuristic(GraphStatePtr state){
-    DiscObjectState obj_state = state->getObjectStateRelMap();
+    DiscObjectState obj_state = state->getObjectStateRelMapFromState();
+
     
     // Check if within bounds. We need to do this here because the bfs2d
     // implementation doesn't take care of this.
@@ -83,8 +86,10 @@ int BaseWithRotationHeuristic::getGoalHeuristic(GraphStatePtr state){
     // Cost of the 2D search.
     int cost = m_gridsearch->getlowerboundoncostfromstart_inmm(state->base_x(), state->base_y());
 
+    DiscBaseState disc_base_state(state->base_x(), state->base_y(), state->base_z(), state->base_theta());
+    ContBaseState cont_base_state(disc_base_state);
     // Get the angle to the goal from the sampled point.
-    double rot_dist = std::fabs(shortest_angular_distance(state->robot_pose().getContBaseState().theta(),
+    double rot_dist = std::fabs(shortest_angular_distance(cont_base_state.theta(),
                                                           m_desired_orientation));
     if(rot_dist < 2*M_PI/m_resolution_params.num_base_angles)
       rot_dist = 0;

@@ -1,4 +1,6 @@
 #include <monolithic_pr2_planner/Heuristics/BFS2DRotFootprintHeuristic.h>
+#include <monolithic_pr2_planner/StateReps/ContBaseState.h>
+#include <monolithic_pr2_planner/StateReps/DiscBaseState.h>
 #include <costmap_2d/cost_values.h>
 
 using namespace monolithic_pr2_planner;
@@ -67,7 +69,9 @@ int BFS2DRotFootprintHeuristic::getGoalHeuristic(GraphStatePtr state){
   //cache==2 means we evaluated this cell and found no collision
   if(cache_[base_x][base_y] == 2){
     int transCost = BFS2DHeuristic::getGoalHeuristic(state);
-    int rotCost = 500*std::fabs(shortest_angular_distance(state->robot_pose().getContBaseState().theta(), theta_));
+    DiscBaseState disc_base_state(state->base_x(), state->base_y(), state->base_z(), state->base_theta());
+    ContBaseState cont_base_state(disc_base_state);
+    int rotCost = 500*std::fabs(shortest_angular_distance(cont_base_state.theta(), theta_));
     if(transCost == 0)//if we are already near the goal, this heuristic is done
       return 0;
 

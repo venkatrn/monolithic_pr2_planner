@@ -305,7 +305,7 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
     if(!use_new_heuristics)
       planner_queues = 4;
     else
-      planner_queues = 19;
+      planner_queues = 20;
 
     printf("\n");
     ROS_INFO("Initialize environment");
@@ -366,8 +366,9 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
       MHAReplanParams replan_params(req.allocated_planning_time);
       replan_params.inflation_eps = EPS1;
       replan_params.anchor_eps = EPS2;
-      replan_params.use_anchor = false;
+      replan_params.use_anchor = true;
       replan_params.return_first_solution = false;
+      replan_params.final_eps = EPS1;
 
       replan_params.meta_search_type = static_cast<mha_planner::MetaSearchType>(req.meta_search_type);
       replan_params.planner_type = static_cast<mha_planner::PlannerType>(req.planner_type);

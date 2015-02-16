@@ -465,6 +465,97 @@ int Environment::GetTrueCost(int parentID, int childID){
     return t_data.cost();
 }
 
+// OMPL stuff
+void Environment::VisualizeContState(ompl::base::State *state) {
+  RobotState robot_state;
+  ContBaseState base;
+  if (!convertFullState(state, robot_state, base)) {
+    ROS_ERROR("ik failed for visualization!");
+  }
+  robot_state.visualize();
+}
+
+int Environment::GetContStateID(ompl::base::State *state) {
+  RobotState robot_state;
+  ContBaseState base;
+  if (!convertFullState(state, robot_state, base)) {
+    ROS_ERROR("ik failed for visualization!");
+  }
+  GraphStatePtr graph_state = make_shared<GraphState>(robot_state);
+  m_hash_mgr->save(graph_state);
+  return graph_state->id();
+}
+
+
+int Environment::GetContEdgeCost(ompl::base::State *parent, ompl::base::State* child) {
+
+  RobotState parent_robot_state, child_robot_state;
+  ContBaseState parent_base, child_base;
+  if (!convertFullState(parent, parent_robot_state, parent_base)) {
+    ROS_ERROR("ik failed for visualization!");
+  }
+  if (!convertFullState(child, child_robot_state, child_base)) {
+    ROS_ERROR("ik failed for visualization!");
+  }
+     
+    double dx = parent_base.x() - child_base.x();
+    double dy =parent_base.y()-child_base.y();
+    double linear_distance = sqrt(dx*dx + dy*dy);
+    double linear_time = linear_distance/static_cast<double>(m_param_catalog.m_motion_primitive_params.nominal_vel);
+    double first_angle = parent_base.theta();
+    double final_angle = child_base.theta();
+    double angular_distance = fabs(shortest_angular_distance(first_angle, 
+                                                             final_angle));
+    double angular_time = angular_distance/params.angular_vel;
+
+    //make the cost the max of the two times
+    int cost = ceil(static_cast<double>(METER_TO_MM_MULT)*(max(linear_time, angular_time)));
+    //use any additional cost multiplier
+    cost *= getAdditionalCostMult();
+    return cost;
+}
+
+bool Environment::convertFullState(ompl::base::State* state,
+                                  RobotState& robot_state,
+                                  ContBaseState& base)
+{
+    ContObjectState obj_state;
+    // fix the l_arm angles
+    vector<double> init_l_arm(7,0);
+    init_l_arm[0] = (0.038946287971107774);
+    init_l_arm[1] = (1.2146697069025374);
+    init_l_arm[2] = (1.3963556492780154);
+    init_l_arm[3] = -1.1972269899800325;
+    init_l_arm[4] = (-4.616317135720829);
+    init_l_arm[5] = -0.9887266887318599;
+    init_l_arm[6] = 1.1755681069775656;
+    LeftContArmState l_arm(init_l_arm);
+    RightContArmState r_arm;
+    const ompl::base::CompoundState* s = dynamic_cast<const ompl::base::CompoundState*> (state);
+    obj_state.x((*(s->as<VectorState>(0)))[0]);
+    obj_state.y((*(s->as<VectorState>(0)))[1]);
+    obj_state.z((*(s->as<VectorState>(0)))[2]);
+    obj_state.roll((*(s->as<VectorState>(0)))[3]);
+    obj_state.pitch((*(s->as<VectorState>(0)))[4]);
+    obj_state.yaw((*(s->as<VectorState>(0)))[5]);
+    r_arm.setUpperArmRoll((*(s->as<VectorState>(0)))[6]);
+    l_arm.setUpperArmRoll((*(s->as<VectorState>(0)))[7]);
+    base.z((*(s->as<VectorState>(0)))[8]);
+    base.x(s->as<SE2State>(1)->getX());
+    base.y(s->as<SE2State>(1)->getY());
+    base.theta(s->as<SE2State>(1)->getYaw());
+
+    RobotState seed_state(base, r_arm, l_arm);
+    RobotPosePtr final_state;
+
+    if (!RobotState::computeRobotPose(obj_state, seed_state, final_state))
+        return false;
+
+    robot_state = *final_state;
+    return true;
+
+}
+
 bool Environment::setStartGoal(SearchRequestPtr search_request,
                                int& start_id, int& goal_id){
     RobotState start_pose(search_request->m_params->base_start, 

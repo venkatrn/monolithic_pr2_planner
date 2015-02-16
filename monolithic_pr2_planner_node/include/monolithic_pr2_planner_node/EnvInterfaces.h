@@ -8,6 +8,8 @@
 #include <ros/ros.h>
 #include <tf/transform_listener.h>
 #include <sbpl/planners/araplanner.h>
+#include <sbpl/planners/lazyARA.h>
+#include <sbpl/planners/ppma.h>
 #include <sbpl/planners/mha_planner.h>
 #include <nav_msgs/OccupancyGrid.h>
 #include <sbpl/planners/planner.h>
@@ -48,11 +50,6 @@ namespace monolithic_pr2_planner_node {
                               int solution_cost,
                               size_t solution_size,
                               double total_planning_time);
-            void packageMHAStats(std::vector<std::string>& stat_names,
-                              std::vector<double>& stats,
-                              int solution_cost,
-                              size_t solution_size,
-                              double total_planning_time);
             bool GenerateExperimentFile(std_srvs::Empty::Request &req, std_srvs::Empty::Response &res);
             bool experimentCallback(GetMobileArmPlan::Request &req,
                                     GetMobileArmPlan::Response &res);
@@ -65,7 +62,7 @@ namespace monolithic_pr2_planner_node {
                            double new_origin_x, double new_origin_y,
                            double width, double height);
             void interruptPlannerCallback(std_msgs::EmptyConstPtr);
-            bool runMHAPlanner(int planner_type,
+            bool runPlanner(int planner_type,
                   std::string planner_prefix,
                   GetMobileArmPlan::Request &req,
                   GetMobileArmPlan::Response &res,
@@ -86,8 +83,10 @@ namespace monolithic_pr2_planner_node {
             ros::ServiceServer m_experiment_service;
             ros::ServiceServer m_write_experiments_service;
             ros::ServiceServer m_demo_service;
-            std::unique_ptr<SBPLPlanner> m_ara_planner;
-            std::unique_ptr<MHAPlanner> m_mha_planner;
+            // std::unique_ptr<SBPLPlanner> m_ara_planner;
+            // std::unique_ptr<LazyARAPlanner> m_ara_planner;
+            std::unique_ptr<PPMAPlanner> m_ppma_planner;
+            // std::unique_ptr<MHAPlanner> m_mha_planner;
             ros::Subscriber m_nav_map;
             ros::Publisher m_costmap_pub;
             std::vector<signed char> m_final_map;
@@ -108,5 +107,7 @@ namespace monolithic_pr2_planner_node {
             std::unique_ptr<OMPLPR2Planner> m_rrtstar;
             std::unique_ptr<OMPLPR2Planner> m_rrtstar_first_sol;
             StatsWriter m_stats_writer;
+
+            ompl::base::StateSpacePtr m_full_body_space;
     };
 }

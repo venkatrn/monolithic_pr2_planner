@@ -75,6 +75,7 @@ OMPLPR2Planner::OMPLPR2Planner(const CSpaceMgrPtr& cspace, int planner_id):
     
     //Define our SpaceInformation (combines the state space and collision checker)
     ompl::base::SpaceInformationPtr si(new ompl::base::SpaceInformation(fullBodySpace));
+    m_si = si;
 
     vector<double> init_l_arm(7,0);
     init_l_arm[0] = (0.038946287971107774);

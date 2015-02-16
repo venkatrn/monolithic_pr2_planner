@@ -196,13 +196,16 @@ bool GraphState::applyMPrim(const GraphStateMotion& mprim){
         assert(obj_state.x() == obj.x());
         assert(obj_state.y() == obj.y());
         assert(obj_state.z() == obj.z());
-        if (obj_state.roll() != obj.roll()){
-            ROS_ERROR("angles don't match %d %d", obj_state.roll(), obj.roll());
-            return false;
-        }
-        assert(obj_state.roll() == obj.roll());
-        assert(obj_state.pitch() == obj.pitch());
-        assert(obj_state.yaw() == obj.yaw());
+        // if (obj_state.roll() != obj.roll()){
+        //     ROS_ERROR("angles don't match %d %d", obj_state.roll(), obj.roll());
+        //     return false;
+        // }
+        // assert(obj_state.roll() == obj.roll());
+        // assert(obj_state.pitch() == obj.pitch());
+        // assert(obj_state.yaw() == obj.yaw());
+        //TODO: Venkat 
+        // Same pose can have different rpy representations. Verify quaternion equality instead.
+
         assert(r_fa == m_robot_pose.right_arm().getDiscFreeAngle());
         assert(l_fa == m_robot_pose.left_arm().getDiscFreeAngle());
     }

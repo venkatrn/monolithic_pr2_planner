@@ -19,6 +19,33 @@ bool ArmAdaptiveMotionPrimitive::apply(const GraphState& source_state,
         return false;
     }
 
+    ///////////////////////////////fahad
+        RobotState seed_state = source_state.robot_pose();
+        // seed_state.visualize();
+        // usleep(1000);
+        // getchar();
+
+        ContObjectState goal_c = goal.getContObjectState();
+        ContBaseState cont_seed_base_state = seed_state.getContBaseState();
+        KDL::Frame obj_frame;
+        obj_frame.p.x(goal_c.x());
+        obj_frame.p.y(goal_c.y());
+        obj_frame.p.z(goal_c.z());
+        obj_frame.M = KDL::Rotation::RPY(goal_c.roll(),
+                                         goal_c.pitch(),
+                                         goal_c.yaw());
+        KDL::Frame internal_tf =
+        seed_state.right_arm().getArmModel()->computeBodyFK(cont_seed_base_state.body_pose());
+        KDL::Frame transform = internal_tf.Inverse() * obj_frame;
+        double rr, rp, ry;
+        transform.M.GetRPY(rr, rp, ry);
+        ContObjectState goal_torso_frame(transform.p.x(),
+                                        transform.p.y(),
+                                        transform.p.z(),
+                                        rr,rp,ry);
+        DiscObjectState d_goal_torso_frame(goal_torso_frame);
+///////////////////////////////
+
     DiscBaseState base_state = source_state.robot_pose().base_state();
 
     // take the discrete orientation (theta) of the robot and convert it
@@ -32,6 +59,11 @@ bool ArmAdaptiveMotionPrimitive::apply(const GraphState& source_state,
     // always on a flat surface, the roll and pitch of the map and body frame
     // are aligned - the only thing that needs to be transformed is the yaw.
     DiscObjectState obj_in_body_frame = source_state.getObjectStateRelBody();
+     /////////////fahad
+    obj_in_body_frame.x(d_goal_torso_frame.x());
+    obj_in_body_frame.y(d_goal_torso_frame.y());
+    obj_in_body_frame.z(d_goal_torso_frame.z());
+    ////////////
     obj_in_body_frame.roll(goal.roll());
     obj_in_body_frame.pitch(goal.pitch());
 

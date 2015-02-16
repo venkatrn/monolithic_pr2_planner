@@ -9,9 +9,24 @@
 #include <monolithic_pr2_planner/MotionPrimitives/MotionPrimitivesMgr.h>
 #include <monolithic_pr2_planner/Heuristics/HeuristicMgr.h>
 #include <monolithic_pr2_planner/PathPostProcessor.h>
+#include <ompl/base/spaces/SE2StateSpace.h>
+#include <ompl/geometric/SimpleSetup.h>
+#include <ompl/geometric/PathGeometric.h>
+#include <ompl/base/spaces/RealVectorStateSpace.h>
+#include <ompl/base/State.h>
+#include <ompl/base/StateValidityChecker.h>
+#include <ompl/geometric/planners/rrt/RRT.h>
+#include <ompl/geometric/planners/rrt/RRTConnect.h>
+#include <ompl/geometric/planners/prm/PRM.h>
+#include <ompl/geometric/planners/rrt/RRTstar.h>
+#include <ompl/base/goals/GoalState.h>
 #include <stdexcept>
 #include <vector>
 #include <memory>
+
+typedef ompl::base::RealVectorStateSpace::StateType VectorState;
+typedef ompl::base::SE2StateSpace::StateType SE2State;
+typedef ompl::base::ScopedState<ompl::base::CompoundStateSpace> FullState;
 
 #define NUM_SMHA_HEUR 4 // Used in EnvInterfaces to initialize the planner.
 #define NUM_IMHA_HEUR 4 // Used in EnvInterfaces to initialize the planner.
@@ -26,7 +41,7 @@ namespace monolithic_pr2_planner {
      * information.
      */
     typedef std::pair<int, int> Edge;
-    class Environment : public EnvironmentMHA {
+    class Environment : public EnvironmentPPMA {
         public:
             Environment(ros::NodeHandle nh);
             CSpaceMgrPtr getCollisionSpace(){ return m_cspace_mgr; };
@@ -37,6 +52,9 @@ namespace monolithic_pr2_planner {
                 vector<int>* costs);
             void GetSuccs(int q_id, int sourceStateID, vector<int>* succIDs, 
                 vector<int>* costs);
+            void VisualizeContState(ompl::base::State* state);
+            int GetContStateID(ompl::base::State* state);
+
 
             void GetLazySuccs(int sourceStateID, vector<int>* succIDs, 
                 vector<int>* costs, std::vector<bool>* isTrueCost);
@@ -58,6 +76,7 @@ namespace monolithic_pr2_planner {
             void configureQuerySpecificParams(SearchRequestPtr search_request);
             void generateStartState(SearchRequestPtr search_request);
 
+
             ParameterCatalog m_param_catalog;
             CSpaceMgrPtr m_cspace_mgr;
             HashManagerPtr m_hash_mgr;
@@ -69,6 +88,11 @@ namespace monolithic_pr2_planner {
 
             int m_planner_type;
             bool m_use_new_heuristics;
+
+            // OMPL stuff
+            bool convertFullState(ompl::base::State* state,
+                                  RobotState& robot_state,
+                                  ContBaseState& base);
 
         // SBPL interface stuff
         public:

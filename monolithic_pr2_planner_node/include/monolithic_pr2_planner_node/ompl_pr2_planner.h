@@ -6,6 +6,7 @@
 #include <ompl/base/spaces/RealVectorStateSpace.h>
 #include <ompl/base/State.h>
 #include <ompl/base/StateValidityChecker.h>
+#include <ompl/geometric/planners/rrt/RRT.h>
 #include <ompl/geometric/planners/rrt/RRTConnect.h>
 #include <ompl/geometric/planners/prm/PRM.h>
 #include <ompl/geometric/planners/rrt/RRTstar.h>
@@ -35,12 +36,19 @@ class OMPLPR2Planner{
         bool checkRequest(monolithic_pr2_planner::SearchRequestParams& search_request);
         bool createStartGoal(FullState& start, FullState& goal, monolithic_pr2_planner::SearchRequestParams& req);
         void setPlanningTime(double t){m_allocated_planning_time = t;};
+        
+        // Mutators
+        ompl::base::SpaceInformationPtr GetSpaceInformationPtr() { return m_si;}
+        ompl::base::StateSpacePtr GetStateSpacePtr() { return fullBodySpace;}
+        ompl::base::ProblemDefinition* GetProblemDefinition() { return pdef;}
+
     private:
         bool convertFullState(ompl::base::State* state,
                               monolithic_pr2_planner::RobotState& robot_state,
                               monolithic_pr2_planner::ContBaseState& base);
         ompl::base::StateSpacePtr fullBodySpace;
         ompl::base::ProblemDefinition* pdef;
+        ompl::base::SpaceInformationPtr m_si;
         ompl::base::Planner* planner;
         ompl::geometric::PathSimplifier* pathSimplifier;
         omplFullBodyCollisionChecker* m_collision_checker;

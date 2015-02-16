@@ -55,15 +55,31 @@ bool GoalState::isSatisfiedBy(const GraphStatePtr& graph_state){
     bool within_xyz_tol = (abs(m_goal_state.x()-obj.x()) < d_tol.x() &&
                            abs(m_goal_state.y()-obj.y()) < d_tol.y() &&
                            abs(m_goal_state.z()-obj.z()) < d_tol.z());
-    bool within_rpy_tol = (abs(m_goal_state.roll()-obj.roll()) < d_tol.roll() &&
-                           abs(m_goal_state.pitch()-obj.pitch()) < d_tol.pitch() &&
-                           abs(m_goal_state.yaw()-obj.yaw()) < d_tol.yaw());
+    // bool within_rpy_tol = (abs(m_goal_state.roll()-obj.roll()) < d_tol.roll() &&
+    //                        abs(m_goal_state.pitch()-obj.pitch()) < d_tol.pitch() &&
+    //                        abs(m_goal_state.yaw()-obj.yaw()) < d_tol.yaw());
 
-    if (within_xyz_tol && within_rpy_tol){
+
+    bool within_quat_tol;
+     tf::Quaternion quat_state(m_goal_state.yaw(),m_goal_state.pitch(),m_goal_state.roll());
+     tf::Quaternion quat_goal(obj.yaw(),obj.pitch(),obj.roll());
+
+    double diff = quat_state.angleShortestPath(quat_goal);
+
+    // within_quat_tol = diff < d_tol.roll();      //should be another parameter d_tol.quat()
+    within_quat_tol = diff < 0.1*d_tol.roll();      //should be another parameter d_tol.quat()
+
+    if (within_xyz_tol && within_quat_tol){
         return true;
     } else {
         return false;
     }
+
+    // if (within_xyz_tol && within_rpy_tol){
+    //     return true;
+    // } else {
+    //     return false;
+    // }
 }
 
 bool GoalState::isSolnStateID(int state_id){

@@ -17,9 +17,6 @@
 #define NUM_IMHA_HEUR 4 // Used in EnvInterfaces to initialize the planner.
 // This should include the Anchor search -> Total number of searches.
 
-#define EPS1 25
-#define EPS2 4
-
 namespace monolithic_pr2_planner {
     /*! \brief Implements a complete environment used by the SBPL planner.
      * Contains everything from managing state IDs to collision space

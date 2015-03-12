@@ -98,86 +98,141 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
       }
     }
     else{
-      double w_bfsRot = 0.5;
-      double w_armFold = 0.5;
+      double w_bfsRot = 0.2;
+      double w_armFold = 0.2;
+      int ad_base = (*values).at("admissible_base");
+      int ad_endeff = (*values).at("admissible_endeff");
+      int anchor_h = std::max(ad_base, ad_endeff);
+      int endeff_rot_goal = (*values).at("endeff_rot_goal");
+
+      int inad_arm_heur = static_cast<int>(0.1*(*values).at("endeff_rot_goal") + 0.1*ad_endeff);
+      if (ad_base > 1000) //TODO: check multiplier
+      { 
+        inad_arm_heur = (*values).at("arm_angles_folded");
+      }
 
       switch (heuristic_id) {
         case 0:  // Anchor
-          return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
+          return anchor_h;
         case 1:  // Anchor
-          return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
-        //case 1:  // ARA Heur 
-          //return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
+          return int(0.1*ad_base) + int(0.1*ad_endeff) + int(0.2*endeff_rot_goal);
+          //return anchor_h;
         case 2:  // Base1, Base2 heur
-          return static_cast<int>(0.5*(*values).at("base_with_rot_0") + 0.5*(*values).at("endeff_rot_goal"));
+          return static_cast<int>(0.1*(*values).at("base_with_rot_0") + 0.1*(*values).at("endeff_rot_goal"));
         case 3:  // Base1, Base2 heur
           //return static_cast<int>(1.0*(*values).at("base_with_rot_0") + 0.0*(*values).at("endeff_rot_goal"));
-          return static_cast<int>(0.5*(*values).at("base_with_rot_0") + 0.5*(*values).at("arm_angles_folded"));
+          return static_cast<int>(0.1*(*values).at("base_with_rot_0") + 0.1*(*values).at("arm_angles_folded"));
         case 4:
-          if((*values).at("bfsRotFoot0")==0)
-            return 0;
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot0") + w_armFold*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot0") + w_armFold*inad_arm_heur);
         case 5:
-          if((*values).at("bfsRotFoot1")==0)
-            return 0;
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot1") + w_armFold*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot1") + w_armFold*inad_arm_heur);
         case 6:
-          if((*values).at("bfsRotFoot2")==0)
-            return 0;
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot2") + w_armFold*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot2") + w_armFold*inad_arm_heur);
         case 7:
-          if((*values).at("bfsRotFoot3")==0)
-            return 0;
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot3") + w_armFold*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot3") + w_armFold*inad_arm_heur);
         case 8:
-          if((*values).at("bfsRotFoot4")==0)
-            return 0;
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot4") + w_armFold*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot4") + w_armFold*inad_arm_heur);
         case 9:
-          if((*values).at("bfsRotFoot5")==0)
-            return 0;
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot5") + w_armFold*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot5") + w_armFold*inad_arm_heur);
         case 10:
-          if((*values).at("bfsRotFoot6")==0)
-            return 0;
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot6") + w_armFold*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot6") + w_armFold*inad_arm_heur);
         case 11:
-          if((*values).at("bfsRotFoot7")==0)
-            return 0;
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot7") + w_armFold*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot7") + w_armFold*inad_arm_heur);
         case 12:
-          if((*values).at("bfsRotFoot8")==0)
-            return 0;
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot8") + w_armFold*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot8") + w_armFold*inad_arm_heur);
         case 13:
-          if((*values).at("bfsRotFoot9")==0)
-            return 0;
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot9") + w_armFold*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot9") + w_armFold*inad_arm_heur);
         case 14:
-          if((*values).at("bfsRotFoot10")==0)
-            return 0;
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot10") + w_armFold*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot10") + w_armFold*inad_arm_heur);
         case 15:
-          if((*values).at("bfsRotFoot11")==0)
-            return 0;
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot11") + w_armFold*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot11") + w_armFold*inad_arm_heur);
         case 16:
-          if((*values).at("bfsRotFoot12")==0)
-            return 0;
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot12") + w_armFold*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot12") + w_armFold*inad_arm_heur);
         case 17:
-          if((*values).at("bfsRotFoot13")==0)
-            return 0;
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot13") + w_armFold*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot13") + w_armFold*inad_arm_heur);
         case 18:
-          if((*values).at("bfsRotFoot14")==0)
-            return 0;
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot14") + w_armFold*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot14") + w_armFold*inad_arm_heur);
         case 19:
-          if((*values).at("bfsRotFoot15")==0)
-            return 0;
-          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot15") + w_armFold*(*values).at("arm_angles_folded"));
+          return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot15") + w_armFold*inad_arm_heur);
       }
+
+      // switch (heuristic_id) {
+      //   case 0:  // Anchor
+      //     return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
+      //   case 1:  // Anchor
+      //     return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
+      //   //case 1:  // ARA Heur 
+      //     //return std::max((*values).at("admissible_endeff"), (*values).at("admissible_base"));
+      //   case 2:  // Base1, Base2 heur
+      //     return static_cast<int>(0.5*(*values).at("base_with_rot_0") + 0.5*(*values).at("endeff_rot_goal"));
+      //   case 3:  // Base1, Base2 heur
+      //     //return static_cast<int>(1.0*(*values).at("base_with_rot_0") + 0.0*(*values).at("endeff_rot_goal"));
+      //     return static_cast<int>(0.5*(*values).at("base_with_rot_0") + 0.5*(*values).at("arm_angles_folded"));
+      //   case 4:
+      //     if((*values).at("bfsRotFoot0")==0)
+      //       return 0;
+      //     return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot0") + w_armFold*(*values).at("arm_angles_folded"));
+      //   case 5:
+      //     if((*values).at("bfsRotFoot1")==0)
+      //       return 0;
+      //     return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot1") + w_armFold*(*values).at("arm_angles_folded"));
+      //   case 6:
+      //     if((*values).at("bfsRotFoot2")==0)
+      //       return 0;
+      //     return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot2") + w_armFold*(*values).at("arm_angles_folded"));
+      //   case 7:
+      //     if((*values).at("bfsRotFoot3")==0)
+      //       return 0;
+      //     return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot3") + w_armFold*(*values).at("arm_angles_folded"));
+      //   case 8:
+      //     if((*values).at("bfsRotFoot4")==0)
+      //       return 0;
+      //     return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot4") + w_armFold*(*values).at("arm_angles_folded"));
+      //   case 9:
+      //     if((*values).at("bfsRotFoot5")==0)
+      //       return 0;
+      //     return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot5") + w_armFold*(*values).at("arm_angles_folded"));
+      //   case 10:
+      //     if((*values).at("bfsRotFoot6")==0)
+      //       return 0;
+      //     return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot6") + w_armFold*(*values).at("arm_angles_folded"));
+      //   case 11:
+      //     if((*values).at("bfsRotFoot7")==0)
+      //       return 0;
+      //     return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot7") + w_armFold*(*values).at("arm_angles_folded"));
+      //   case 12:
+      //     if((*values).at("bfsRotFoot8")==0)
+      //       return 0;
+      //     return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot8") + w_armFold*(*values).at("arm_angles_folded"));
+      //   case 13:
+      //     if((*values).at("bfsRotFoot9")==0)
+      //       return 0;
+      //     return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot9") + w_armFold*(*values).at("arm_angles_folded"));
+      //   case 14:
+      //     if((*values).at("bfsRotFoot10")==0)
+      //       return 0;
+      //     return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot10") + w_armFold*(*values).at("arm_angles_folded"));
+      //   case 15:
+      //     if((*values).at("bfsRotFoot11")==0)
+      //       return 0;
+      //     return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot11") + w_armFold*(*values).at("arm_angles_folded"));
+      //   case 16:
+      //     if((*values).at("bfsRotFoot12")==0)
+      //       return 0;
+      //     return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot12") + w_armFold*(*values).at("arm_angles_folded"));
+      //   case 17:
+      //     if((*values).at("bfsRotFoot13")==0)
+      //       return 0;
+      //     return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot13") + w_armFold*(*values).at("arm_angles_folded"));
+      //   case 18:
+      //     if((*values).at("bfsRotFoot14")==0)
+      //       return 0;
+      //     return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot14") + w_armFold*(*values).at("arm_angles_folded"));
+      //   case 19:
+      //     if((*values).at("bfsRotFoot15")==0)
+      //       return 0;
+      //     return static_cast<int>(w_bfsRot*(*values).at("bfsRotFoot15") + w_armFold*(*values).at("arm_angles_folded"));
+      // }
     }
 
     /*

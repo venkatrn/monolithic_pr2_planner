@@ -25,6 +25,11 @@ int main(int argc, char** argv){
   bool gotMetaType = false;
   req.use_ompl = false;
   char* filename;
+  // Defaults
+  req.mha_type = mha_planner::MHAType::ORIGINAL;
+  req.planner_type = mha_planner::PlannerType::SMHA;
+  req.meta_search_type = mha_planner::MetaSearchType::ROUND_ROBIN;
+
   for(int i=1; i<argc; i++){
     if(strcmp(argv[i],"imha")==0){
       req.planner_type = mha_planner::PlannerType::IMHA;
@@ -36,14 +41,42 @@ int main(int argc, char** argv){
     }
     else if(strcmp(argv[i],"rr")==0){
       req.meta_search_type = mha_planner::MetaSearchType::ROUND_ROBIN;
+      req.mha_type = mha_planner::MHAType::ORIGINAL;
       gotMetaType = true;
     }
     else if(strcmp(argv[i],"ma")==0){
       req.meta_search_type = mha_planner::MetaSearchType::META_A_STAR;
+      req.mha_type = mha_planner::MHAType::ORIGINAL;
       gotMetaType = true;
     }
     else if(strcmp(argv[i],"dts")==0){
       req.meta_search_type = mha_planner::MetaSearchType::DTS;
+      req.mha_type = mha_planner::MHAType::ORIGINAL;
+      gotMetaType = true;
+    }
+    else if(strcmp(argv[i],"original_mha")==0){
+      req.meta_search_type = mha_planner::MetaSearchType::ROUND_ROBIN;
+      req.mha_type = mha_planner::MHAType::ORIGINAL;
+      gotMetaType = true;
+    }
+    else if(strcmp(argv[i],"mha_plus")==0){
+      req.meta_search_type = mha_planner::MetaSearchType::ROUND_ROBIN;
+      req.mha_type = mha_planner::MHAType::PLUS;
+      gotMetaType = true;
+    }
+    else if(strcmp(argv[i],"focal_mha")==0){
+      req.meta_search_type = mha_planner::MetaSearchType::ROUND_ROBIN;
+      req.mha_type = mha_planner::MHAType::FOCAL;
+      gotMetaType = true;
+    }
+    else if(strcmp(argv[i],"unconstrained_mha")==0){
+      req.meta_search_type = mha_planner::MetaSearchType::ROUND_ROBIN;
+      req.mha_type = mha_planner::MHAType::UNCONSTRAINED;
+      gotMetaType = true;
+    }
+    else if(strcmp(argv[i],"gbfs")==0){
+      req.meta_search_type = mha_planner::MetaSearchType::ROUND_ROBIN;
+      req.mha_type = mha_planner::MHAType::GBFS;
       gotMetaType = true;
     }
     else if(strcmp(argv[i],"rrt")==0){

@@ -16,7 +16,7 @@ SET(CMAKE_CXX_FLAGS "-std=c++0x")
 
 # find_package(Boost 1.46.0 COMPONENTS thread system filesystem REQUIRED)
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(SBPL REQUIRED sbpl)
+pkg_check_modules(sbpl REQUIRED sbpl)
 include_directories(${SBPL_INCLUDE_DIRS})
 link_directories(${SBPL_LIBRARY_DIRS})
 
@@ -34,7 +34,7 @@ rosbuild_add_boost_directories()
 #common commands for building c++ executables and libraries
 #target_link_libraries(${PROJECT_NAME} another_library)
 #rosbuild_link_boost(${PROJECT_NAME} thread)
-rosbuild_add_executable(node src/node.cpp src/EnvInterfaces.cpp
+rosbuild_add_executable(node src/node.cpp src/EnvInterfaces.cpp #(Not required for simulation?)
                              src/CollisionSpaceInterface.cpp
                              src/ompl_pr2_planner.cpp
                              src/ompl_collision_checker.cpp

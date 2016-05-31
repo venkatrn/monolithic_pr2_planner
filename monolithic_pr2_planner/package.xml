@@ -1,0 +1,52 @@
+<package>
+  <name>monolithic_pr2_planner</name>
+  <version>1.0.0</version>
+  <description>monolithic_pr2_planner</description>
+  <maintainer email="shivamvats.iitkgp@gmail.com">Shivam Vats</maintainer>
+
+  <license>BSD</license>
+
+  <url type="website">http://ros.org/wiki/full_body_planner_env</url>
+  <!-- <url type="bugtracker"></url> -->
+
+  <!-- Dependencies which this package needs to build itself. -->
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- Dependencies needed to compile this package. -->
+  <build_depend>pr2_collision_checker</build_depend>
+  <build_depend>angles</build_depend>
+  <build_depend>pviz</build_depend>
+  <build_depend>bfs3d</build_depend>
+  <build_depend>ikfast_pr2</build_depend>
+  <build_depend>nav_msgs</build_depend>
+  <build_depend>kinematics_msgs</build_depend>
+  <build_depend>sbpl</build_depend>
+  <build_depend>costmap_2d</build_depend>
+
+  <!-- Dependencies needed after this package is compiled. -->
+  <run_depend>pr2_collision_checker</run_depend>
+  <run_depend>angles</run_depend>
+  <run_depend>pviz</run_depend>
+  <run_depend>bfs3d</run_depend>
+  <run_depend>ikfast_pr2</run_depend>
+  <run_depend>nav_msgs</run_depend>
+  <run_depend>kinematics_msgs</run_depend>
+  <run_depend>sbpl</run_depend>
+  <run_depend>costmap_2d</run_depend>
+
+  <!-- Dependencies needed only for running tests. -->
+  <!-- <test_depend>pr2_collision_checker</test_depend> -->
+  <!-- <test_depend>angles</test_depend> -->
+  <!-- <test_depend>pviz</test_depend> -->
+  <!-- <test_depend>bfs3d</test_depend> -->
+  <!-- <test_depend>ikfast_pr2</test_depend> -->
+  <!-- <test_depend>nav_msgs</test_depend> -->
+  <!-- <test_depend>kinematics_msgs</test_depend> -->
+  <!-- <test_depend>sbpl</test_depend> -->
+  <!-- <test_depend>costmap_2d</test_depend> -->
+
+<export>
+    <cpp lflags="-L${prefix}/lib -lmonolithic_pr2_planner" cflags="-I${prefix}/include"/>
+</export>
+
+</package>

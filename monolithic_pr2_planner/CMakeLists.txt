@@ -4,14 +4,14 @@ cmake_minimum_required(VERSION 2.8.3)
 project(monolithic_pr2_planner)
 # Load catkin and all dependencies required for this package
 # TODO: remove all from COMPONENTS that are not catkin packages.
-find_package(catkin REQUIRED COMPONENTS pr2_collision_checker angles pviz bfs3d ikfast_pr2 nav_msgs moveit_msgs costmap_2d sbpl_mha)
+find_package(catkin REQUIRED COMPONENTS pr2_collision_checker angles pviz bfs3d ikfast_pr2 nav_msgs moveit_msgs costmap_2d sbpl_mha rostest)
 #find_package(sbpl)
 # CATKIN_MIGRATION: removed during catkin migration
 
 # catkin_package parameters: http://ros.org/doc/groovy/api/catkin/html/dev_guide/generated_cmake_api.html#catkin-package
 # TODO: fill in what other packages will need to use this package
 catkin_package(
-    DEPENDS pr2_collision_checker angles pviz bfs3d ikfast_pr2 nav_msgs moveit_msgs costmap_2d
+    DEPENDS pr2_collision_checker angles pviz bfs3d ikfast_pr2 nav_msgs moveit_msgs costmap_2d rostest
     CATKIN_DEPENDS sbpl_mha # TODO
     INCLUDE_DIRS include ${catkin_INCLUDE_DIRS} ${sbpl_mha}#${sbpl_INCLUDE_DIRS}# TODO include
     LIBRARIES ${catkin_LIBRARIES}# TODO
@@ -117,7 +117,8 @@ include_directories(${Boost_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
 #target_link_libraries(example ${PROJECT_NAME})
 
-add_executable(conversions test/conversions.cpp)
+catkin_add_gtest(conversions test/conversions.cpp)
+#add_executable(conversions test/conversions.cpp)
 target_link_libraries(conversions monolithic_pr2_planner)
 
 add_rostest(test/tests.launch)

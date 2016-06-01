@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(monolithic_pr2_planner_node)
 # Load catkin and all dependencies required for this package
 # TODO: remove all from COMPONENTS that are not catkin packages.
-find_package(catkin REQUIRED COMPONENTS roscpp common_rosdeps geometry_msgs monolithic_pr2_planner leatherman pcl_ros orocos_kdl geometry_msgs sensor_msgs arm_navigation_msgs ompl costmap_2d sbpl_manipulation_components_pr2 interactive_markers sbpl_mha yaml-cpp)
+find_package(catkin REQUIRED COMPONENTS roscpp geometry_msgs monolithic_pr2_planner leatherman pcl_ros orocos_kdl geometry_msgs sensor_msgs arm_navigation_msgs ompl costmap_2d sbpl_manipulation_components_pr2 interactive_markers sbpl_mha)
 
 #uncomment if you have defined messages
 #add_message_files(
@@ -25,7 +25,7 @@ generate_messages(
 # catkin_package parameters: http://ros.org/doc/groovy/api/catkin/html/dev_guide/generated_cmake_api.html#catkin-package
 # TODO: fill in what other packages will need to use this package
 catkin_package(
-    DEPENDS roscpp common_rosdeps geometry_msgs monolithic_pr2_planner leatherman pcl_ros orocos_kdl geometry_msgs sensor_msgs arm_navigation_msgs ompl costmap_2d sbpl_manipulation_components_pr2 interactive_markers sbpl_mha yaml-cpp
+    DEPENDS roscpp geometry_msgs monolithic_pr2_planner leatherman pcl_ros orocos_kdl geometry_msgs sensor_msgs arm_navigation_msgs ompl costmap_2d sbpl_manipulation_components_pr2 interactive_markers sbpl_mha 
     CATKIN_DEPENDS # TODO
     INCLUDE_DIRS include ${catkin_INCLUDE_DIRS}# TODO include
     LIBRARIES ${catkin_LIBRARIES}# TODO

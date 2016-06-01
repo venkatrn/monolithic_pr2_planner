@@ -14,7 +14,6 @@
 
   <!-- Dependencies needed to compile this package. -->
   <build_depend>roscpp</build_depend>
-  <build_depend>common_rosdeps</build_depend>
   <build_depend>geometry_msgs</build_depend>
   <build_depend>monolithic_pr2_planner</build_depend>
   <build_depend>leatherman</build_depend>
@@ -31,7 +30,6 @@
 
   <!-- Dependencies needed after this package is compiled. -->
   <run_depend>roscpp</run_depend>
-  <run_depend>common_rosdeps</run_depend>
   <run_depend>geometry_msgs</run_depend>
   <run_depend>monolithic_pr2_planner</run_depend>
   <run_depend>leatherman</run_depend>

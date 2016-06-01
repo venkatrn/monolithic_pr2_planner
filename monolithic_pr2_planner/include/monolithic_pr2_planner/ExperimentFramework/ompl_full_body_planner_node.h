@@ -60,7 +60,7 @@
 #include <arm_navigation_msgs/AttachedCollisionObject.h>
 #include <arm_navigation_msgs/GetMotionPlan.h>
 #include <trajectory_msgs/JointTrajectoryPoint.h> 
-#include <kinematics_msgs/GetPositionFK.h>
+#include <moveit_msgs/GetPositionFK.h>
 
 #include <ros/console.h>
 #include <log4cxx/logger.h>

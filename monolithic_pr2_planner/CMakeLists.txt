@@ -4,14 +4,14 @@ cmake_minimum_required(VERSION 2.8.3)
 project(monolithic_pr2_planner)
 # Load catkin and all dependencies required for this package
 # TODO: remove all from COMPONENTS that are not catkin packages.
-find_package(catkin REQUIRED COMPONENTS pr2_collision_checker angles pviz bfs3d ikfast_pr2 nav_msgs kinematics_msgs sbpl costmap_2d)
+find_package(catkin REQUIRED COMPONENTS pr2_collision_checker angles pviz bfs3d ikfast_pr2 nav_msgs moveit_msgs sbpl costmap_2d)
 
 # CATKIN_MIGRATION: removed during catkin migration
 
 # catkin_package parameters: http://ros.org/doc/groovy/api/catkin/html/dev_guide/generated_cmake_api.html#catkin-package
 # TODO: fill in what other packages will need to use this package
 catkin_package(
-    DEPENDS pr2_collision_checker angles pviz bfs3d ikfast_pr2 nav_msgs kinematics_msgs sbpl costmap_2d
+    DEPENDS pr2_collision_checker angles pviz bfs3d ikfast_pr2 nav_msgs moveit_msgs sbpl costmap_2d
     CATKIN_DEPENDS # TODO
     INCLUDE_DIRS include ${catkin_INCLUDE_DIRS}# TODO include
     LIBRARIES ${catkin_LIBRARIES}# TODO

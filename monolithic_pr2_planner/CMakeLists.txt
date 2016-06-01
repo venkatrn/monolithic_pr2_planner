@@ -4,18 +4,24 @@ cmake_minimum_required(VERSION 2.8.3)
 project(monolithic_pr2_planner)
 # Load catkin and all dependencies required for this package
 # TODO: remove all from COMPONENTS that are not catkin packages.
-find_package(catkin REQUIRED COMPONENTS pr2_collision_checker angles pviz bfs3d ikfast_pr2 nav_msgs moveit_msgs sbpl costmap_2d)
-
+find_package(catkin REQUIRED COMPONENTS pr2_collision_checker angles pviz bfs3d ikfast_pr2 nav_msgs moveit_msgs costmap_2d sbpl_mha)
+#find_package(sbpl)
 # CATKIN_MIGRATION: removed during catkin migration
 
 # catkin_package parameters: http://ros.org/doc/groovy/api/catkin/html/dev_guide/generated_cmake_api.html#catkin-package
 # TODO: fill in what other packages will need to use this package
 catkin_package(
-    DEPENDS pr2_collision_checker angles pviz bfs3d ikfast_pr2 nav_msgs moveit_msgs sbpl costmap_2d
-    CATKIN_DEPENDS # TODO
-    INCLUDE_DIRS include ${catkin_INCLUDE_DIRS}# TODO include
+    DEPENDS pr2_collision_checker angles pviz bfs3d ikfast_pr2 nav_msgs moveit_msgs costmap_2d
+    CATKIN_DEPENDS sbpl_mha # TODO
+    INCLUDE_DIRS include ${catkin_INCLUDE_DIRS} ${sbpl_mha}#${sbpl_INCLUDE_DIRS}# TODO include
     LIBRARIES ${catkin_LIBRARIES}# TODO
 )
+
+#find_package(PkgConfig REQUIRED)
+#pkg_check_modules(sbpl REQUIRED sbpl)
+#include_directories(${SBPL_INCLUDE_DIRS})
+#link_directories(${SBPL_LIBRARY_DIRS})
+
 # include_directories(include ${Boost_INCLUDE_DIR} ${catkin_INCLUDE_DIRS})
 # CATKIN_MIGRATION: removed during catkin migration
 # cmake_minimum_required(VERSION 2.4.6)
@@ -54,6 +60,7 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 #set the default path for built libraries to the "lib" directory
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
+include_directories(include ${catkin_INCLUDE_DIRS})# ${sbpl_INCLUDE_DIRS})
 #common commands for building c++ executables and libraries
 add_library(monolithic_pr2_planner src/StateReps/RobotState.cpp
                                             src/StateReps/ContArmState.cpp
@@ -101,7 +108,7 @@ add_library(monolithic_pr2_planner src/StateReps/RobotState.cpp
                                             src/ExperimentFramework/randomStartGoalGenerator.cpp
                                             src/StatsWriter.cpp
                                             )
-target_link_libraries(monolithic_pr2_planner ${catkin_LIBRARIES})
+target_link_libraries(monolithic_pr2_planner ${catkin_LIBRARIES})# ${sbpl_LIBRARIES})
 #
 # CATKIN_MIGRATION: removed during catkin migration
 # rosbuild_add_boost_directories()

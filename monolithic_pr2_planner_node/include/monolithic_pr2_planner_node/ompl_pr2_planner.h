@@ -6,6 +6,7 @@
 #include <ompl/base/spaces/RealVectorStateSpace.h>
 #include <ompl/base/State.h>
 #include <ompl/base/StateValidityChecker.h>
+#include <ompl/base/objectives/PathLengthOptimizationObjective.h>
 #include <ompl/geometric/planners/rrt/RRTConnect.h>
 #include <ompl/geometric/planners/prm/PRM.h>
 #include <ompl/geometric/planners/rrt/RRTstar.h>

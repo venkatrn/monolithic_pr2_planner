@@ -103,6 +103,7 @@ add_executable(runTests src/run_tests.cpp)
 target_link_libraries(runTests monolithic_pr2_planner)
 
 add_executable(generateExperimentsNode src/generateExperimentsNode.cpp)
+add_dependencies(generateExperimentsNode ${catkin_EXPORTED_TARGETS})
 target_link_libraries(generateExperimentsNode monolithic_pr2_planner)
 
 

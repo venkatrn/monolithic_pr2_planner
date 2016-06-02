@@ -1,5 +1,6 @@
 #pragma once
 #include <ros/ros.h>
+#include <ompl/base/Cost.h>
 #include <ompl/base/spaces/SE2StateSpace.h>
 #include <ompl/geometric/SimpleSetup.h>
 #include <ompl/geometric/PathGeometric.h>

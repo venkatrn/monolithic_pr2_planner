@@ -15,13 +15,13 @@ ompl::base::OptimizationObjectivePtr getThresholdPathLengthObj(const ompl::base:
 {
     if(planner_id == RRTSTARFIRSTSOL){
         ompl::base::OptimizationObjectivePtr obj(new ompl::base::PathLengthOptimizationObjective(si));
-        //10000000.51));
+	obj->setCostThreshold(ompl::base::Cost(10000000.51));        
         return obj;
 
     }
     else{
         ompl::base::OptimizationObjectivePtr obj(new ompl::base::PathLengthOptimizationObjective(si));
-        //10.51));
+	obj->setCostThreshold(ompl::base::Cost(10.51));               
         return obj;
     }
 }

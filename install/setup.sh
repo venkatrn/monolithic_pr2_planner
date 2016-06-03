@@ -6,5 +6,5 @@ cd ../../;
 wstool update;
 
 echo "Installing debian packages using apt-get"
-rosdep install --from-paths . --ignore-src --rosdistro=groovy
+rosdep install --from-paths . --ignore-src --rosdistro=indigo
 

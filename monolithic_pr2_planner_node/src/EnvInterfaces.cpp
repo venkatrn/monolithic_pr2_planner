@@ -8,7 +8,7 @@
 #include <boost/filesystem.hpp>
 #include <geometry_msgs/Pose.h>
 #include <leatherman/utils.h>
-#include <tf2/LinearMath/btVector3.h>
+#include <tf2/LinearMath/Vector3.h>
 #include <climits>
 
 #define EPS 50.0

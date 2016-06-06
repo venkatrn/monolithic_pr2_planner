@@ -8,7 +8,7 @@ project(monolithic_pr2_planner_node)
 # TODO: remove all from COMPONENTS that are not catkin packages.
 #find_package(ompl REQUIRED)
 find_package(catkin REQUIRED COMPONENTS roscpp geometry_msgs monolithic_pr2_planner leatherman pcl_ros geometry_msgs sensor_msgs arm_navigation_msgs costmap_2d
-                             sbpl_manipulation_components_pr2 interactive_markers sbpl_mha message_generation pviz tf2 )
+                             sbpl_manipulation_components_pr2 interactive_markers sbpl_mha message_generation pviz tf2 pcl_conversions)
 find_package(orocos_kdl)
 #uncomment if you have defined services
 add_service_files(
@@ -26,7 +26,7 @@ generate_messages(
 catkin_package(
     DEPENDS roscpp geometry_msgs costmap_2d sbpl_manipulation_components_pr2 interactive_markers
              orocos_kdl
-    CATKIN_DEPENDS tf2 message_runtime pviz sbpl_manipulation_components_pr2 monolithic_pr2_planner leatherman pcl_ros  geometry_msgs sensor_msgs arm_navigation_msgs sbpl_mha # TODO
+             CATKIN_DEPENDS pcl_conversions tf2 message_runtime pviz sbpl_manipulation_components_pr2 monolithic_pr2_planner leatherman pcl_ros  geometry_msgs sensor_msgs arm_navigation_msgs sbpl_mha # TODO
     INCLUDE_DIRS include ${catkin_INCLUDE_DIRS} ${ompl_INCLUDE_DIRS}# TODO include
     LIBRARIES ${catkin_LIBRARIES} ${ompl_LIBRARIES} # TODO
 )
@@ -54,7 +54,7 @@ SET(CMAKE_CXX_FLAGS "-std=c++0x")
 # find_package(Boost 1.46.0 COMPONENTS thread system filesystem REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(ompl REQUIRED ompl)
-include_directories(${ompl_INCLUDE_DIRS} ${tf2_INCLUDE_DIRS})
+include_directories(${ompl_INCLUDE_DIRS} ${tf2_INCLUDE_DIRS} ${pcl_conversions_INCLUDE_DIRS})
 link_directories(${ompl_LIBRARY_DIRS} )
 
 #set the default path for built executables to the "bin" directory
@@ -88,7 +88,7 @@ add_dependencies(testExecute ${catkin_EXPORTED_TARGETS})
 target_link_libraries(testExecute monolithic_pr2_planner sbpl_manipulation_components sbpl_manipulation_components_pr2 pviz pr2_collision_checker bfs3d ikfast_pr2 )
 
 add_executable(stlToOctomap src/publishSTLToOctomap.cpp)
-target_link_libraries(stlToOctomap monolithic_pr2_planner)
+target_link_libraries(stlToOctomap monolithic_pr2_planner ${pcl_conversions_LIBRARIES})
 
 add_executable(run_simulation src/run_simulations.cpp)
 target_link_libraries(run_simulation monolithic_pr2_planner)

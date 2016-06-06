@@ -1,6 +1,6 @@
 #include <sbpl_geometry_utils/Voxelizer.h>
 #include <pcl/point_types.h>
-#include <pcl/ros/conversions.h>
+#include <pcl_conversions/pcl_conversions.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <std_msgs/Float32MultiArray.h>
 #include <vector>
@@ -16,8 +16,8 @@
 using namespace boost::filesystem;
 using namespace std;
 
-bool getVoxelsFromMesh(std::string resource, 
-        geometry_msgs::Pose pose, 
+bool getVoxelsFromMesh(std::string resource,
+        geometry_msgs::Pose pose,
         std::vector<std::vector<double> > &voxels){
     std::vector<int32_t> triangles;
     std::vector<geometry_msgs::Point> vertices, scaled_vertices;
@@ -28,7 +28,7 @@ bool getVoxelsFromMesh(std::string resource,
     if(!mesh_type.empty()){
         if(mesh_type.compare("dae") == 0)
             stl_resource = leatherman::replaceExtension(resource, "stl");
-        ROS_DEBUG("Collada file found. Will try to use the STL version instead. (%s)", 
+        ROS_DEBUG("Collada file found. Will try to use the STL version instead. (%s)",
                  resource.c_str());
         ROS_DEBUG("STL filename: %s", stl_resource.c_str());
     }
@@ -38,7 +38,7 @@ bool getVoxelsFromMesh(std::string resource,
     temp_scale.x = 1.0;
     temp_scale.y = 1.0;
     temp_scale.z = 1.0;
-    if(!leatherman::getMeshComponentsFromResource(stl_resource, temp_scale, 
+    if(!leatherman::getMeshComponentsFromResource(stl_resource, temp_scale,
                                                   triangles, vertices))
         return false;
 
@@ -81,7 +81,7 @@ void addRandomObstacles(pcl::PointCloud<pcl::PointXYZ>::Ptr pclCloud, int
     // Add the surface - these are generated only within these bounds.
     double surfaceBoundsXMin = 6.2;
     double surfaceBoundsXMax = 7;
-    
+
     double surfaceBoundsYMin = 0.8;
     double surfaceBoundsYMax = 3.5;
 
@@ -92,11 +92,11 @@ void addRandomObstacles(pcl::PointCloud<pcl::PointXYZ>::Ptr pclCloud, int
     double surfaceSizeYMin = 0.65;
 
     double surfaceSizeZ = 0.8;
-    
+
 
     double obstacleBoundsXMin = 3.5;
     double obstacleBoundsXMax = 6;
-    
+
     double obstacleBoundsYMin = 0;
     double obstacleBoundsYMax = 4;
 
@@ -124,7 +124,7 @@ void addRandomObstacles(pcl::PointCloud<pcl::PointXYZ>::Ptr pclCloud, int
         (surfaceBoundsYMax - surfaceBoundsYMin)/(numSurfaces+1);
 
         double Z = 0.0;
-        
+
         // Generate size
         double dimX = surfaceSizeXMin + static_cast<double>(rand())/RAND_MAX *
         (surfaceSizeXMax - surfaceSizeXMin);
@@ -162,7 +162,7 @@ void addRandomObstacles(pcl::PointCloud<pcl::PointXYZ>::Ptr pclCloud, int
             (obstacleBoundsYMax - obstacleBoundsYMin);
 
             double oZ = dimZ;
-            
+
             // Generate size
             double odimX = obstacleSizeXMin + static_cast<double>(rand())/RAND_MAX *
             (obstacleSizeXMax - obstacleSizeXMin);
@@ -172,11 +172,11 @@ void addRandomObstacles(pcl::PointCloud<pcl::PointXYZ>::Ptr pclCloud, int
 
             double odimZ = obstacleSizeZMin + static_cast<double>(rand())/RAND_MAX *
             (obstacleSizeZMax - obstacleSizeZMin);
-            
+
             addCuboid(pclCloud, oX, oY, oZ, odimX, odimY, odimZ, true);
         }
     }
-    
+
 
 }
 
@@ -207,7 +207,7 @@ vector<Eigen::Vector3d> getVoxelsFromFile(std::string filename){
     ros::Publisher pcl_pub = nh.advertise<sensor_msgs::PointCloud2>("pcl_environment", 1);
     path p(filename);
     if (!exists(p)){
-        ROS_ERROR("Couldn't find %s to load in the collision map!", 
+        ROS_ERROR("Couldn't find %s to load in the collision map!",
                   filename.c_str());
     }
 
@@ -272,7 +272,7 @@ vector<Eigen::Vector3d> getVoxelsFromFile(std::string filename){
     // addCuboid(pclCloud, 5.248199056716729, 2.5379581496994748, 0.8, 0.1, 0.4,
     //     0.15,true);
     // addCuboid(pclCloud, 5.348199056716729, 2.1079581496994748, 0.8, 0.1, 0.2, 0.3,true);
-    
+
     // Doorway
     addCuboid(pclCloud, 5, 0, 0, 0.05, 2, 1.8, true);
     addCuboid(pclCloud, 5, 2.85, 0, 0.05, 2.2, 1.8, true);
@@ -282,11 +282,11 @@ vector<Eigen::Vector3d> getVoxelsFromFile(std::string filename){
 
     // Small table
     addCuboid(pclCloud, 7.8, 2.3, 0, 0.4, 0.4, 0.8, true);
-    
+
 
     bool addTableObstacles;
     ph.param("addTableObstacles",addTableObstacles,false);
-   
+
     if(addTableObstacles){
       bool randomizeTableObstacles;
       ph.param("randomizeTableObstacles",randomizeTableObstacles,true);

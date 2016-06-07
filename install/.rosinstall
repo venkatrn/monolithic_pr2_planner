@@ -1,44 +1,44 @@
 - git:
     local-name: arm_navigation_msgs
     uri: https://github.com/shivamvats/arm_navigation_msgs
-    version: hydro-devel
+    version: indigo
 - git:
     local-name: ikfast_pr2
     uri: https://github.com/shivamvats/ikfast_pr2
-    version: groovy_catkin
+    version: indigo
 - git:
     local-name: leatherman
     uri: https://github.com/shivamvats/leatherman
-    version: groovy_catkin
+    version: indigo
 - git:
     local-name: monolithic_pr2_planner
     uri: https://github.com/shivamvats/monolithic_pr2_planner
-    version: groovy_catkin
+    version: indigo
 - git:
     local-name: navigation
     uri: https://github.com/shivamvats/navigation
-    version: groovy_catkin
+    version: indigo
 - git:
     local-name: pr2_collision_checker
     uri: https://github.com/shivamvats/pr2_collision_checker
-    version: groovy_catkin
+    version: indigo
 - git:
     local-name: pr2_kinematics
     uri: https://github.com/shivamvats/pr2_kinematics
-    version: hydro_for_groovy
+    version: indigo
 - git:
     local-name: pviz
     uri: https://github.com/shivamvats/pviz
-    version: groovy_catkin
+    version: indigo
 - git:
     local-name: sbpl_geometry_utils
     uri: https://github.com/shivamvats/sbpl_geometry_utils
-    version: groovy_catkin
+    version: indigo
 - git:
     local-name: sbpl_manipulation
     uri: https://github.com/shivamvats/sbpl_manipulation
-    version: groovy_catkin
+    version: indigo
 - git:
     local-name: sbpl_mha
     uri: https://github.com/shivamvats/sbpl_mha
-    version: groovy_catkin
+    version: indigo

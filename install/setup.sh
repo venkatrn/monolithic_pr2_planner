@@ -13,4 +13,5 @@ rosdep install --from-paths . --ignore-src --rosdistro=indigo
 # livgsl0-dev
 # ompl
 # libsdl1.2-dev 
+# pcl_conversions
 

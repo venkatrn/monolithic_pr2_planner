@@ -5,6 +5,8 @@
 #include <boost/shared_ptr.hpp>
 #include <geometry_msgs/Pose.h>
 
+#include <log4cxx/logger.h>
+
 using namespace monolithic_pr2_planner;
 using namespace boost;
 
@@ -27,73 +29,73 @@ void changeLoggerLevel(std::string name, std::string level)
 // TODO clean this up
 void setLoggersFromParamServer(ros::NodeHandle nh){
     std::string level;
-    nh.param<std::string>("debug/logging/configuration", 
+    nh.param<std::string>("debug/logging/configuration",
                           level, "info");
-    changeLoggerLevel(std::string("ros.monolithic_pr2_planner") + 
-                                  std::string(".") + 
+    changeLoggerLevel(std::string("ros.monolithic_pr2_planner") +
+                                  std::string(".") +
                                   std::string(CONFIG_LOG), level);
-    changeLoggerLevel(std::string("ros.monolithic_pr2_planner_node") + 
-                                  std::string(".") + 
+    changeLoggerLevel(std::string("ros.monolithic_pr2_planner_node") +
+                                  std::string(".") +
                                   std::string(CONFIG_LOG), level);
     ROS_INFO_NAMED(CONFIG_LOG, "configuration logging level set to %s", level.c_str());
 
-    nh.param<std::string>("debug/logging/initialization", 
+    nh.param<std::string>("debug/logging/initialization",
                           level, "info");
-    changeLoggerLevel(std::string("ros.monolithic_pr2_planner") + 
-                                  std::string(".") + 
+    changeLoggerLevel(std::string("ros.monolithic_pr2_planner") +
+                                  std::string(".") +
                                   std::string(INIT_LOG), level);
-    changeLoggerLevel(std::string("ros.monolithic_pr2_planner_node") + 
-                                  std::string(".") + 
+    changeLoggerLevel(std::string("ros.monolithic_pr2_planner_node") +
+                                  std::string(".") +
                                   std::string(INIT_LOG), level);
     ROS_INFO_NAMED(CONFIG_LOG, "initialization logging level set to %s", level.c_str());
 
-    nh.param<std::string>("debug/logging/collision_space", 
+    nh.param<std::string>("debug/logging/collision_space",
                           level, "info");
-    changeLoggerLevel(std::string("ros.monolithic_pr2_planner") + 
-                                  std::string(".") + 
+    changeLoggerLevel(std::string("ros.monolithic_pr2_planner") +
+                                  std::string(".") +
                                   std::string(CSPACE_LOG), level);
-    changeLoggerLevel(std::string("ros.monolithic_pr2_planner_node") + 
-                                  std::string(".") + 
+    changeLoggerLevel(std::string("ros.monolithic_pr2_planner_node") +
+                                  std::string(".") +
                                   std::string(CSPACE_LOG), level);
     ROS_INFO_NAMED(CONFIG_LOG, "collision space logging level set to %s", level.c_str());
 
-    nh.param<std::string>("debug/logging/kinematics", 
+    nh.param<std::string>("debug/logging/kinematics",
                           level, "info");
-    changeLoggerLevel(std::string("ros.monolithic_pr2_planner") + 
-                                  std::string(".") + 
+    changeLoggerLevel(std::string("ros.monolithic_pr2_planner") +
+                                  std::string(".") +
                                   std::string(KIN_LOG), level);
-    changeLoggerLevel(std::string("ros.monolithic_pr2_planner_node") + 
-                                  std::string(".") + 
+    changeLoggerLevel(std::string("ros.monolithic_pr2_planner_node") +
+                                  std::string(".") +
                                   std::string(KIN_LOG), level);
     ROS_INFO_NAMED(CONFIG_LOG, "kinematics logging level set to %s", level.c_str());
 
-    nh.param<std::string>("debug/logging/hashmanager", 
+    nh.param<std::string>("debug/logging/hashmanager",
                           level, "info");
-    changeLoggerLevel(std::string("ros.monolithic_pr2_planner") + 
-                                  std::string(".") + 
+    changeLoggerLevel(std::string("ros.monolithic_pr2_planner") +
+                                  std::string(".") +
                                   std::string(HASH_LOG), level);
-    changeLoggerLevel(std::string("ros.monolithic_pr2_planner_node") + 
-                                  std::string(".") + 
+    changeLoggerLevel(std::string("ros.monolithic_pr2_planner_node") +
+                                  std::string(".") +
                                   std::string(HASH_LOG), level);
     ROS_INFO_NAMED(CONFIG_LOG, "hashmanager logging level set to %s", level.c_str());
 
-    nh.param<std::string>("debug/logging/search", 
+    nh.param<std::string>("debug/logging/search",
                           level, "info");
-    changeLoggerLevel(std::string("ros.monolithic_pr2_planner") + 
-                                  std::string(".") + 
+    changeLoggerLevel(std::string("ros.monolithic_pr2_planner") +
+                                  std::string(".") +
                                   std::string(SEARCH_LOG), level);
-    changeLoggerLevel(std::string("ros.monolithic_pr2_planner_node") + 
-                                  std::string(".") + 
+    changeLoggerLevel(std::string("ros.monolithic_pr2_planner_node") +
+                                  std::string(".") +
                                   std::string(SEARCH_LOG), level);
     ROS_INFO_NAMED(CONFIG_LOG, "search logging level set to %s", level.c_str());
 
-    nh.param<std::string>("debug/logging/motionprimitives", 
+    nh.param<std::string>("debug/logging/motionprimitives",
                           level, "info");
-    changeLoggerLevel(std::string("ros.monolithic_pr2_planner") + 
-                                  std::string(".") + 
+    changeLoggerLevel(std::string("ros.monolithic_pr2_planner") +
+                                  std::string(".") +
                                   std::string(MPRIM_LOG), level);
-    changeLoggerLevel(std::string("ros.monolithic_pr2_planner_node") + 
-                                  std::string(".") + 
+    changeLoggerLevel(std::string("ros.monolithic_pr2_planner_node") +
+                                  std::string(".") +
                                   std::string(MPRIM_LOG), level);
     ROS_INFO_NAMED(CONFIG_LOG, "search logging level set to %s", level.c_str());
 }

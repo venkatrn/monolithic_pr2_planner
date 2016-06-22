@@ -9,6 +9,9 @@ enum MenuItems{PLAN_IMHA_ROUND_ROBIN=1,
                PLAN_SMHA_ROUND_ROBIN,
                PLAN_SMHA_META_A_STAR,
                PLAN_SMHA_DTS,
+               PLAN_SMHA_DTS_PLUS,
+               PLAN_SMHA_DTS_FOCAL,
+               PLAN_SMHA_DTS_UNCONSTRAINED,
                INTERRUPT,
                WRITE_TO_FILE};
 
@@ -44,7 +47,10 @@ void ControlPlanner::processFeedback(const visualization_msgs::InteractiveMarker
        feedback->menu_entry_id == MenuItems::PLAN_IMHA_DTS ||
        feedback->menu_entry_id == MenuItems::PLAN_SMHA_ROUND_ROBIN ||
        feedback->menu_entry_id == MenuItems::PLAN_SMHA_META_A_STAR ||
-       feedback->menu_entry_id == MenuItems::PLAN_SMHA_DTS){
+       feedback->menu_entry_id == MenuItems::PLAN_SMHA_DTS ||
+       feedback->menu_entry_id == MenuItems::PLAN_SMHA_DTS_PLUS ||
+       feedback->menu_entry_id == MenuItems::PLAN_SMHA_DTS_FOCAL ||
+       feedback->menu_entry_id == MenuItems::PLAN_SMHA_DTS_UNCONSTRAINED){
 
       visualization_msgs::InteractiveMarker start_base_marker;
       int_marker_server->get("start_base",start_base_marker);
@@ -87,10 +93,26 @@ void ControlPlanner::processFeedback(const visualization_msgs::InteractiveMarker
        feedback->menu_entry_id == MenuItems::PLAN_SMHA_META_A_STAR)
       req.meta_search_type = mha_planner::MetaSearchType::META_A_STAR;
     else if(feedback->menu_entry_id == MenuItems::PLAN_IMHA_DTS ||
-            feedback->menu_entry_id == MenuItems::PLAN_SMHA_DTS)
+            feedback->menu_entry_id == MenuItems::PLAN_SMHA_DTS ||
+            feedback->menu_entry_id == MenuItems::PLAN_SMHA_DTS_PLUS ||
+            feedback->menu_entry_id == MenuItems::PLAN_SMHA_DTS_FOCAL ||
+            feedback->menu_entry_id == MenuItems::PLAN_SMHA_DTS_UNCONSTRAINED)
       req.meta_search_type = mha_planner::MetaSearchType::DTS;
     else
       req.meta_search_type = mha_planner::MetaSearchType::ROUND_ROBIN;
+
+    // Setting the type of mha planner.
+    if(feedback->menu_entry_id == MenuItems::PLAN_SMHA_DTS_PLUS)
+        req.mha_type = mha_planner::MHAType::PLUS;
+
+    else if(feedback->menu_entry_id == MenuItems::PLAN_SMHA_DTS_FOCAL)
+        req.mha_type = mha_planner::MHAType::FOCAL;
+
+    else if(feedback->menu_entry_id == MenuItems::PLAN_SMHA_DTS_UNCONSTRAINED)
+        req.mha_type = mha_planner::MHAType::UNCONSTRAINED;
+
+    else
+        req.mha_type = mha_planner::MHAType::ORIGINAL;
 
       //position of the wrist in the object's frame
       req.rarm_object.pose.position.x = 0;
@@ -616,7 +638,10 @@ ControlPlanner::ControlPlanner(){
   menu_handler.insert("Plan SMHA Round Robin", boost::bind(&ControlPlanner::processFeedback, this, _1));
   menu_handler.insert("Plan SMHA Meta A*", boost::bind(&ControlPlanner::processFeedback, this, _1));
   menu_handler.insert("Plan SMHA DTS", boost::bind(&ControlPlanner::processFeedback, this, _1));
-  menu_handler.insert("Interrupt Planner", boost::bind(&ControlPlanner::processFeedback, this, _1));
+  menu_handler.insert("Plan SMHA DTS PLUS", boost::bind(&ControlPlanner::processFeedback, this, _1));
+  menu_handler.insert("Plan SMHA DTS PLUS", boost::bind(&ControlPlanner::processFeedback, this, _1));
+  menu_handler.insert("Plan SMHA DTS FOCAL", boost::bind(&ControlPlanner::processFeedback, this, _1));
+  menu_handler.insert("Plan SMHA DTS UNCONSTRAINED", boost::bind(&ControlPlanner::processFeedback, this, _1));
   menu_handler.insert("Write to file", boost::bind(&ControlPlanner::processFeedback, this, _1));
   menu_handler.apply(*int_marker_server, "start_base");
   menu_handler.apply(*int_marker_server, "goal_base");

@@ -19,6 +19,10 @@
     uri: https://github.com/shivamvats/navigation
     version: indigo
 - git:
+    local-name: octomap_mapping
+    uri: https://github.com/shivamvats/octomap_mapping
+    version: indigo
+- git:
     local-name: pr2_collision_checker
     uri: https://github.com/shivamvats/pr2_collision_checker
     version: indigo

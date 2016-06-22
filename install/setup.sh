@@ -5,6 +5,7 @@ wstool init ../.. .rosinstall;
 cd ../../;
 wstool update;
 
+echo "Indigo version of octomap_server does not work with this package"
 echo "Installing debian packages using apt-get"
 rosdep install --from-paths . --ignore-src --rosdistro=indigo
 

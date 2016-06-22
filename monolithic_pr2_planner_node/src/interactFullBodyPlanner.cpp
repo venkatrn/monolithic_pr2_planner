@@ -101,7 +101,7 @@ void ControlPlanner::processFeedback(const visualization_msgs::InteractiveMarker
     else
       req.meta_search_type = mha_planner::MetaSearchType::ROUND_ROBIN;
 
-    // Setting the type of mha planner.
+    // Setting the type of mha plannerr
     if(feedback->menu_entry_id == MenuItems::PLAN_SMHA_DTS_PLUS)
         req.mha_type = mha_planner::MHAType::PLUS;
 
@@ -639,9 +639,9 @@ ControlPlanner::ControlPlanner(){
   menu_handler.insert("Plan SMHA Meta A*", boost::bind(&ControlPlanner::processFeedback, this, _1));
   menu_handler.insert("Plan SMHA DTS", boost::bind(&ControlPlanner::processFeedback, this, _1));
   menu_handler.insert("Plan SMHA DTS PLUS", boost::bind(&ControlPlanner::processFeedback, this, _1));
-  menu_handler.insert("Plan SMHA DTS PLUS", boost::bind(&ControlPlanner::processFeedback, this, _1));
   menu_handler.insert("Plan SMHA DTS FOCAL", boost::bind(&ControlPlanner::processFeedback, this, _1));
   menu_handler.insert("Plan SMHA DTS UNCONSTRAINED", boost::bind(&ControlPlanner::processFeedback, this, _1));
+  menu_handler.insert("Interrupt planner", boost::bind(&ControlPlanner::processFeedback, this, _1));
   menu_handler.insert("Write to file", boost::bind(&ControlPlanner::processFeedback, this, _1));
   menu_handler.apply(*int_marker_server, "start_base");
   menu_handler.apply(*int_marker_server, "goal_base");

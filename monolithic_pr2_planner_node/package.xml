@@ -32,6 +32,8 @@
   <build_depend>pviz</build_depend>
   <build_depend>tf2</build_depend>
   <build_depend>pcl_conversions</build_depend>
+  <build_depend>gridmap_2d</build_depend>
+  <build_depend>opencv</build_depend>
 
   <!-- Dependencies needed after this package is compiled. -->
   <run_depend>roscpp</run_depend>
@@ -53,6 +55,9 @@
   <run_depend>pviz</run_depend>
   <run_depend>tf2</run_depend>
   <run_depend>pcl_conversions</run_depend>
+  <run_depend>gridmap_2d</run_depend>
+  <run_depend>opencv</run_depend>
+
 
   <!-- Dependencies needed only for running tests. -->
   <!-- <test_depend>roscpp</test_depend> -->

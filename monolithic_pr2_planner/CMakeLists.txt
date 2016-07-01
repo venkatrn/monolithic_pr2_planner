@@ -35,7 +35,7 @@ catkin_package(
 #  Release        : w/o debug symbols, w/ optimization
 #  RelWithDebInfo : w/ debug symbols, w/ optimization
 #  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-set(ROS_BUILD_TYPE Debug)
+set(CATKIN_BUILD_TYPE Release)
 
 
 # CATKIN_MIGRATION: removed during catkin migration

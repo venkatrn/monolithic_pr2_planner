@@ -34,6 +34,9 @@ namespace monolithic_pr2_planner_node {
         public:
             EnvInterfaces(boost::shared_ptr<monolithic_pr2_planner::Environment> env,
                 ros::NodeHandle nh);
+            ~EnvInterfaces() {m_costmap_ros.reset(nullptr);
+                              m_costmap_publisher.reset(nullptr);
+            }
             void getParams();
             bool planPathCallback(GetMobileArmPlan::Request &req, 
                                   GetMobileArmPlan::Response &res);

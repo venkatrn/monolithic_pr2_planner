@@ -8,7 +8,7 @@ project(monolithic_pr2_planner_node)
 # TODO: remove all from COMPONENTS that are not catkin packages.
 #find_package(ompl REQUIRED)
 find_package(catkin REQUIRED COMPONENTS roscpp geometry_msgs monolithic_pr2_planner leatherman pcl_ros geometry_msgs sensor_msgs arm_navigation_msgs costmap_2d
-                             sbpl_manipulation_components_pr2 interactive_markers sbpl_mha message_generation pviz tf2 pcl_conversions)
+                             sbpl_manipulation_components_pr2 interactive_markers sbpl_mha message_generation pviz tf2 pcl_conversions gridmap_2d)
 find_package(orocos_kdl)
 #uncomment if you have defined services
 add_service_files(
@@ -18,7 +18,7 @@ add_service_files(
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
-    DEPENDENCIES trajectory_msgs geometry_msgs std_msgs
+    DEPENDENCIES trajectory_msgs geometry_msgs std_msgs 
 )
 
 # catkin_package parameters: http://ros.org/doc/groovy/api/catkin/html/dev_guide/generated_cmake_api.html#catkin-package
@@ -26,10 +26,12 @@ generate_messages(
 catkin_package(
     DEPENDS roscpp geometry_msgs costmap_2d sbpl_manipulation_components_pr2 interactive_markers
              orocos_kdl
-             CATKIN_DEPENDS pcl_conversions tf2 message_runtime pviz sbpl_manipulation_components_pr2 monolithic_pr2_planner leatherman pcl_ros  geometry_msgs sensor_msgs arm_navigation_msgs sbpl_mha # TODO
+             CATKIN_DEPENDS pcl_conversions tf2 message_runtime pviz sbpl_manipulation_components_pr2 monolithic_pr2_planner leatherman pcl_ros  geometry_msgs sensor_msgs arm_navigation_msgs sbpl_mha gridmap_2d# TODO
     INCLUDE_DIRS include ${catkin_INCLUDE_DIRS} ${ompl_INCLUDE_DIRS}# TODO include
     LIBRARIES ${catkin_LIBRARIES} ${ompl_LIBRARIES} # TODO
 )
+
+find_package(OpenCV REQUIRED)
 
 # include_directories(include ${Boost_INCLUDE_DIR} ${catkin_INCLUDE_DIRS})
 # CATKIN_MIGRATION: removed during catkin migration
@@ -44,7 +46,7 @@ catkin_package(
 #  Release        : w/o debug symbols, w/ optimization
 #  RelWithDebInfo : w/ debug symbols, w/ optimization
 #  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-set(ROS_BUILD_TYPE Debug)
+set(CATKIN_BUILD_TYPE Release )
 
 # CATKIN_MIGRATION: removed during catkin migration
 # rosbuild_init()
@@ -62,7 +64,7 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 #set the default path for built libraries to the "lib" directory
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
-include_directories(${Boost_INCLUDE_DIRS} include ${catkin_INCLUDE_DIRS} ${ompl_INCLUDE_DIRS} ${orocos_kdl_INCLUDE_DIRS})
+include_directories(${Boost_INCLUDE_DIRS} include ${catkin_INCLUDE_DIRS} ${ompl_INCLUDE_DIRS} ${orocos_kdl_INCLUDE_DIRS} ${OpenCV}_INCLUDE_DIRS)
 #target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} ${catkin_LIBRARIES} ${ompl_LIBRARIES})
 
 add_executable(node src/node.cpp src/EnvInterfaces.cpp #(Not required for simulation?)
@@ -105,6 +107,9 @@ target_link_libraries(runTests monolithic_pr2_planner)
 add_executable(generateExperimentsNode src/generateExperimentsNode.cpp)
 add_dependencies(generateExperimentsNode ${catkin_EXPORTED_TARGETS})
 target_link_libraries(generateExperimentsNode monolithic_pr2_planner)
+
+add_executable(saveProjectedMap src/saveProjectedMap.cpp)
+target_link_libraries(saveProjectedMap monolithic_pr2_planner ${OpenCV_LIBS} ${catkin_LIBRARIES})
 
 
 

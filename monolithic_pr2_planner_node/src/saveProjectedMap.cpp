@@ -8,6 +8,9 @@
 #include <opencv2/opencv.hpp>
 #include <highgui.h>
 
+#define MAX_KITCHEN_WIDTH 300 // For width 6m at 0.02m/pix
+#define MAX_KITCHEN_LENGTH 500 // For length 10m at 0.02 m/pix
+
 std::string path;
 
 void chatterCallback(const nav_msgs::OccupancyGridPtr &map)
@@ -17,7 +20,7 @@ void chatterCallback(const nav_msgs::OccupancyGridPtr &map)
 
  cv::Mat img(converted_map.binaryMap());
  //std::cout<<img.rows<<"\t"<<img.cols<<"\n";
- cv::Rect myROI(620, 624, 930-620, 1040-624);
+ cv::Rect myROI(620, 624, MAX_KITCHEN_WIDTH , MAX_KITCHEN_LENGTH);
  cv::Mat croppedImage = img(myROI);
  cv::imwrite(path + "/projected_map.jpg", croppedImage);
 

@@ -1815,8 +1815,8 @@ bool OMPLFullBodyPlannerNode::isGoalConstraintSatisfied(const std::vector<double
 /* Kinematics ----------------------------------------------------------------*/
 bool OMPLFullBodyPlannerNode::computeFK(const std::vector<double> &jnt_pos, std::string arm_name, geometry_msgs::Pose &pose)
 {
-  kinematics_msgs::GetPositionFK::Request  request;
-  kinematics_msgs::GetPositionFK::Response response;
+  moveit_msgs::GetPositionFK::Request  request;
+  moveit_msgs::GetPositionFK::Response response;
 
   std::string fk_service;
   request.header.stamp = ros::Time();
@@ -1846,7 +1846,7 @@ bool OMPLFullBodyPlannerNode::computeFK(const std::vector<double> &jnt_pos, std:
 
   ROS_DEBUG("waiting for %s service", fk_service.c_str());
   ros::service::waitForService(fk_service);
-  ros::ServiceClient client = root_handle_.serviceClient<kinematics_msgs::GetPositionFK>(fk_service);
+  ros::ServiceClient client = root_handle_.serviceClient<moveit_msgs::GetPositionFK>(fk_service);
 
   if(client.call(request, response))
   {

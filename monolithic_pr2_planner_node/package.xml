@@ -1,0 +1,79 @@
+<package>
+  <name>monolithic_pr2_planner_node</name>
+  <version>1.0.0</version>
+  <description>monolithic_pr2_planner_node</description>
+  <maintainer email="shivamvats.iitkgp@gmail.com">Shivam Vats</maintainer>
+
+  <license>BSD</license>
+
+  <url type="website">http://ros.org/wiki/full_body_planner_dual_arm</url>
+  <!-- <url type="bugtracker"></url> -->
+
+  <!-- Dependencies which this package needs to build itself. -->
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- Dependencies needed to compile this package. -->
+  <build_depend>roscpp</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>message_generation</build_depend>
+  <build_depend>monolithic_pr2_planner</build_depend>
+  <build_depend>leatherman</build_depend>
+  <build_depend>pcl_ros</build_depend>
+  <build_depend>orocos_kdl</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>arm_navigation_msgs</build_depend>
+  <build_depend>ompl</build_depend>
+  <build_depend>costmap_2d</build_depend>
+  <build_depend>sbpl_manipulation_components</build_depend>
+  <build_depend>sbpl_manipulation_components_pr2</build_depend>
+  <build_depend>interactive_markers</build_depend>
+  <build_depend>sbpl_mha</build_depend>
+  <build_depend>pviz</build_depend>
+  <build_depend>tf2</build_depend>
+  <build_depend>pcl_conversions</build_depend>
+  <build_depend>gridmap_2d</build_depend>
+  <build_depend>opencv</build_depend>
+
+  <!-- Dependencies needed after this package is compiled. -->
+  <run_depend>roscpp</run_depend>
+  <run_depend>geometry_msgs</run_depend>
+  <run_depend>message_runtime</run_depend>
+  <run_depend>monolithic_pr2_planner</run_depend>
+  <run_depend>leatherman</run_depend>
+  <run_depend>pcl_ros</run_depend>
+  <run_depend>orocos_kdl</run_depend>
+  <run_depend>geometry_msgs</run_depend>
+  <run_depend>sensor_msgs</run_depend>
+  <run_depend>arm_navigation_msgs</run_depend>
+  <run_depend>ompl</run_depend>
+  <run_depend>costmap_2d</run_depend>
+  <run_depend>sbpl_manipulation_components</run_depend>
+  <run_depend>sbpl_manipulation_components_pr2</run_depend>
+  <run_depend>interactive_markers</run_depend>
+  <run_depend>sbpl_mha</run_depend>
+  <run_depend>pviz</run_depend>
+  <run_depend>tf2</run_depend>
+  <run_depend>pcl_conversions</run_depend>
+  <run_depend>gridmap_2d</run_depend>
+  <run_depend>opencv</run_depend>
+
+
+  <!-- Dependencies needed only for running tests. -->
+  <!-- <test_depend>roscpp</test_depend> -->
+  <!-- <test_depend>common_rosdeps</test_depend> -->
+  <!-- <test_depend>geometry_msgs</test_depend> -->
+  <!-- <test_depend>monolithic_pr2_planner</test_depend> -->
+  <!-- <test_depend>leatherman</test_depend> -->
+  <!-- <test_depend>pcl_ros</test_depend> -->
+  <!-- <test_depend>kdl</test_depend> -->
+  <!-- <test_depend>geometry_msgs</test_depend> -->
+  <!-- <test_depend>sensor_msgs</test_depend> -->
+  <!-- <test_depend>arm_navigation_msgs</test_depend> -->
+  <!-- <test_depend>ompl</test_depend> -->
+  <!-- <test_depend>costmap_2d</test_depend> -->
+  <!-- <test_depend>sbpl_manipulation_components_pr2</test_depend> -->
+  <!-- <test_depend>interactive_markers</test_depend> -->
+  <!-- <test_depend>sbpl</test_depend> -->
+
+</package>

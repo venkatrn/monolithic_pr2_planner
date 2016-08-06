@@ -135,8 +135,8 @@ TEST_F(MiniEnv, contToDiscConversion)
 // TODO arm stuff
 TEST_F(MiniEnv, contArmState)
 {
-    LeftContArmState l_arm;
-    l_arm.set
+    //LeftContArmState l_arm;
+    //l_arm.set
 }
 
 // can't figure out why this fails

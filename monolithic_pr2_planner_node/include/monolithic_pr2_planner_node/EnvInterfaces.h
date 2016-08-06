@@ -21,7 +21,7 @@
 #include <monolithic_pr2_planner_node/ompl_pr2_planner.h>
 #include <monolithic_pr2_planner/ExperimentFramework/randomStartGoalGenerator.h>
 
-#include <full_body_controller/ExecutePath.h>
+//#include <full_body_controller/ExecutePath.h>
 
 namespace monolithic_pr2_planner_node {
     struct InterfaceParams {
@@ -34,6 +34,9 @@ namespace monolithic_pr2_planner_node {
         public:
             EnvInterfaces(boost::shared_ptr<monolithic_pr2_planner::Environment> env,
                 ros::NodeHandle nh);
+            ~EnvInterfaces() {m_costmap_ros.reset(nullptr);
+                              m_costmap_publisher.reset(nullptr);
+            }
             void getParams();
             bool planPathCallback(GetMobileArmPlan::Request &req, 
                                   GetMobileArmPlan::Response &res);

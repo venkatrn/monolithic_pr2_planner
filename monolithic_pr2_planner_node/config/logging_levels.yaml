@@ -1,7 +1,7 @@
 debug:
     logging:
         configuration: info
-        initialization: debug
+        initialization: info
         collision_space: info
         kinematics: info
         hashmanager: info

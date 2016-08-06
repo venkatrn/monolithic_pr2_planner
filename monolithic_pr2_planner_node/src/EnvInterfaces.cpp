@@ -8,7 +8,7 @@
 #include <boost/filesystem.hpp>
 #include <geometry_msgs/Pose.h>
 #include <leatherman/utils.h>
-#include <LinearMath/btVector3.h>
+#include <tf2/LinearMath/Vector3.h>
 #include <climits>
 
 #define EPS 50.0
@@ -439,7 +439,7 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
 
     if (m_params.run_trajectory) {
       ROS_INFO("Running trajectory!");
-      runTrajectory(states);
+      //runTrajectory(states); Commented out to compile without driver.
     }
 
     return true;
@@ -899,6 +899,7 @@ double EnvInterfaces::getJointAngle(std::string name,
  * @param states The final path
  * @return status of the call
  */
+/* Commenting out to compile without the PR2 driver
 void EnvInterfaces::runTrajectory(std::vector<FullBodyState> &states) {
 
   // Create the messages from the full body states
@@ -992,4 +993,4 @@ void EnvInterfaces::runTrajectory(std::vector<FullBodyState> &states) {
     ROS_INFO("Trajectory failed.");
   }
 }
-
+*/

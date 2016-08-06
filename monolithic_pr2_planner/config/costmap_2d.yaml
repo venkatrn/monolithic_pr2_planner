@@ -21,7 +21,7 @@ track_unknown_space: true
 footprint: [[-0.385, -0.385], [-0.385, 0.385], [0.385, 0.385], [0.385, -0.385]]
 # footprint_padding: 0.01
 #inflation_radius: 0.47 #---> experiments were run with this.
-inflation_radius: 0.57
+inflation_radius: 0.38
 #inflation_radius: 0.38
 # robot_radius: 0.7
 # cost_scaling_factor: 10.0

@@ -55,7 +55,7 @@ SET(CMAKE_CXX_FLAGS "-std=c++0x")
 
 # find_package(Boost 1.46.0 COMPONENTS thread system filesystem REQUIRED)
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(ompl REQUIRED ompl)
+find_package(OMPL REQUIRED ompl)
 include_directories(${ompl_INCLUDE_DIRS} ${tf2_INCLUDE_DIRS} ${pcl_conversions_INCLUDE_DIRS})
 link_directories(${ompl_LIBRARY_DIRS} )
 
@@ -80,7 +80,9 @@ add_executable(testPlanningRequest src/testPlanningRequest.cpp)
 target_link_libraries(testPlanningRequest monolithic_pr2_planner)
 
 add_executable(interactFullBodyPlanner src/interactFullBodyPlanner.cpp)
-add_dependencies(interactFullBodyPlanner ${catkin_EXPORTED_TARGETS})
+add_dependencies(interactFullBodyPlanner
+  monolithic_pr2_planner_node_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+
 # TODO I don't know why I have to list the packages explicitly.
 target_link_libraries(interactFullBodyPlanner monolithic_pr2_planner sbpl_manipulation_components_pr2 pviz ${catkin_LIBRARIES} ${ompl_LIBRARIES})
 

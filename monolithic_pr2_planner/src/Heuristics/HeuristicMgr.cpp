@@ -9,6 +9,7 @@
 #include <monolithic_pr2_planner/Heuristics/BFS2DHeuristic.h>
 #include <monolithic_pr2_planner/Heuristics/BaseWithRotationHeuristic.h>
 #include <monolithic_pr2_planner/Heuristics/BFS2DRotFootprintHeuristic.h>
+#include <monolithic_pr2_planner/Heuristics/DistanceTransform2D.h>
 #include <costmap_2d/cost_values.h>
 #include <kdl/frames.hpp>
 #include <memory>
@@ -206,6 +207,11 @@ void HeuristicMgr::initializeHeuristics() {
         addEndEffOnlyRotationHeur("endeff_rot_vert", rot, cost_multiplier);
     }
 
+    {
+        int cost_multiplier = 1;
+        addDistanceTransform("distance_transform");
+    }
+
     // {
     //     int cost_multiplier = 1;
     //     addVoronoiOrientationHeur("voronoi_heur", cost_multiplier);
@@ -346,6 +352,17 @@ void HeuristicMgr::addBFS2DRotFootprint(std::string name, const int cost_multipl
     m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
 }
 
+void HeuristicMgr::addDistanceTransform(std::string name){
+    // Initialize the new heuristic
+    AbstractHeuristicPtr new_dt_heur = make_shared<DistanceTransform2D>();
+    // Set cost multiplier here.
+    // new_2d_heur->setCostMultiplier(cost_multiplier);
+    // new_2d_heur->setRadiusAroundGoal(radius_m);
+    // Add to the list of heuristics
+    m_heuristics.push_back(new_dt_heur);
+    m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
+}
+
 // void HeuristicMgr::addVoronoiOrientationHeur(std::string name, const int cost_multiplier){
 //     // Initialize the new heuristic
 //     VoronoiOrientationHeuristicPtr new_voronoi_heur = make_shared<VoronoiOrientationHeuristic>();
@@ -410,11 +427,11 @@ void HeuristicMgr::setGoal(GoalState& goal_state){
             int(i));
         m_heuristics[i]->setGoal(goal_state);
     }
-    {
-        // Create additional heuristics for MHA planner
-        int cost_multiplier = 1;
-        initializeMHAHeuristics(cost_multiplier);
-    }
+    // {
+    //     // Create additional heuristics for MHA planner
+    //     int cost_multiplier = 1;
+    //     initializeMHAHeuristics(cost_multiplier);
+    // }
 }
 
 void HeuristicMgr::getGoalHeuristic(const GraphStatePtr& state, std::unique_ptr<stringintmap>& values)

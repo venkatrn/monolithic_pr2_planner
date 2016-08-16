@@ -11,6 +11,9 @@
 #include <tf2/LinearMath/Vector3.h>
 #include <climits>
 
+#include <opencv2/highgui/highgui.hpp> 
+#include <opencv2/contrib/contrib.hpp> 
+
 #define EPS 50.0
 
 using namespace monolithic_pr2_planner_node;
@@ -42,8 +45,9 @@ EnvInterfaces::EnvInterfaces(
   getParams();
   bool forward_search = true;
   m_ara_planner.reset(new ARAPlanner(m_env.get(), forward_search));
-  m_mha_planner.reset(new MHAPlanner(m_env.get(), NUM_SMHA_HEUR,
-                                     forward_search));
+  // m_mha_planner.reset(new MHAPlanner(m_env.get(), NUM_SMHA_HEUR,
+  //                                    forward_search));
+  m_esp_planner.reset(new ESPPlanner(m_env.get(), forward_search));
   m_costmap_pub = m_nodehandle.advertise<nav_msgs::OccupancyGrid>("costmap_pub",
                                                                   1);
   m_costmap_publisher.reset(new
@@ -55,7 +59,7 @@ EnvInterfaces::EnvInterfaces(
 
 void EnvInterfaces::interruptPlannerCallback(std_msgs::EmptyConstPtr) {
   ROS_WARN("Planner interrupt received!");
-  m_mha_planner->interrupt();
+  m_esp_planner->interrupt();
 }
 
 void EnvInterfaces::getParams() {
@@ -329,7 +333,10 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
   m_env->reset();
   m_env->setPlannerType(planner_type);
   m_env->setUseNewHeuristics(use_new_heuristics);
-  m_mha_planner.reset(new MHAPlanner(m_env.get(), planner_queues,
+  // m_mha_planner.reset(new MHAPlanner(m_env.get(), planner_queues,
+  //                                    forward_search));
+  ROS_INFO("Initialize planner");
+  m_esp_planner.reset(new ESPPlanner(m_env.get(), 
                                      forward_search));
   total_planning_time = clock();
   ROS_INFO("configuring request");
@@ -383,41 +390,69 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
     sleep(5);
     return true;
   } else {
-    m_mha_planner->set_start(start_id);
+    // m_mha_planner->set_start(start_id);
+    m_esp_planner->set_start(start_id);
     ROS_INFO("setting %s goal id to %d", planner_prefix.c_str(), goal_id);
-    m_mha_planner->set_goal(goal_id);
-    m_mha_planner->force_planning_from_scratch();
+    // m_mha_planner->set_goal(goal_id);
+    // m_mha_planner->force_planning_from_scratch();
+    m_esp_planner->set_goal(goal_id);
+    m_esp_planner->force_planning_from_scratch();
     vector<int> soln;
     int soln_cost;
     ROS_INFO("allocated time is %f", req.allocated_planning_time);
-    MHAReplanParams replan_params(req.allocated_planning_time);
+    // MHAReplanParams replan_params(req.allocated_planning_time);
+    ReplanParams replan_params(req.allocated_planning_time);
 
-    replan_params.meta_search_type = static_cast<mha_planner::MetaSearchType>
-                                     (req.meta_search_type);
-    replan_params.planner_type = static_cast<mha_planner::PlannerType>
-                                 (req.planner_type);
-    replan_params.mha_type = static_cast<mha_planner::MHAType>(req.mha_type);
+    // replan_params.meta_search_type = static_cast<mha_planner::MetaSearchType>
+    //                                  (req.meta_search_type);
+    // replan_params.planner_type = static_cast<mha_planner::PlannerType>
+    //                              (req.planner_type);
+    // replan_params.mha_type = static_cast<mha_planner::MHAType>(req.mha_type);
 
-    if (replan_params.mha_type == mha_planner::MHAType::ORIGINAL) {
-      if (EPS >= 2.0) {
-        replan_params.inflation_eps = EPS / 2.0;
-        replan_params.anchor_eps = 2.0;
-      } else {
-        replan_params.inflation_eps = sqrt(EPS);
-        replan_params.anchor_eps = sqrt(EPS);
-      }
-    } else {
-      replan_params.inflation_eps = EPS;
-      replan_params.anchor_eps = 1.0;
-    }
+    // if (replan_params.mha_type == mha_planner::MHAType::ORIGINAL) {
+    //   if (EPS >= 2.0) {
+    //     replan_params.inflation_eps = EPS / 2.0;
+    //     replan_params.anchor_eps = 2.0;
+    //   } else {
+    //     replan_params.inflation_eps = sqrt(EPS);
+    //     replan_params.anchor_eps = sqrt(EPS);
+    //   }
+    // } else {
+    //   replan_params.inflation_eps = EPS;
+    //   replan_params.anchor_eps = 1.0;
+    // }
 
-    replan_params.use_anchor = true;
+    // replan_params.use_anchor = true;
     replan_params.return_first_solution = false;
+    replan_params.initial_eps = EPS;
     replan_params.final_eps = EPS;
 
     //isPlanFound = m_mha_planner->replan(req.allocated_planning_time,
     //                                     &soln, &soln_cost);
-    isPlanFound = m_mha_planner->replan(&soln, replan_params, &soln_cost);
+    // isPlanFound = m_mha_planner->replan(&soln, replan_params, &soln_cost);
+
+    vector<sbpl::Path> solution_paths;
+    isPlanFound = m_esp_planner->replan(&solution_paths, replan_params, &soln_cost);
+    printf("Found %d possible paths:\n", static_cast<int>(solution_paths.size()));
+
+    for (size_t ii = 0; ii < solution_paths.size(); ++ii) {
+      const auto &solution_path = solution_paths[ii];
+      cout << "Cost: " << solution_path.cost << "     ";
+
+      for (size_t jj = 0; jj < solution_path.state_ids.size(); ++jj) {
+        cout << solution_path.state_ids[jj] << " ";
+      }
+
+      cout << endl;
+    }
+
+    cout << endl;
+    int true_path_idx = m_esp_planner->GetTruePathIdx(solution_paths);
+    cout << "True path IDX: " << true_path_idx << endl;
+    if (true_path_idx != -1) {
+      isPlanFound = true;
+      soln = solution_paths[true_path_idx].state_ids;
+    }
 
     if (isPlanFound) {
       ROS_INFO("Plan found in %s Planner. Moving on to reconstruction.",
@@ -624,43 +659,25 @@ void EnvInterfaces::packageMHAStats(vector<string> &stat_names,
                                     double total_planning_time) {
   stat_names.resize(10);
   stats.resize(10);
-  stat_names[0] = "total plan time";
-  stat_names[1] = "initial solution planning time";
-  stat_names[2] = "epsilon 1";
-  stat_names[3] = "initial solution expansions";
-  stat_names[4] = "final epsilon planning time";
-  stat_names[5] = "epsilon 2";
-  stat_names[6] = "solution epsilon";
-  stat_names[7] = "expansions";
-  stat_names[8] = "solution cost";
-  stat_names[9] = "path length";
+  stat_names[0] = "initial solution planning time";
+  stat_names[1] = "initial solution expansions";
+  stat_names[2] = "solution cost";
+  stat_names[3] = "path length";
 
   vector<PlannerStats> planner_stats;
-  m_mha_planner->get_search_stats(&planner_stats);
+  m_esp_planner->get_search_stats(&planner_stats);
 
   if (planner_stats.empty()) {
     stats[0] = -1;
     stats[1] = -1;
     stats[2] = -1;
     stats[3] = -1;
-    stats[4] = -1;
-    stats[5] = -1;
-    stats[6] = -1;
-    stats[7] = -1;
-    stats[8] = -1;
-    stats[9] = -1;
   } else {
     // Take stats only for the first solution, since this is not anytime currently
     stats[0] = planner_stats[0].time;
-    stats[1] = stats[0];
-    stats[2] = EPS;
-    stats[3] = planner_stats[0].expands;
-    stats[4] = stats[0];
-    stats[5] = stats[2];
-    stats[6] = stats[2];
-    stats[7] = stats[3];
-    stats[8] = static_cast<double>(planner_stats[0].cost);
-    stats[9] = static_cast<double>(solution_size);
+    stats[1] = planner_stats[0].expands;
+    stats[2] = static_cast<double>(planner_stats[0].cost);
+    stats[3] = static_cast<double>(solution_size);
   }
 }
 
@@ -830,7 +847,6 @@ void EnvInterfaces::loadNavMap(const nav_msgs::OccupancyGridPtr &map) {
   m_costmap_pub.publish(costmap_pub);
 
   m_collision_space_interface->update2DHeuristicMaps(m_cropped_map);
-
 }
 
 void EnvInterfaces::getRobotState(tf::TransformListener &tf_,

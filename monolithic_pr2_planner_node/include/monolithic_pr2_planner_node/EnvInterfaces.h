@@ -1,5 +1,6 @@
 #pragma once
-#include <monolithic_pr2_planner/Environment.h>
+// #include <monolithic_pr2_planner/Environment.h>
+#include <monolithic_pr2_planner/EnvironmentESP.h>
 #include <monolithic_pr2_planner_node/CollisionSpaceInterface.h>
 #include <monolithic_pr2_planner_node/GetMobileArmPlan.h>
 #include <boost/shared_ptr.hpp>
@@ -9,6 +10,7 @@
 #include <tf/transform_listener.h>
 #include <sbpl/planners/araplanner.h>
 #include <sbpl/planners/mha_planner.h>
+#include <esp_planner/esp_planner.h>
 #include <nav_msgs/OccupancyGrid.h>
 #include <sbpl/planners/planner.h>
 #include <costmap_2d/costmap_2d_ros.h>
@@ -91,6 +93,7 @@ namespace monolithic_pr2_planner_node {
             ros::ServiceServer m_demo_service;
             std::unique_ptr<SBPLPlanner> m_ara_planner;
             std::unique_ptr<MHAPlanner> m_mha_planner;
+            std::unique_ptr<ESPPlanner> m_esp_planner;
             ros::Subscriber m_nav_map;
             ros::Publisher m_costmap_pub;
             std::vector<signed char> m_final_map;

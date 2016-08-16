@@ -147,6 +147,7 @@ inline void SBPL2DGridSearch::initializeSearchState2D(SBPL_2DGridSearchState* st
 void SBPL2DGridSearch::destroy()
 {
     // destroy the OPEN list:
+    printf("Destroying OPEN\n");
     if (OPEN2D_ != NULL) {
         OPEN2D_->makeemptyheap();
         delete OPEN2D_;
@@ -154,6 +155,7 @@ void SBPL2DGridSearch::destroy()
     }
 
     // destroy the 2D states:
+    printf("Destroying 2D States\n");
     if (searchStates2D_ != NULL) {
         for (int x = 0; x < width_; x++) {
             delete[] searchStates2D_[x];
@@ -162,6 +164,7 @@ void SBPL2DGridSearch::destroy()
         searchStates2D_ = NULL;
     }
 
+    printf("Destroying OPENBLIST\n");
     if (OPEN2DBLIST_ != NULL) {
         delete OPEN2DBLIST_;
         OPEN2DBLIST_ = NULL;
@@ -454,7 +457,7 @@ bool SBPL2DGridSearch::search_withheap(unsigned char** Grid2D, unsigned char obs
     else
         largestcomputedoptf_ = INFINITECOST;
 
-    delete[] pbClosed;
+    free(pbClosed);
 
     SBPL_PRINTF( "# of expands during 2dgridsearch=%d time=%d msecs 2Dsolcost_inmm=%d "
                 "largestoptfval=%d (start=%d %d goal=%d %d)\n",

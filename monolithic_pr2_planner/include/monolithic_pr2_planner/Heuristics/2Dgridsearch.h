@@ -191,7 +191,7 @@ private:
     //2D search data
     CSlidingBucket* OPEN2DBLIST_;
     CIntHeap* OPEN2D_;
-    SBPL_2DGridSearchState** searchStates2D_;
+    std::vector<std::vector<SBPL_2DGridSearchState>> searchStates2D_;
     int dx_[SBPL_2DGRIDSEARCH_NUMOF2DDIRS];
     int dy_[SBPL_2DGRIDSEARCH_NUMOF2DDIRS];
     //the intermediate cells through which the actions go 

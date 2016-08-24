@@ -1,3 +1,8 @@
+# Define various planner types.
+int8 PLANNER_ARA=0
+int8 PLANNER_LAZY_ARA=1
+int8 PLANNER_ESP=2
+
 # start
 geometry_msgs/PoseStamped start
 
@@ -35,6 +40,7 @@ float64 final_eps
 float64 dec_eps
 
 int8 planner_type
+bool use_lazy
 int8 meta_search_type
 int8 mha_type
 bool use_ompl

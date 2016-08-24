@@ -14,13 +14,15 @@
 #include <opencv2/highgui/highgui.hpp> 
 #include <opencv2/contrib/contrib.hpp> 
 
-#define EPS 50.0
-
 using namespace monolithic_pr2_planner_node;
 using namespace monolithic_pr2_planner;
 using namespace boost;
 using namespace std;
 using namespace KDL;
+
+constexpr int PLANNER_ARA = GetMobileArmPlan::Request::PLANNER_ARA;
+constexpr int PLANNER_LAZY_ARA = GetMobileArmPlan::Request::PLANNER_LAZY_ARA;
+constexpr int PLANNER_ESP = GetMobileArmPlan::Request::PLANNER_ESP;
 
 // constructor automatically launches the collision space interface, which only
 // loads it up with a pointer to the collision space mgr. it doesn't bind to any
@@ -44,9 +46,7 @@ EnvInterfaces::EnvInterfaces(
 
   getParams();
   bool forward_search = true;
-  m_ara_planner.reset(new ARAPlanner(m_env.get(), forward_search));
-  // m_mha_planner.reset(new MHAPlanner(m_env.get(), NUM_SMHA_HEUR,
-  //                                    forward_search));
+  m_ara_planner.reset(new LazyARAPlanner(m_env.get(), forward_search));
   m_esp_planner.reset(new ESPPlanner(m_env.get(), forward_search));
   m_costmap_pub = m_nodehandle.advertise<nav_msgs::OccupancyGrid>("costmap_pub",
                                                                   1);
@@ -59,7 +59,12 @@ EnvInterfaces::EnvInterfaces(
 
 void EnvInterfaces::interruptPlannerCallback(std_msgs::EmptyConstPtr) {
   ROS_WARN("Planner interrupt received!");
-  m_esp_planner->interrupt();
+  if (m_req_planner_type == PLANNER_ESP) {
+    m_esp_planner->interrupt();
+  } else if (m_req_planner_type == PLANNER_ARA || m_req_planner_type == PLANNER_LAZY_ARA) {
+    auto m_lazy_ara_planner = dynamic_cast<LazyARAPlanner*>(m_ara_planner.get());
+    m_lazy_ara_planner->interrupt();
+  }
 }
 
 void EnvInterfaces::getParams() {
@@ -333,11 +338,16 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
   m_env->reset();
   m_env->setPlannerType(planner_type);
   m_env->setUseNewHeuristics(use_new_heuristics);
-  // m_mha_planner.reset(new MHAPlanner(m_env.get(), planner_queues,
-  //                                    forward_search));
   ROS_INFO("Initialize planner");
   m_esp_planner.reset(new ESPPlanner(m_env.get(), 
                                      forward_search));
+  if (m_req_planner_type == PLANNER_ESP) {
+    m_esp_planner.reset(new ESPPlanner(m_env.get(), 
+                                     forward_search));
+  } else if (m_req_planner_type == PLANNER_ARA || m_req_planner_type == PLANNER_LAZY_ARA) {
+    m_ara_planner.reset(new LazyARAPlanner(m_env.get(), 
+                                     forward_search));
+  }
   total_planning_time = clock();
   ROS_INFO("configuring request");
 
@@ -347,7 +357,7 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
 
     total_planning_time = -1;
     int soln_cost = -1;
-    packageMHAStats(stat_names, stats, soln_cost, 0, total_planning_time);
+    packageStats(stat_names, stats, soln_cost, 0, total_planning_time);
 
     for (unsigned int i = 0; i < stats.size(); i++) {
       stats[i] = -1;
@@ -390,68 +400,44 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
     sleep(5);
     return true;
   } else {
-    // m_mha_planner->set_start(start_id);
-    m_esp_planner->set_start(start_id);
-    ROS_INFO("setting %s goal id to %d", planner_prefix.c_str(), goal_id);
-    // m_mha_planner->set_goal(goal_id);
-    // m_mha_planner->force_planning_from_scratch();
-    m_esp_planner->set_goal(goal_id);
-    m_esp_planner->force_planning_from_scratch();
     vector<int> soln;
     int soln_cost;
     ROS_INFO("allocated time is %f", req.allocated_planning_time);
-    // MHAReplanParams replan_params(req.allocated_planning_time);
     ReplanParams replan_params(req.allocated_planning_time);
 
-    // replan_params.meta_search_type = static_cast<mha_planner::MetaSearchType>
-    //                                  (req.meta_search_type);
-    // replan_params.planner_type = static_cast<mha_planner::PlannerType>
-    //                              (req.planner_type);
-    // replan_params.mha_type = static_cast<mha_planner::MHAType>(req.mha_type);
-
-    // if (replan_params.mha_type == mha_planner::MHAType::ORIGINAL) {
-    //   if (EPS >= 2.0) {
-    //     replan_params.inflation_eps = EPS / 2.0;
-    //     replan_params.anchor_eps = 2.0;
-    //   } else {
-    //     replan_params.inflation_eps = sqrt(EPS);
-    //     replan_params.anchor_eps = sqrt(EPS);
-    //   }
-    // } else {
-    //   replan_params.inflation_eps = EPS;
-    //   replan_params.anchor_eps = 1.0;
-    // }
-
-    // replan_params.use_anchor = true;
     replan_params.return_first_solution = false;
-    replan_params.initial_eps = EPS;
-    replan_params.final_eps = EPS;
+    replan_params.initial_eps = req.initial_eps;
+    replan_params.final_eps = req.final_eps;
 
-    //isPlanFound = m_mha_planner->replan(req.allocated_planning_time,
-    //                                     &soln, &soln_cost);
-    // isPlanFound = m_mha_planner->replan(&soln, replan_params, &soln_cost);
+    if (req.planner_type == PLANNER_ESP) {
+      m_esp_planner->set_start(start_id);
+      ROS_INFO("setting %s goal id to %d", planner_prefix.c_str(), goal_id);
+      m_esp_planner->set_goal(goal_id);
+      m_esp_planner->force_planning_from_scratch();
 
-    vector<sbpl::Path> solution_paths;
-    isPlanFound = m_esp_planner->replan(&solution_paths, replan_params, &soln_cost);
-    printf("Found %d possible paths:\n", static_cast<int>(solution_paths.size()));
+      vector<sbpl::Path> solution_paths;
+      isPlanFound = m_esp_planner->replan(&solution_paths, replan_params, &soln_cost);
+      printf("Found %d possible paths:\n", static_cast<int>(solution_paths.size()));
 
-    for (size_t ii = 0; ii < solution_paths.size(); ++ii) {
-      const auto &solution_path = solution_paths[ii];
-      cout << "Cost: " << solution_path.cost << "     ";
+      for (size_t ii = 0; ii < solution_paths.size(); ++ii) {
+        const auto &solution_path = solution_paths[ii];
+        cout << "Cost: " << solution_path.cost << "     ";
 
-      for (size_t jj = 0; jj < solution_path.state_ids.size(); ++jj) {
-        cout << solution_path.state_ids[jj] << " ";
+        for (size_t jj = 0; jj < solution_path.state_ids.size(); ++jj) {
+          cout << solution_path.state_ids[jj] << " ";
+        }
+
+        cout << endl;
       }
-
-      cout << endl;
-    }
-
-    cout << endl;
-    int true_path_idx = m_esp_planner->GetTruePathIdx(solution_paths);
-    cout << "True path IDX: " << true_path_idx << endl;
-    if (true_path_idx != -1) {
-      isPlanFound = true;
-      soln = solution_paths[true_path_idx].state_ids;
+      if (!solution_paths.empty()) {
+        soln = solution_paths[0].state_ids;
+      }
+    } else {
+      m_ara_planner->set_start(start_id);
+      ROS_INFO("setting %s goal id to %d", planner_prefix.c_str(), goal_id);
+      m_ara_planner->set_goal(goal_id);
+      m_ara_planner->force_planning_from_scratch();
+      isPlanFound = m_ara_planner->replan(&soln, replan_params, &soln_cost);
     }
 
     if (isPlanFound) {
@@ -459,13 +445,13 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
                planner_prefix.c_str());
       states =  m_env->reconstructPath(soln);
       total_planning_time = clock() - total_planning_time;
-      packageMHAStats(stat_names, stats, soln_cost, states.size(),
+      packageStats(stat_names, stats, soln_cost, states.size(),
                       total_planning_time);
       m_stats_writer.writeSBPL(stats, states, counter, planner_prefix);
       res.stats_field_names = stat_names;
       res.stats = stats;
     } else {
-      packageMHAStats(stat_names, stats, soln_cost, states.size(),
+      packageStats(stat_names, stats, soln_cost, states.size(),
                       total_planning_time);
       res.stats_field_names = stat_names;
       res.stats = stats;
@@ -604,55 +590,6 @@ bool EnvInterfaces::demoCallback(GetMobileArmPlan::Request &req,
 }
 
 void EnvInterfaces::packageStats(vector<string> &stat_names,
-                                 vector<double> &stats,
-                                 int solution_cost,
-                                 size_t solution_size,
-                                 double total_planning_time) {
-
-  stat_names.resize(10);
-  stats.resize(10);
-  stat_names[0] = "total plan time";
-  stat_names[1] = "initial solution planning time";
-  stat_names[2] = "initial epsilon";
-  stat_names[3] = "initial solution expansions";
-  stat_names[4] = "final epsilon planning time";
-  stat_names[5] = "final epsilon";
-  stat_names[6] = "solution epsilon";
-  stat_names[7] = "expansions";
-  stat_names[8] = "solution cost";
-  stat_names[9] = "path length";
-
-  // TODO fix the total planning time
-  //stats[0] = totalPlanTime;
-  // TODO: Venkat. Handle the inital/final solution eps correctly when this becomes anytime someday.
-  /*
-  stats[0] = total_planning_time/static_cast<double>(CLOCKS_PER_SEC);
-  stats[1] = m_ara_planner->get_initial_eps_planning_time();
-  stats[2] = m_ara_planner->get_initial_eps();
-  stats[3] = m_ara_planner->get_n_expands_init_solution();
-  stats[4] = m_ara_planner->get_final_eps_planning_time();
-  stats[5] = m_ara_planner->get_final_epsilon();
-  stats[6] = m_ara_planner->get_solution_eps();
-  stats[7] = m_ara_planner->get_n_expands();
-  stats[8] = static_cast<double>(solution_cost);
-  stats[9] = static_cast<double>(solution_size);
-  */
-  vector<PlannerStats> planner_stats;
-  m_mha_planner->get_search_stats(&planner_stats);
-  // Take stats only for the first solution, since this is not anytime currently
-  stats[0] = planner_stats[0].time;
-  stats[1] = stats[0];
-  stats[2] = EPS;
-  stats[3] = planner_stats[0].expands;
-  stats[4] = stats[0];
-  stats[5] = stats[2];
-  stats[6] = stats[2];
-  stats[7] = stats[3];
-  stats[8] = static_cast<double>(planner_stats[0].cost);
-  stats[9] = static_cast<double>(solution_size);
-}
-
-void EnvInterfaces::packageMHAStats(vector<string> &stat_names,
                                     vector<double> &stats,
                                     int solution_cost,
                                     size_t solution_size,

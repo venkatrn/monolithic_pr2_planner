@@ -28,7 +28,10 @@ namespace monolithic_pr2_planner {
             bool isValid(RobotState& robot_pose);
             bool isValidSuccessor(const GraphState& successor,
                                   const TransitionData& t_data);
+            bool isValidSuccessorOnlySelf(const GraphState& successor,
+                                  const TransitionData& t_data);
             bool isValidTransitionStates(const TransitionData& t_data);
+            bool isValidTransitionStatesOnlySelf(const TransitionData& t_data);
             bool isValidContState(std::vector<double>& l_arm,std::vector<double>&
                 r_arm, const std::vector<double> body);
 

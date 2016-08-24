@@ -78,6 +78,7 @@ namespace monolithic_pr2_planner {
 
             int m_planner_type;
             bool m_use_new_heuristics;
+            std::map<Edge, int> m_true_cost_cache;
 
         // SBPL interface stuff
         public:

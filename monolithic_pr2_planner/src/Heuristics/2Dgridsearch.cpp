@@ -42,7 +42,7 @@ SBPL2DGridSearch::SBPL2DGridSearch(int width_x, int height_y, float cellsize_m,
     double radius)
 {
     iteration_ = 0;
-    searchStates2D_ = NULL;
+    // searchStates2D_ = NULL;
 
     width_ = width_x;
     height_ = height_y;
@@ -119,14 +119,13 @@ bool SBPL2DGridSearch::createSearchStates2D(void)
 {
     int x, y;
 
-    if (searchStates2D_ != NULL) {
-        SBPL_ERROR("ERROR: We already have a non-NULL search states array\n");
+    if (!searchStates2D_.empty()) {
+        SBPL_ERROR("ERROR: We already have a non-empty search states array\n");
         return false;
     }
 
-    searchStates2D_ = new SBPL_2DGridSearchState*[width_];
+    searchStates2D_.resize(width_, std::vector<SBPL_2DGridSearchState>(height_));
     for (x = 0; x < width_; x++) {
-        searchStates2D_[x] = new SBPL_2DGridSearchState[height_];
         for (y = 0; y < height_; y++) {
             searchStates2D_[x][y].iterationaccessed = iteration_;
             searchStates2D_[x][y].x = x;
@@ -155,14 +154,14 @@ void SBPL2DGridSearch::destroy()
     }
 
     // destroy the 2D states:
-    printf("Destroying 2D States\n");
-    if (searchStates2D_ != NULL) {
-        for (int x = 0; x < width_; x++) {
-            delete[] searchStates2D_[x];
-        }
-        delete[] searchStates2D_;
-        searchStates2D_ = NULL;
-    }
+    // printf("Destroying 2D States\n");
+    // if (searchStates2D_ != NULL) {
+    //     for (int x = 0; x < width_; x++) {
+    //         delete[] searchStates2D_[x];
+    //     }
+    //     delete[] searchStates2D_;
+    //     searchStates2D_ = NULL;
+    // }
 
     printf("Destroying OPENBLIST\n");
     if (OPEN2DBLIST_ != NULL) {

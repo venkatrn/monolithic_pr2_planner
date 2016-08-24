@@ -91,8 +91,15 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
     ROS_DEBUG_NAMED(HEUR_LOG, "%s : %d", heur.first.c_str(), heur.second);
   }
 
-  return std::max((*values).at("admissible_base"),
-                  (*values).at("admissible_endeff"));
+  const int base_heur = (*values).at("admissible_base");
+  const int endeff_heur = (*values).at("admissible_endeff");
+
+  // if (base_heur < 100) {
+  //   ROS_INFO("Base_heur: %d", base_heur);
+  //   return endeff_heur;
+  // }
+  // return base_heur;
+  return std::max(base_heur, endeff_heur);
 }
 
 void Environment::GetSuccs(int sourceStateID, vector<int> *succIDs,
@@ -223,6 +230,7 @@ void Environment::GetLazySuccs(int q_id, int sourceStateID,
       successor->printToDebug(MPRIM_LOG);
       ROS_DEBUG_NAMED(SEARCH_LOG, "done");
     } else {
+
       if (!mprim->apply(*source_state, successor, t_data)) {
         //ROS_DEBUG_NAMED(MPRIM_LOG, "couldn't apply mprim");
         continue;
@@ -233,6 +241,17 @@ void Environment::GetLazySuccs(int q_id, int sourceStateID,
       source_state->printToDebug(MPRIM_LOG);
       successor->printToDebug(MPRIM_LOG);
       ROS_DEBUG_NAMED(SEARCH_LOG, "done");
+    }
+    bool valid_successor = (m_cspace_mgr->isValidSuccessorOnlySelf(*successor, t_data) &&
+                          m_cspace_mgr->isValidTransitionStatesOnlySelf(t_data));
+    if (!valid_successor) {
+      continue;
+    }
+    auto true_cost_it = m_true_cost_cache.find(Edge(sourceStateID, successor->id()));
+    if (true_cost_it != m_true_cost_cache.end()) {
+      if (true_cost_it->second == -1) {
+        continue;
+      }
     }
 
     m_hash_mgr->save(successor);
@@ -255,8 +274,16 @@ void Environment::GetLazySuccs(int q_id, int sourceStateID,
     //        succIDs->push_back(successor->id());
     //        key = Edge(sourceStateID, successor->id());
     m_edges.insert(map<Edge, MotionPrimitivePtr>::value_type(key, mprim));
-    costs->push_back(mprim->cost());
-    isTrueCost->push_back(false);
+
+    // If this transition has already been evaluated, then return the true
+    // value.
+    if (true_cost_it != m_true_cost_cache.end()) {
+      costs->push_back(true_cost_it->second);
+      isTrueCost->push_back(true);
+    } else {
+      costs->push_back(mprim->cost());
+      isTrueCost->push_back(false);
+    }
   }
 }
 
@@ -265,6 +292,13 @@ void Environment::GetLazySuccs(int q_id, int sourceStateID,
  * know the motion primitive used
  */
 int Environment::GetTrueCost(int parentID, int childID) {
+
+  // Return the true cost if it has already been computed.
+  auto it = m_true_cost_cache.find(Edge(parentID, childID));
+  if (it != m_true_cost_cache.end()) {
+    return it->second;
+  }
+
   TransitionData t_data;
 
   vector<MotionPrimitivePtr> small_mprims;
@@ -285,6 +319,7 @@ int Environment::GetTrueCost(int parentID, int childID) {
   MotionPrimitivePtr mprim = m_edges.at(Edge(parentID, childID));
 
   if (!mprim->apply(*source_state, successor, t_data)) {
+    m_true_cost_cache[Edge(parentID, childID)] = -1;
     return -1;
   }
 
@@ -306,9 +341,11 @@ int Environment::GetTrueCost(int parentID, int childID) {
                           m_cspace_mgr->isValidTransitionStates(t_data));
 
   if (!valid_successor) {
+    m_true_cost_cache[Edge(parentID, childID)] = -1;
     return -1;
   }
 
+  m_true_cost_cache[Edge(parentID, childID)] = t_data.cost();
   return t_data.cost();
 }
 
@@ -326,7 +363,7 @@ void Environment::GetSuccs(int parent_id, std::vector<int> *succ_ids,
   edge_probabilities->resize(succ_ids->size(), 1.0);
 
 
-  ROS_INFO("Succs for %d", parent_id);
+  // ROS_INFO("Succs for %d", parent_id);
   const DistanceTransform2D &probabilities = dynamic_cast<DistanceTransform2D &>
                                              (*(m_heur_mgr->getHeuristic("distance_transform")));
 
@@ -342,7 +379,7 @@ void Environment::GetSuccs(int parent_id, std::vector<int> *succ_ids,
     }
 
     const double prob = probabilities.getIncomingEdgeProbability(state);
-    ROS_INFO("Prob for %d:   %f", succ_ids->at(ii), prob);
+    // ROS_INFO("Prob for %d:   %f", succ_ids->at(ii), prob);
     edge_probabilities->at(ii) = prob;
   }
 }

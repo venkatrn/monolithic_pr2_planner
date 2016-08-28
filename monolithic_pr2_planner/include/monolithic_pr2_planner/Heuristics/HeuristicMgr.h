@@ -60,7 +60,7 @@ namespace monolithic_pr2_planner {
             void addUniformCost2DHeur(std::string name, const double
                 radius_m = 0);
             void addUniformCost3DHeur(std::string name);
-            void addDistanceTransform(std::string name);
+            void addDistanceTransform(std::string name, const int cost_multiplier, const double radius_m);
             // void addVoronoiOrientationHeur(std::string name, const int cost_multiplier
             //     = 1);
             void addEndEffOnlyRotationHeur(std::string name, KDL::Rotation desired_orientation, const int cost_multiplier

@@ -209,7 +209,8 @@ void HeuristicMgr::initializeHeuristics() {
 
     {
         int cost_multiplier = 1;
-        addDistanceTransform("distance_transform");
+        double radius_around_goal = 0.60; //0.75;
+        addDistanceTransform("distance_transform", cost_multiplier, radius_around_goal);
     }
 
     // {
@@ -352,12 +353,12 @@ void HeuristicMgr::addBFS2DRotFootprint(std::string name, const int cost_multipl
     m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);
 }
 
-void HeuristicMgr::addDistanceTransform(std::string name){
+void HeuristicMgr::addDistanceTransform(std::string name, const int cost_multiplier, const double radius_m){
     // Initialize the new heuristic
     AbstractHeuristicPtr new_dt_heur = make_shared<DistanceTransform2D>();
     // Set cost multiplier here.
-    // new_2d_heur->setCostMultiplier(cost_multiplier);
-    // new_2d_heur->setRadiusAroundGoal(radius_m);
+    new_dt_heur->setCostMultiplier(cost_multiplier);
+    new_dt_heur->setRadiusAroundGoal(radius_m);
     // Add to the list of heuristics
     m_heuristics.push_back(new_dt_heur);
     m_heuristic_map[name] = static_cast<int>(m_heuristics.size() - 1);

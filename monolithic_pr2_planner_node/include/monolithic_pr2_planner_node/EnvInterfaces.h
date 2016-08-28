@@ -10,7 +10,7 @@
 #include <tf/transform_listener.h>
 #include <sbpl/planners/araplanner.h>
 #include <sbpl/planners/mha_planner.h>
-#include <esp_planner/esp_planner.h>
+#include <esp_planner/esp_mha_planner.h>
 #include <nav_msgs/OccupancyGrid.h>
 #include <sbpl/planners/planner.h>
 #include <costmap_2d/costmap_2d_ros.h>

@@ -37,6 +37,7 @@ namespace monolithic_pr2_planner {
             void setUniformCostSearch(bool ucs = false);
         protected:
             std::unique_ptr<SBPL2DGridSearch> m_gridsearch;
+            std::unique_ptr<SBPL2DGridSearch> m_gridsearch_prob;
             unsigned int m_size_col;
             unsigned int m_size_row;
             unsigned char** m_grid;
@@ -46,6 +47,11 @@ namespace monolithic_pr2_planner {
             std::vector<std::pair<int, int>> m_obstacle_coordinates;
             // ros::NodeHandle m_nh;
             // ros::Publisher m_circlepub;
+            // This computes a 2D BFS-ish heuristic where the cost to goal is
+            // defined as sum of action costs to get to goal (with sqrt(2) for
+            // diagonals and 1 for cardinals) plus the sum of negative log existence probabilities
+            // over cells traversed (scaled by prob_multiplier).
+            void ComputeProbabilityHeuristic(double prob_multiplier);
 
     };
     typedef boost::shared_ptr<DistanceTransform2D> DistanceTransform2DPtr;

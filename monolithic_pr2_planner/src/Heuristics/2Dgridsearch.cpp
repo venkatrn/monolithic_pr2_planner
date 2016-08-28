@@ -414,7 +414,10 @@ bool SBPL2DGridSearch::search_withheap(unsigned char** Grid2D, unsigned char obs
 
             if (mapcost >= obsthresh) //obstacle encountered
             continue;
-            int cost = (mapcost + 1) * m_uniform_cost_search?1:dxy_distance_mm_[dir];
+            int cost = (mapcost + 1);
+            if (!m_uniform_cost_search) {
+              cost *= dxy_distance_mm_[dir];
+            }
 
             //get the predecessor
             searchPredState = &searchStates2D_[newx][newy];

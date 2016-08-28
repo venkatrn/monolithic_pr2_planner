@@ -93,12 +93,19 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
 
   const int base_heur = (*values).at("admissible_base");
   const int endeff_heur = (*values).at("admissible_endeff");
+  const int prob_heur = (*values).at("distance_transform");
 
   // if (base_heur < 100) {
   //   ROS_INFO("Base_heur: %d", base_heur);
   //   return endeff_heur;
   // }
   // return base_heur;
+  if (heuristic_id == 0) {
+    printf("Heurs (%d): %d    %d    %d\n", stateID, base_heur, endeff_heur, std::max(base_heur, endeff_heur));
+    return std::max(base_heur, endeff_heur);
+  } else if (heuristic_id == 1) {
+    return prob_heur;
+  }
   return std::max(base_heur, endeff_heur);
 }
 

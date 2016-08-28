@@ -76,15 +76,17 @@ bool GoalState::isSatisfiedBy(const GraphStatePtr& graph_state){
                           m_tolerances[Tolerances::PITCH],
                           m_tolerances[Tolerances::YAW]);
     DiscObjectState d_tol = c_tol.getDiscObjectState();
+    // TODO: this should be getObjectStateRelMapFromState if we do lazy
+    // (no IK) successor generation.
     DiscObjectState obj = graph_state->getObjectStateRelMap();
 
 
     bool within_xyz_tol = (abs(m_goal_state.x()-obj.x()) < d_tol.x() &&
                            abs(m_goal_state.y()-obj.y()) < d_tol.y() &&
                            abs(m_goal_state.z()-obj.z()) < d_tol.z());
-    // bool within_rpy_tol = (abs(m_goal_state.roll()-obj.roll()) < d_tol.roll() &&
-    //                        abs(m_goal_state.pitch()-obj.pitch()) < d_tol.pitch() &&
-    //                        abs(m_goal_state.yaw()-obj.yaw()) < d_tol.yaw());
+    bool within_rpy_tol = (abs(m_goal_state.roll()-obj.roll()) < d_tol.roll() &&
+                           abs(m_goal_state.pitch()-obj.pitch()) < d_tol.pitch() &&
+                           abs(m_goal_state.yaw()-obj.yaw()) < d_tol.yaw());
 
     bool within_quat_tol;
      tf::Quaternion quat_state(m_goal_state.yaw(),m_goal_state.pitch(),m_goal_state.roll());
@@ -92,9 +94,12 @@ bool GoalState::isSatisfiedBy(const GraphStatePtr& graph_state){
 
     double diff = quat_state.angleShortestPath(quat_goal);
 
-    within_quat_tol = diff < d_tol.roll();      //should be another parameter d_tol.quat()
+    within_quat_tol = fabs(diff) < d_tol.roll();      //should be another parameter d_tol.quat()
 
-    if (within_xyz_tol && within_quat_tol){
+    // if (within_xyz_tol && within_quat_tol){
+    // Revert to RPY tolerance checking; quaternion tolerance needs another
+    // look.
+    if (within_xyz_tol && within_rpy_tol){
         return true;
     } else {
         return false;

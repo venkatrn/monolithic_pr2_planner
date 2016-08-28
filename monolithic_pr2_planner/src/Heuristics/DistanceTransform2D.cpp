@@ -8,7 +8,10 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/contrib/contrib.hpp>
 
+#include <boost/algorithm/clamp.hpp>
+
 using namespace monolithic_pr2_planner;
+using boost::algorithm::clamp;
 
 const double kCircumscribedRadius = 0.8;
 
@@ -21,6 +24,8 @@ DistanceTransform2D::DistanceTransform2D() {
                   m_size_col, m_size_row);
 
   m_gridsearch.reset(new SBPL2DGridSearch(m_size_col, m_size_row,
+                                          m_occupancy_grid->getResolution()));
+  m_gridsearch_prob.reset(new SBPL2DGridSearch(m_size_col, m_size_row,
                                           m_occupancy_grid->getResolution()));
 
   // Initialize the grid here itself so that you don't wait for the map
@@ -120,30 +125,92 @@ void DistanceTransform2D::loadMap(const std::vector<unsigned char> &data) {
   ROS_INFO("Printed distance transform");
 }
 
+void DistanceTransform2D::ComputeProbabilityHeuristic(double prob_multiplier) {
+
+  DiscObjectState state = m_goal.getObjectState();
+
+  // Get the initial points for the dijkstra search
+  std::vector<std::pair<int,int> > init_points;
+  double res = m_occupancy_grid->getResolution();
+  int discrete_radius = m_radius/res;
+  getBresenhamCirclePoints(state.x(), state.y(), discrete_radius, init_points);
+
+  const unsigned char kLethalObstacle = std::numeric_limits<unsigned char>::max();
+
+  for (unsigned int j = 0; j < m_size_row; j++) {
+    for (unsigned int i = 0; i < m_size_col; i++) {
+
+      int dist_transform_value = m_gridsearch->getlowerboundoncostfromstart_inmm(i, j);
+
+      if (dist_transform_value < static_cast<int>(0.34 * 1000.0)) {
+        m_grid[i][j] = kLethalObstacle;
+      } else if (!(state.x() == i && state.y() == j)) {
+
+        const double probability = std::min(1.0,
+                               (static_cast<double>(dist_transform_value) * 0.001) / kCircumscribedRadius);
+        m_grid[i][j] = static_cast<unsigned char>(clamp(-prob_multiplier * log(probability), 0.0, kLethalObstacle - 1));
+        // cout << "Prob: " << static_cast<int>(m_grid[i][j]) << endl;
+        // m_grid[i][j] = static_cast<unsigned char>(prob_multiplier * (1.0 - probability));
+      }
+    }
+  }
+
+  ROS_INFO("Number of obstacle cells: %d", m_obstacle_coordinates.size());
+
+  ROS_DEBUG_NAMED(HEUR_LOG, "[BFS2D] updated grid of size %d %d from the map",
+                  m_size_col, m_size_row);
+
+  // m_gridsearch->search(m_grid, costmap_2d::LETHAL_OBSTACLE, m_size_col - 1, m_size_row - 1,
+  //     0,0, SBPL_2DGRIDSEARCH_TERM_CONDITION_ALLCELLS, m_obstacle_coordinates);
+  m_gridsearch_prob->search(m_grid, kLethalObstacle,
+                       state.x(), state.y(),
+                       0, 0, SBPL_2DGRIDSEARCH_TERM_CONDITION_ALLCELLS, init_points);
+  ROS_INFO("Finished computing distance transform");
+  cv::Mat prob_heuristic;
+  prob_heuristic.create(m_size_col, m_size_row, CV_64FC1);
+
+  for (size_t ii = 0; ii < m_size_col; ++ii) {
+    for (size_t jj = 0; jj < m_size_row; ++jj) {
+      int value = m_gridsearch_prob->getlowerboundoncostfromstart_inmm(ii, jj);
+
+      if (value < INFINITECOST) {
+        prob_heuristic.at<double>(ii,
+                                  jj) = value;
+      } else {
+        prob_heuristic.at<double>(ii, jj) = 0;
+      }
+    }
+  }
+
+  // prob_heuristic.setTo(1.0, prob_heuristic > kCircumscribedRadius);
+  cv::Mat colored_mat;
+  cv::normalize(prob_heuristic, colored_mat, 0, 255, cv::NORM_MINMAX,
+                CV_8UC1);
+  cv::applyColorMap(colored_mat, colored_mat, cv::COLORMAP_JET);
+  std::string name = "/tmp/prob_heuristic" + std::to_string(prob_multiplier) + ".png";
+  cv::imwrite(name.c_str(), colored_mat);
+  ROS_INFO("Printed prob heuristic");
+
+}
+
 void DistanceTransform2D::setUniformCostSearch(bool ucs) {
   m_gridsearch->setUniformCostSearch(ucs);
 }
 
 void DistanceTransform2D::setGoal(GoalState &goal_state) {
-  return;
   // Save the goal for future use.
   m_goal = goal_state;
 
-  DiscObjectState state = goal_state.getObjectState();
-  // visualizeRadiusAroundGoal(state.x(), state.y());
-  // visualizeCenter(state.x(), state.y());
 
-  double res = m_occupancy_grid->getResolution();
-  int discrete_radius = m_radius / res;
-
-  // Set the goal state to 0,0 - just make sure it's not the start state.
-  // m_gridsearch->search(m_grid, costmap_2d::INSCRIBED_INFLATED_OBSTACLE, state.x(), state.y(),
-  //     0,0, SBPL_2DGRIDSEARCH_TERM_CONDITION_ALLCELLS, m_obstacle_coordinates);
-  m_gridsearch->search(m_grid, costmap_2d::LETHAL_OBSTACLE,
-                       m_obstacle_coordinates[0].first, m_obstacle_coordinates[0].second,
-                       0, 0, SBPL_2DGRIDSEARCH_TERM_CONDITION_ALLCELLS, m_obstacle_coordinates);
-  ROS_INFO("Finished computing distance transform");
-  ROS_DEBUG_NAMED(HEUR_LOG, "[BFS2D] Setting goal %d %d", state.x(), state.y());
+  ROS_DEBUG_NAMED(HEUR_LOG, "[BFS2D] Setting goal %d %d", m_goal.getObjectState().x(), m_goal.getObjectState().y());
+  // ComputeProbabilityHeuristic(1000.0);
+  // ComputeProbabilityHeuristic(255.0);
+  // ComputeProbabilityHeuristic(100.0);
+  ComputeProbabilityHeuristic(10.0);
+  // ComputeProbabilityHeuristic(5.0);
+  // ComputeProbabilityHeuristic(2.0);
+  // ComputeProbabilityHeuristic(1.0);
+  // ComputeProbabilityHeuristic(0.0);
 }
 
 int DistanceTransform2D::getGoalHeuristic(GraphStatePtr state) {
@@ -155,23 +222,18 @@ int DistanceTransform2D::getGoalHeuristic(GraphStatePtr state) {
       state->base_y() < 0 || state->base_y() >= int(m_size_row)) {
     ROS_DEBUG_NAMED(HEUR_LOG, "[BFS2D] Out of bounds: %d %d",
                     state->base_x(), state->base_y());
-    return INFINITECOST;
+    return 0.0;
   }
 
-  int cost = m_gridsearch->getlowerboundoncostfromstart_inmm(state->base_x(),
+  int cost_base = m_gridsearch_prob->getlowerboundoncostfromstart_inmm(state->base_x(),
                                                              state->base_y());
-
-  // ROS_DEBUG_NAMED(HEUR_LOG, "[BFS2D] 2Ddijkstra's cost to %d %d is %d",
-  //                           state->base_x(), state->base_y(),
-  //                           (cost)<0?INFINITECOST:cost );
-  if (cost < 0) {
+  int cost_endeff = m_gridsearch_prob->getlowerboundoncostfromstart_inmm(obj_state.x(),
+                                                             obj_state.y());
+  if (cost_base < 0 || cost_endeff < 0) {
     return INFINITECOST;
   }
 
-
-  // if (cost < m_costmap_ros->getInscribedRadius()/0.02)
-  // return 0;
-  return getCostMultiplier() * cost;
+  return std::max(cost_base, cost_endeff);
 }
 
 double DistanceTransform2D::getIncomingEdgeProbability(GraphStatePtr state)
@@ -187,13 +249,15 @@ const {
     return 0.0;
   }
 
-  int cost = m_gridsearch->getlowerboundoncostfromstart_inmm(state->base_x(),
+  int cost_base = m_gridsearch->getlowerboundoncostfromstart_inmm(state->base_x(),
                                                              state->base_y());
+  int cost_endeff = m_gridsearch->getlowerboundoncostfromstart_inmm(obj_state.x(),
+                                                             obj_state.y());
 
   // ROS_DEBUG_NAMED(HEUR_LOG, "[BFS2D] 2Ddijkstra's cost to %d %d is %d",
   //                           state->base_x(), state->base_y(),
   //                           (cost)<0?INFINITECOST:cost );
-  if (cost < 0) {
+  if (cost_base < 0) {
     return 0.0;
   }
 
@@ -203,8 +267,11 @@ const {
   // In meters.
   // const double kCircumscribedRaidus = m_costmap_ros->getInscribedRadius() + 1.0;
   // ROS_INFO("Cost : %d", cost);
-  const double prob = std::min(1.0,
-                               (static_cast<double>(cost) * 0.001) / kCircumscribedRadius);
+  const double prob_base = std::min(1.0,
+                               (static_cast<double>(cost_base) * 0.001) / kCircumscribedRadius);
+  const double prob_endeff = std::min(1.0,
+                               (static_cast<double>(cost_endeff) * 0.001) / kCircumscribedRadius);
+  const double prob = std::min(prob_base, prob_endeff);
   return prob;
 }
 
@@ -226,7 +293,7 @@ void DistanceTransform2D::visualizeCenter(int x, int y) {
 
 void DistanceTransform2D::setRadiusAroundGoal(double radius_m) {
   m_radius = radius_m;
-  m_gridsearch.reset(new SBPL2DGridSearch(m_size_col, m_size_row,
+  m_gridsearch_prob.reset(new SBPL2DGridSearch(m_size_col, m_size_row,
                                           m_occupancy_grid->getResolution(), radius_m));
 }
 

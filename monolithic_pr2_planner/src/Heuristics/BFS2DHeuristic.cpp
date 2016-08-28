@@ -17,6 +17,7 @@ BFS2DHeuristic::BFS2DHeuristic(){
 
     m_gridsearch.reset(new SBPL2DGridSearch(m_size_col, m_size_row,
         m_occupancy_grid->getResolution()));
+    m_gridsearch->setUniformCostSearch(true);
     
     // Initialize the grid here itself so that you don't wait for the map
     // callback to be called
@@ -94,6 +95,18 @@ int BFS2DHeuristic::getGoalHeuristic(GraphStatePtr state){
     if (cost < 0){
         return INFINITECOST;
     }
+
+    // Heuristic should be zero if within goal region.
+    double res = m_occupancy_grid->getResolution();
+    int discrete_radius = m_radius/res;
+    DiscObjectState goal_state = m_goal.getObjectState(); 
+    if (
+        (state->base_x() - goal_state.x()) * (state->base_x() - goal_state.x()) +
+        (state->base_y() - goal_state.y()) * (state->base_y() - goal_state.y()) <= m_radius * m_radius
+       ) {
+      return 0;
+    }
+
 
     
     // if (cost < m_costmap_ros->getInscribedRadius()/0.02)

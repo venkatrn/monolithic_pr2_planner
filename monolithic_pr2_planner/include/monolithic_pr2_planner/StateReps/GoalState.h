@@ -20,6 +20,7 @@ namespace monolithic_pr2_planner {
             void setGoal(DiscObjectState goal_state){m_goal_state =
                 goal_state;};
             bool withinXYZTol(const GraphStatePtr& graph_state);
+            double endeffectorXYDistanceSqr(const GraphStatePtr& graph_state);
             void visualize();
         private:
             vector<int> m_possible_goals;

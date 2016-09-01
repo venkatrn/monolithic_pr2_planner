@@ -129,7 +129,8 @@ int main(int argc, char** argv){
 
     std::unique_ptr<ARAPlanner> m_planner;
     bool forward_search = true;
-    m_planner.reset(new ARAPlanner(m_env.get(), forward_search));
+    // m_planner.reset(new ARAPlanner(m_env.get(), forward_search));
+    m_planner.reset(new ARAPlanner(dynamic_cast<EnvironmentESP*>(m_env.get()), forward_search));
     SearchRequestParamsPtr search_request = make_shared<SearchRequestParams>();
     search_request->initial_epsilon = 10;
     search_request->final_epsilon = 9;

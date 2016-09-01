@@ -12,12 +12,17 @@ namespace monolithic_pr2_planner {
         std::vector<double> right_arm;
         std::vector<double> obj;
     };
+    typedef std::pair<int, int> Edge;
     class PathPostProcessor {
         public:
             PathPostProcessor(HashManagerPtr hash_mgr, CSpaceMgrPtr cspace_mgr);
             std::vector<FullBodyState> reconstructPath(std::vector<int> state_ids,
                                                        GoalState& goal_state,
                                                        std::vector<MotionPrimitivePtr> mprims);
+            std::vector<FullBodyState> reconstructPath(std::vector<int> state_ids,
+                                                       GoalState& goal_state,
+                                                       std::vector<MotionPrimitivePtr> mprims,
+                                                       const std::map<Edge, TransitionData>& t_data_cache);
             void visualizeFinalPath(std::vector<FullBodyState> path);
             static bool stateInterpolate(const RobotState& start, const RobotState& end,
                                              std::vector<FullBodyState>* interp_steps);

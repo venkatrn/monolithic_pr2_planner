@@ -23,6 +23,7 @@ using namespace KDL;
 constexpr int PLANNER_ARA = GetMobileArmPlan::Request::PLANNER_ARA;
 constexpr int PLANNER_LAZY_ARA = GetMobileArmPlan::Request::PLANNER_LAZY_ARA;
 constexpr int PLANNER_ESP = GetMobileArmPlan::Request::PLANNER_ESP;
+constexpr int PLANNER_MHA = GetMobileArmPlan::Request::PLANNER_MHA;
 
 // constructor automatically launches the collision space interface, which only
 // loads it up with a pointer to the collision space mgr. it doesn't bind to any
@@ -46,8 +47,9 @@ EnvInterfaces::EnvInterfaces(
 
   getParams();
   bool forward_search = true;
-  m_ara_planner.reset(new LazyARAPlanner(m_env.get(), forward_search));
-  m_esp_planner.reset(new ESPPlanner(m_env.get(), forward_search));
+  m_ara_planner.reset(new LazyARAPlanner(dynamic_cast<EnvironmentESP*>(m_env.get()), forward_search));
+  m_esp_planner.reset(new ESPPlanner(m_env.get(), m_env->NumHeuristics(), forward_search));
+  m_mha_planner.reset(new MHAPlanner(m_env.get(), m_env->NumHeuristics(), forward_search));
   m_costmap_pub = m_nodehandle.advertise<nav_msgs::OccupancyGrid>("costmap_pub",
                                                                   1);
   m_costmap_publisher.reset(new
@@ -64,6 +66,8 @@ void EnvInterfaces::interruptPlannerCallback(std_msgs::EmptyConstPtr) {
   } else if (m_req_planner_type == PLANNER_ARA || m_req_planner_type == PLANNER_LAZY_ARA) {
     auto m_lazy_ara_planner = dynamic_cast<LazyARAPlanner*>(m_ara_planner.get());
     m_lazy_ara_planner->interrupt();
+  } else if (m_req_planner_type == PLANNER_MHA) {
+    m_mha_planner->interrupt();
   }
 }
 
@@ -339,14 +343,25 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
   m_env->setPlannerType(planner_type);
   m_env->setUseNewHeuristics(use_new_heuristics);
   ROS_INFO("Initialize planner");
-  m_esp_planner.reset(new ESPPlanner(m_env.get(), 
-                                     forward_search));
+
+  m_req_planner_type = req.planner_type;
+
   if (m_req_planner_type == PLANNER_ESP) {
-    m_esp_planner.reset(new ESPPlanner(m_env.get(), 
+    m_esp_planner.reset(new ESPPlanner(m_env.get(), m_env->NumHeuristics(), 
+                                     forward_search));
+  } else if (m_req_planner_type == PLANNER_MHA) {
+    // 1 heuristic less than the MHA planner since we don't want the
+    // probability heuristic.
+    m_mha_planner.reset(new MHAPlanner(m_env.get(), m_env->NumHeuristics() - 1, 
                                      forward_search));
   } else if (m_req_planner_type == PLANNER_ARA || m_req_planner_type == PLANNER_LAZY_ARA) {
-    m_ara_planner.reset(new LazyARAPlanner(m_env.get(), 
+    m_mha_planner.reset(new MHAPlanner(m_env.get(), m_env->NumHeuristics(), 
                                      forward_search));
+    
+  } else if (m_req_planner_type == PLANNER_ARA || m_req_planner_type == PLANNER_LAZY_ARA) {
+    // m_ara_planner.reset(new LazyARAPlanner(m_env.get(), 
+    //                                  forward_search));
+    m_ara_planner.reset(new LazyARAPlanner(dynamic_cast<EnvironmentESP*>(m_env.get()), forward_search));
   }
   total_planning_time = clock();
   ROS_INFO("configuring request");
@@ -432,6 +447,43 @@ bool EnvInterfaces::runMHAPlanner(int planner_type,
       if (!solution_paths.empty()) {
         soln = solution_paths[0].state_ids;
       }
+    } else if (req.planner_type == PLANNER_MHA) {
+        m_mha_planner->set_start(start_id);
+        ROS_INFO("setting %s goal id to %d", planner_prefix.c_str(), goal_id);
+        m_mha_planner->set_goal(goal_id);
+        m_mha_planner->force_planning_from_scratch();
+        ROS_INFO("allocated time is %f", req.allocated_planning_time);
+        MHAReplanParams replan_params(req.allocated_planning_time);
+
+        replan_params.meta_search_type = static_cast<mha_planner::MetaSearchType>
+                                         (req.meta_search_type);
+        replan_params.planner_type = mha_planner::PlannerType::SMHA;
+        replan_params.mha_type = static_cast<mha_planner::MHAType>(req.mha_type);
+        replan_params.use_lazy = true;
+        // If true, this will ignore the time limmit.
+        replan_params.return_first_solution = false;
+
+        if (replan_params.mha_type == mha_planner::MHAType::ORIGINAL) {
+
+if (req.initial_eps >= 2.0) {
+  replan_params.inflation_eps = req.initial_eps / 2.0;
+            replan_params.anchor_eps = 2.0;
+          } else {
+            replan_params.inflation_eps = sqrt(req.initial_eps);
+            replan_params.anchor_eps = sqrt(req.initial_eps);
+          }
+        } else {
+          replan_params.inflation_eps = req.initial_eps;
+          replan_params.anchor_eps = 1.0;
+        }
+
+        replan_params.use_anchor = true;
+        replan_params.return_first_solution = false;
+        replan_params.final_eps = req.initial_eps;
+
+        //isPlanFound = m_mha_planner->replan(req.allocated_planning_time,
+        //                                     &soln, &soln_cost);
+        isPlanFound = m_mha_planner->replan(&soln, replan_params, &soln_cost);
     } else {
       m_ara_planner->set_start(start_id);
       ROS_INFO("setting %s goal id to %d", planner_prefix.c_str(), goal_id);
@@ -518,7 +570,22 @@ bool EnvInterfaces::planPathCallback(GetMobileArmPlan::Request &req,
 
   double total_planning_time = clock();
   bool forward_search = true;
-  isPlanFound = runMHAPlanner(monolithic_pr2_planner::T_SMHA, "smha_", req, res,
+  string planner_prefix;
+  switch(req.planner_type) {
+    case PLANNER_LAZY_ARA:
+    case PLANNER_ARA:
+      planner_prefix = "ara";
+      break;
+    case PLANNER_ESP:
+      planner_prefix = "esp";
+      break;
+    case PLANNER_MHA:
+      planner_prefix = "mha";
+      break;
+    default:
+      planner_prefix = "unknown_planner";
+  }
+  isPlanFound = runMHAPlanner(monolithic_pr2_planner::T_SMHA, planner_prefix, req, res,
                               search_request, counter);
   counter++;
   return true;
@@ -594,15 +661,21 @@ void EnvInterfaces::packageStats(vector<string> &stat_names,
                                     int solution_cost,
                                     size_t solution_size,
                                     double total_planning_time) {
-  stat_names.resize(10);
-  stats.resize(10);
+  stat_names.resize(4);
+  stats.resize(4);
   stat_names[0] = "initial solution planning time";
   stat_names[1] = "initial solution expansions";
   stat_names[2] = "solution cost";
   stat_names[3] = "path length";
 
   vector<PlannerStats> planner_stats;
-  m_esp_planner->get_search_stats(&planner_stats);
+  if (m_req_planner_type == PLANNER_ESP) {
+    m_esp_planner->get_search_stats(&planner_stats);
+  } else if (m_req_planner_type == PLANNER_ARA || m_req_planner_type == PLANNER_LAZY_ARA) {
+    m_ara_planner->get_search_stats(&planner_stats);
+  } else if (m_req_planner_type == PLANNER_MHA) {
+    m_mha_planner->get_search_stats(&planner_stats);
+  }
 
   if (planner_stats.empty()) {
     stats[0] = -1;

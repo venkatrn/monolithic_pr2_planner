@@ -87,6 +87,7 @@ namespace monolithic_pr2_planner_node {
             ros::ServiceServer m_write_experiments_service;
             ros::ServiceServer m_demo_service;
             std::unique_ptr<SBPLPlanner> m_ara_planner;
+            std::unique_ptr<MHAPlanner> m_mha_planner;
             std::unique_ptr<ESPPlanner> m_esp_planner;
             int m_req_planner_type;
             ros::Subscriber m_nav_map;

@@ -16,9 +16,14 @@
 using namespace monolithic_pr2_planner;
 using namespace boost;
 
+namespace {
+  constexpr int kNumHeuristics = 5;
+  constexpr double kNearGoalThreshSqr = 1.5 * 1.5;
+}
+
 // stateid2mapping pointer inherited from sbpl interface. needed for planner.
 Environment::Environment(ros::NodeHandle nh)
-  :   m_hash_mgr(new HashManager(&StateID2IndexMapping)),
+  :   m_hash_mgr(new HashManager(&(EnvironmentMHA::StateID2IndexMapping))),
       m_nodehandle(nh), m_mprims(m_goal),
       m_heur_mgr(new HeuristicMgr()),
       m_using_lazy(true),
@@ -35,8 +40,10 @@ Environment::Environment(ros::NodeHandle nh)
 void Environment::reset() {
   m_heur_mgr->reset();
   // m_heur_mgr->setCollisionSpaceMgr(m_cspace_mgr);
-  m_hash_mgr.reset(new HashManager(&StateID2IndexMapping));
+  m_hash_mgr.reset(new HashManager(&(EnvironmentMHA::StateID2IndexMapping)));
   m_edges.clear();
+  m_true_cost_cache.clear();
+  m_t_data_cache.clear();
 
   // Fetch params again, in case they're being modified between calls.
   // m_param_catalog.fetch(m_nodehandle);
@@ -91,22 +98,52 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
     ROS_DEBUG_NAMED(HEUR_LOG, "%s : %d", heur.first.c_str(), heur.second);
   }
 
-  const int base_heur = (*values).at("admissible_base");
-  const int endeff_heur = (*values).at("admissible_endeff");
+  const int ad_base = (*values).at("admissible_base");
+  const int ad_endeff = (*values).at("admissible_endeff");
+  const int endeff_rot_goal = (*values).at("endeff_rot_goal");
   const int prob_heur = (*values).at("distance_transform");
+  const int anchor_h = std::max(ad_base, ad_endeff);
 
-  // if (base_heur < 100) {
-  //   ROS_INFO("Base_heur: %d", base_heur);
-  //   return endeff_heur;
+  // if (heuristic_id == 0) {
+  //   // printf("Heurs (%d): %d    %d    %d\n", stateID, base_heur, endeff_heur, std::max(base_heur, endeff_heur));
+  //   return anchor_h;
+  // } else if (heuristic_id == 1) {
+  //   return int(0.1*ad_base) + int(0.1*ad_endeff) + int(0.2*endeff_rot_goal);
+  // } else if (heuristic_id == 2) {
+  //   return prob_heur;
   // }
-  // return base_heur;
-  if (heuristic_id == 0) {
-    printf("Heurs (%d): %d    %d    %d\n", stateID, base_heur, endeff_heur, std::max(base_heur, endeff_heur));
-    return std::max(base_heur, endeff_heur);
-  } else if (heuristic_id == 1) {
-    return prob_heur;
+
+  double w_bfsRot = 0.2;
+  double w_armFold = 0.2;
+  int inad_arm_heur = static_cast<int>(0.1*(*values).at("endeff_rot_goal") + 0.1*ad_endeff);
+  // if (ad_base > 1000) //TODO: check multiplier
+  // { 
+  //   inad_arm_heur = (*values).at("arm_angles_folded");
+  // }
+
+  switch (heuristic_id) {
+    case 0:  // Anchor
+      return anchor_h;
+    case 1:  // Anchor
+      // return int(0.1*ad_base) + int(0.1*ad_endeff) + int(0.2*endeff_rot_goal);
+      return anchor_h;
+    case 2:  // Base1, Base2 heur
+      // return static_cast<int>(0.1*(*values).at("base_with_rot_0") + 0.1*(*values).at("endeff_rot_goal"));
+      return static_cast<int>(0.1*(*values).at("base_with_rot_0")) + inad_arm_heur;
+    case 3:  // Base1, Base2 heur
+      //return static_cast<int>(1.0*(*values).at("base_with_rot_0") + 0.0*(*values).at("endeff_rot_goal"));
+      return static_cast<int>(0.1*(*values).at("base_with_rot_0") + 0.1*(*values).at("arm_angles_folded"));
+      // return int(0.1*prob_heur) + int(0.2*endeff_rot_goal);
+    case 4:
+        return prob_heur;
   }
-  return std::max(base_heur, endeff_heur);
+
+  ROS_ERROR("Heuristic ID %d doesn't exist, returning anchor", heuristic_id);
+  return anchor_h;
+}
+
+int Environment::NumHeuristics() {
+  return kNumHeuristics;
 }
 
 void Environment::GetSuccs(int sourceStateID, vector<int> *succIDs,
@@ -137,7 +174,7 @@ void Environment::GetSuccs(int q_id, int sourceStateID, vector<int> *succIDs,
     m_cspace_mgr->visualizeAttachedObject(expansion_pose,
                                           250 / NUM_SMHA_HEUR * q_id);
     // m_cspace_mgr->visualizeCollisionModel(expansion_pose);
-    usleep(5000);
+    usleep(1000);
   }
 
   for (auto mprim : m_mprims.getMotionPrims()) {
@@ -218,7 +255,7 @@ void Environment::GetLazySuccs(int q_id, int sourceStateID,
 
   if (m_param_catalog.m_visualization_params.expansions) {
     source_state->robot_pose().visualize(expansion_color);
-    usleep(10000);
+    usleep(1000);
   }
 
   for (auto mprim : all_mprims) {
@@ -249,16 +286,34 @@ void Environment::GetLazySuccs(int q_id, int sourceStateID,
       successor->printToDebug(MPRIM_LOG);
       ROS_DEBUG_NAMED(SEARCH_LOG, "done");
     }
-    bool valid_successor = (m_cspace_mgr->isValidSuccessorOnlySelf(*successor, t_data) &&
-                          m_cspace_mgr->isValidTransitionStatesOnlySelf(t_data));
-    if (!valid_successor) {
-      continue;
-    }
+
+
+    // If we know that this successor is invalid thorugh previous caching, then
+    // skip it.
     auto true_cost_it = m_true_cost_cache.find(Edge(sourceStateID, successor->id()));
     if (true_cost_it != m_true_cost_cache.end()) {
       if (true_cost_it->second == -1) {
         continue;
       }
+    }
+
+    bool valid_successor = false;
+    const bool is_goal_state = m_goal->isSatisfiedBy(successor);
+    const bool is_near_goal = (m_goal->endeffectorXYDistanceSqr(successor) < kNearGoalThreshSqr); 
+    // cout << "Dist: " << m_goal->endeffectorXYDistanceSqr(successor) << endl;
+    if (is_near_goal) {
+      // If the successor is a goal state, then do full collision cheking as
+      // well.
+      valid_successor = (m_cspace_mgr->isValidSuccessor(*successor, t_data) &&
+                          m_cspace_mgr->isValidTransitionStates(t_data));
+    } else {
+      // Otherwise do only self-collision checking.
+      valid_successor = (m_cspace_mgr->isValidSuccessorOnlySelf(*successor, t_data) &&
+                          m_cspace_mgr->isValidTransitionStatesOnlySelf(t_data));
+    }
+
+    if (!valid_successor) {
+      continue;
     }
 
     m_hash_mgr->save(successor);
@@ -273,19 +328,24 @@ void Environment::GetLazySuccs(int q_id, int sourceStateID,
                mprim->cost(), mprim->motion_type());
       succIDs->push_back(GOAL_STATE);
       key = Edge(sourceStateID, GOAL_STATE);
+      m_t_data_cache.insert(map<Edge, TransitionData>::value_type(key, t_data));
+      // Also cache the true source-child edge before the goal ID hack.
+      m_t_data_cache.insert(map<Edge, TransitionData>::value_type(Edge(sourceStateID, successor->id()), t_data));
     } else {
       succIDs->push_back(successor->id());
       key = Edge(sourceStateID, successor->id());
+      m_t_data_cache.insert(map<Edge, TransitionData>::value_type(key, t_data));
     }
 
-    //        succIDs->push_back(successor->id());
-    //        key = Edge(sourceStateID, successor->id());
     m_edges.insert(map<Edge, MotionPrimitivePtr>::value_type(key, mprim));
 
     // If this transition has already been evaluated, then return the true
     // value.
     if (true_cost_it != m_true_cost_cache.end()) {
       costs->push_back(true_cost_it->second);
+      isTrueCost->push_back(true);
+    } else if (is_near_goal) {
+      costs->push_back(t_data.cost());
       isTrueCost->push_back(true);
     } else {
       costs->push_back(mprim->cost());
@@ -306,9 +366,9 @@ int Environment::GetTrueCost(int parentID, int childID) {
     return it->second;
   }
 
-  TransitionData t_data;
+  TransitionData t_data = m_t_data_cache.at(Edge(parentID, childID));
 
-  vector<MotionPrimitivePtr> small_mprims;
+  // vector<MotionPrimitivePtr> small_mprims;
 
   if (m_edges.find(Edge(parentID, childID)) == m_edges.end()) {
     ROS_ERROR("transition hasn't been found between %d and %d??", parentID,
@@ -316,33 +376,34 @@ int Environment::GetTrueCost(int parentID, int childID) {
     assert(false);
   }
 
-  small_mprims.push_back(m_edges[Edge(parentID, childID)]);
-  PathPostProcessor postprocessor(m_hash_mgr, m_cspace_mgr);
+  // small_mprims.push_back(m_edges[Edge(parentID, childID)]);
+  // PathPostProcessor postprocessor(m_hash_mgr, m_cspace_mgr);
 
   ROS_DEBUG_NAMED(SEARCH_LOG, "evaluating edge (%d %d)", parentID, childID);
   GraphStatePtr source_state = m_hash_mgr->getGraphState(parentID);
-  GraphStatePtr real_next_successor = m_hash_mgr->getGraphState(childID);
-  GraphStatePtr successor;
+  GraphStatePtr successor = m_hash_mgr->getGraphState(childID);
   MotionPrimitivePtr mprim = m_edges.at(Edge(parentID, childID));
 
-  if (!mprim->apply(*source_state, successor, t_data)) {
-    m_true_cost_cache[Edge(parentID, childID)] = -1;
-    return -1;
-  }
+  // We don't need the below if we always do IK even during lazy successor
+  // generation. Instead, we can cache successor and tdata states.
+  // if (!mprim->apply(*source_state, successor, t_data)) {
+  //   m_true_cost_cache[Edge(parentID, childID)] = -1;
+  //   return -1;
+  // }
 
   mprim->printEndCoord();
   mprim->print();
   //source_state->printToInfo(SEARCH_LOG);
   //successor->printToInfo(SEARCH_LOG);
-  successor->id(m_hash_mgr->getStateID(successor));
+  // successor->id(m_hash_mgr->getStateID(successor));
 
   // right before this point, the successor's graph state does not match the
   // stored robot state (because we modified the graph state without calling
   // ik and all that). this call updates the stored robot pose.
-  real_next_successor->robot_pose(successor->robot_pose());
+  // real_next_successor->robot_pose(successor->robot_pose());
 
-  bool matchesEndID = (successor->id() == childID) || (childID == GOAL_STATE);
-  assert(matchesEndID);
+  // bool matchesEndID = (successor->id() == childID) || (childID == GOAL_STATE);
+  // assert(matchesEndID);
 
   bool valid_successor = (m_cspace_mgr->isValidSuccessor(*successor, t_data) &&
                           m_cspace_mgr->isValidTransitionStates(t_data));
@@ -363,6 +424,7 @@ void Environment::GetSuccs(int parent_id, std::vector<int> *succ_ids,
   std::vector<bool> is_true_cost;
   GetLazySuccs(parent_id, succ_ids, costs, &is_true_cost);
   // GetSuccs(parent_id, succ_ids, costs);
+  // is_true_cost.resize(succ_ids->size(), false);
   edge_eval_times->clear();
   edge_eval_times->resize(succ_ids->size(), 0.1);
   // TODO: implement a probability model.
@@ -376,16 +438,20 @@ void Environment::GetSuccs(int parent_id, std::vector<int> *succ_ids,
 
   for (size_t ii = 0; ii < succ_ids->size(); ++ii) {
     GraphStatePtr state = m_hash_mgr->getGraphState(succ_ids->at(ii));
-    // for (auto& heur : (*values)) {
-    //     ROS_DEBUG_NAMED(HEUR_LOG, "%s : %d", heur.first.c_str(), heur.second);
-    // }
+    double prob = probabilities.getIncomingEdgeProbability(state);
 
     // Hack for goal state.
     if (state->id() == GOAL_STATE) {
-      state = m_goal->getSolnState();
+      // state = m_goal->getSolnState();
+      // All transitions to goal are fully-evaluated. So needn't worry about
+      // probabilities.
+      prob = 1.0;
     }
 
-    const double prob = probabilities.getIncomingEdgeProbability(state);
+    if (is_true_cost[ii]) {
+      prob = 1.0;
+    }
+
     // ROS_INFO("Prob for %d:   %f", succ_ids->at(ii), prob);
     edge_probabilities->at(ii) = prob;
   }
@@ -393,6 +459,14 @@ void Environment::GetSuccs(int parent_id, std::vector<int> *succ_ids,
 
 bool Environment::EvaluateEdge(int parent_id, int child_id) {
   const int true_cost = GetTrueCost(parent_id, child_id);
+  if (true_cost < 0 && m_param_catalog.m_visualization_params.expansions) {
+    const GraphStatePtr parent_state = m_hash_mgr->getGraphState(parent_id);
+    parent_state->robot_pose().visualize(255 / 10.0);
+    usleep(1000);
+    const GraphStatePtr child_state = m_hash_mgr->getGraphState(child_id);
+    child_state->robot_pose().visualize(255 / 3.0);
+    usleep(1000);
+  }
   return (true_cost >= 0);
 }
 
@@ -405,6 +479,8 @@ bool Environment::setStartGoal(SearchRequestPtr search_request,
   obj_state.printToInfo(SEARCH_LOG);
 
   m_edges.clear();
+  m_true_cost_cache.clear();
+  m_t_data_cache.clear();
 
   if (!search_request->isValid(m_cspace_mgr)) {
     obj_state.printToInfo(SEARCH_LOG);
@@ -445,6 +521,12 @@ bool Environment::setStartGoal(SearchRequestPtr search_request,
   // This informs the adaptive motions about the goal.
   ArmAdaptiveMotionPrimitive::goal(*m_goal);
   BaseAdaptiveMotionPrimitive::goal(*m_goal);
+  ArmSnapMotionPrimitive::goal(*m_goal);
+  ArmSnapMotionPrimitive::tolerances(
+         search_request->m_params->xyz_tolerance,
+         search_request->m_params->roll_tolerance,
+         search_request->m_params->pitch_tolerance,
+         search_request->m_params->yaw_tolerance);
 
   // informs the heuristic about the goal
   m_heur_mgr->setGoal(*m_goal);
@@ -534,7 +616,7 @@ void Environment::configureQuerySpecificParams(SearchRequestPtr
 vector<FullBodyState> Environment::reconstructPath(vector<int> soln_path) {
   PathPostProcessor postprocessor(m_hash_mgr, m_cspace_mgr);
   std::vector<FullBodyState> final_path = postprocessor.reconstructPath(
-                                            soln_path, *m_goal, m_mprims.getMotionPrims());
+                                            soln_path, *m_goal, m_mprims.getMotionPrims(), m_t_data_cache);
 
   if (m_param_catalog.m_visualization_params.final_path) {
     postprocessor.visualizeFinalPath(final_path);

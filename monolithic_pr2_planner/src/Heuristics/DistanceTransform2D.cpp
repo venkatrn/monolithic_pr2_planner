@@ -61,9 +61,6 @@ void DistanceTransform2D::update2DHeuristicMap(const
 void DistanceTransform2D::loadMap(const std::vector<unsigned char> &data) {
 
   m_obstacle_coordinates.clear();
-  ROS_INFO("Obstacle thresh is %d", costmap_2d::INSCRIBED_INFLATED_OBSTACLE);
-  ROS_INFO("R, C %d %d", m_size_row, m_size_col);
-
   for (unsigned int j = 0; j < m_size_row; j++) {
     for (unsigned int i = 0; i < m_size_col; i++) {
       m_grid[i][j] = (data[j * m_size_col + i]);
@@ -89,8 +86,6 @@ void DistanceTransform2D::loadMap(const std::vector<unsigned char> &data) {
     }
   }
 
-  ROS_INFO("Number of obstacle cells: %d", m_obstacle_coordinates.size());
-
   ROS_DEBUG_NAMED(HEUR_LOG, "[BFS2D] updated grid of size %d %d from the map",
                   m_size_col, m_size_row);
 
@@ -99,7 +94,7 @@ void DistanceTransform2D::loadMap(const std::vector<unsigned char> &data) {
   m_gridsearch->search(m_grid, costmap_2d::LETHAL_OBSTACLE,
                        m_obstacle_coordinates[0].first, m_obstacle_coordinates[0].second,
                        0, 0, SBPL_2DGRIDSEARCH_TERM_CONDITION_ALLCELLS, m_obstacle_coordinates);
-  ROS_INFO("Finished computing distance transform");
+  ROS_INFO("Finished computing distance transform for %d cells", static_cast<int>(m_obstacle_coordinates.size()));
   cv::Mat dist_transform;
   dist_transform.create(m_size_col, m_size_row, CV_64FC1);
 
@@ -206,7 +201,8 @@ void DistanceTransform2D::setGoal(GoalState &goal_state) {
   // ComputeProbabilityHeuristic(1000.0);
   // ComputeProbabilityHeuristic(255.0);
   // ComputeProbabilityHeuristic(100.0);
-  ComputeProbabilityHeuristic(10.0);
+  ComputeProbabilityHeuristic(20.0);
+  // ComputeProbabilityHeuristic(10.0);
   // ComputeProbabilityHeuristic(5.0);
   // ComputeProbabilityHeuristic(2.0);
   // ComputeProbabilityHeuristic(1.0);
@@ -222,7 +218,7 @@ int DistanceTransform2D::getGoalHeuristic(GraphStatePtr state) {
       state->base_y() < 0 || state->base_y() >= int(m_size_row)) {
     ROS_DEBUG_NAMED(HEUR_LOG, "[BFS2D] Out of bounds: %d %d",
                     state->base_x(), state->base_y());
-    return 0.0;
+    return INFINITECOST;
   }
 
   int cost_base = m_gridsearch_prob->getlowerboundoncostfromstart_inmm(state->base_x(),
@@ -234,6 +230,7 @@ int DistanceTransform2D::getGoalHeuristic(GraphStatePtr state) {
   }
 
   return std::max(cost_base, cost_endeff);
+  // return static_cast<int>(0.45 * cost_base + 0.05 * cost_endeff);
 }
 
 double DistanceTransform2D::getIncomingEdgeProbability(GraphStatePtr state)
@@ -246,6 +243,13 @@ const {
       state->base_y() < 0 || state->base_y() >= int(m_size_row)) {
     ROS_DEBUG_NAMED(HEUR_LOG, "[BFS2D] Out of bounds: %d %d",
                     state->base_x(), state->base_y());
+    return 0.0;
+  }
+
+  if (obj_state.x() < 0 || obj_state.x() >= int(m_size_col) ||
+      obj_state.y() < 0 || obj_state.y() >= int(m_size_row)) {
+    ROS_DEBUG_NAMED(HEUR_LOG, "[BFS2D] Out of bounds: %d %d",
+                    obj_state.x(), obj_state.y());
     return 0.0;
   }
 

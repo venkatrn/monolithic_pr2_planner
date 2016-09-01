@@ -195,9 +195,15 @@ void ArmAdaptiveMotionPrimitive::computeIntermSteps(const GraphState& source_sta
                         const GraphState& successor, 
                         TransitionData& t_data){
     std::vector<RobotState> interp_steps;
-    RobotState::workspaceInterpolate(source_state.robot_pose(), 
+    bool interpolate = RobotState::workspaceInterpolate(source_state.robot_pose(), 
                                      successor.robot_pose(),
                                      &interp_steps);
+    if (!interpolate) {
+        interp_steps.clear();
+        RobotState::jointSpaceInterpolate(source_state.robot_pose(),
+                                            successor.robot_pose(),
+                                            &interp_steps);
+    }
 
     ROS_DEBUG_NAMED(MPRIM_LOG, "interpolation for arm AMP");
     for (auto robot_state: interp_steps){

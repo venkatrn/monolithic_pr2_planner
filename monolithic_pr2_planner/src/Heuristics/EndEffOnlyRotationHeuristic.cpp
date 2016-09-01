@@ -11,9 +11,9 @@ EndEffOnlyRotationHeuristic::EndEffOnlyRotationHeuristic(){
 }
 
 int EndEffOnlyRotationHeuristic::getGoalHeuristic(GraphStatePtr state){
-    if (m_goal.withinXYZTol(state)){
-        return 0;
-    }
+    // if (m_goal.withinXYZTol(state)){
+    //     return 0;
+    // }
     double roll, pitch, yaw;
     m_desired_orientation.GetRPY(roll, pitch, yaw);
     ContObjectState robot_obj(state->getObjectStateRelMapFromState());
@@ -24,6 +24,17 @@ int EndEffOnlyRotationHeuristic::getGoalHeuristic(GraphStatePtr state){
                           std::fabs(shortest_angular_distance(robot_obj.yaw(),
                                                             yaw));
     int rot_heur = static_cast<int>(1000*angular_dist);
+    
+
+    // ContObjectState cont_current_obj(state->getObjectStateRelMapFromState());
+    //  tf::Quaternion quat_state(yaw, pitch, roll);
+    //  tf::Quaternion quat_goal(cont_current_obj.yaw(),cont_current_obj.pitch(),cont_current_obj.roll());
+    //
+    // double diff = quat_state.angleShortestPath(quat_goal);
+    //
+    //
+    // double quat_diff = quat_state.angleShortestPath(quat_goal);
+    // int rot_heur = static_cast<int>(1000*quat_diff);
 
     return rot_heur;
 }

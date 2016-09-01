@@ -6,6 +6,7 @@
 enum MenuItems {PLAN_ARA = 1,
                 PLAN_LAZY_ARA,
                 PLAN_ESP,
+                PLAN_MHA,
                 INTERRUPT,
                 WRITE_TO_FILE
                };
@@ -16,6 +17,7 @@ using monolithic_pr2_planner_node::GetMobileArmPlan;
 constexpr int PLANNER_ARA = GetMobileArmPlan::Request::PLANNER_ARA;
 constexpr int PLANNER_LAZY_ARA = GetMobileArmPlan::Request::PLANNER_LAZY_ARA;
 constexpr int PLANNER_ESP = GetMobileArmPlan::Request::PLANNER_ESP;
+constexpr int PLANNER_MHA = GetMobileArmPlan::Request::PLANNER_MHA;
 
 int main(int argc, char **argv) {
   ros::init(argc, argv, "control_planner");
@@ -46,7 +48,8 @@ void ControlPlanner::processFeedback(const
       visualization_msgs::InteractiveMarkerFeedback::MENU_SELECT) {
     if (feedback->menu_entry_id == MenuItems::PLAN_ESP ||
         feedback->menu_entry_id == MenuItems::PLAN_LAZY_ARA ||
-        feedback->menu_entry_id == MenuItems::PLAN_ARA)
+        feedback->menu_entry_id == MenuItems::PLAN_ARA ||
+        feedback->menu_entry_id == MenuItems::PLAN_MHA)
 
     {
       visualization_msgs::InteractiveMarker start_base_marker;
@@ -88,6 +91,11 @@ void ControlPlanner::processFeedback(const
       } else if (feedback->menu_entry_id == MenuItems::PLAN_ESP) {
         req.planner_type = PLANNER_ESP;
         req.use_lazy = true;
+      } else if (feedback->menu_entry_id == MenuItems::PLAN_MHA) {
+        req.planner_type = PLANNER_MHA;
+        req.meta_search_type = mha_planner::MetaSearchType::DTS;
+        req.mha_type = mha_planner::MHAType::FOCAL;
+        req.use_lazy = true;
       }
 
       //position of the wrist in the object's frame
@@ -114,8 +122,8 @@ void ControlPlanner::processFeedback(const
       req.planning_mode = monolithic_pr2_planner::PlanningModes::RIGHT_ARM_MOBILE;
 
       //planner parameters
-      req.initial_eps = 10.0;
-      req.final_eps = 10.0;
+      req.initial_eps = 100.0;
+      req.final_eps = 100.0;
       req.dec_eps = 0.2;
       printf("plan\n");
 
@@ -647,6 +655,8 @@ ControlPlanner::ControlPlanner() {
   menu_handler.insert("Plan Lazy ARA",
                       boost::bind(&ControlPlanner::processFeedback, this, _1));
   menu_handler.insert("Plan ESP",
+                      boost::bind(&ControlPlanner::processFeedback, this, _1));
+  menu_handler.insert("Plan MHA",
                       boost::bind(&ControlPlanner::processFeedback, this, _1));
   menu_handler.insert("Interrupt planner",
                       boost::bind(&ControlPlanner::processFeedback, this, _1));

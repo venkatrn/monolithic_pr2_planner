@@ -146,7 +146,6 @@ inline void SBPL2DGridSearch::initializeSearchState2D(SBPL_2DGridSearchState* st
 void SBPL2DGridSearch::destroy()
 {
     // destroy the OPEN list:
-    printf("Destroying OPEN\n");
     if (OPEN2D_ != NULL) {
         OPEN2D_->makeemptyheap();
         delete OPEN2D_;
@@ -163,7 +162,6 @@ void SBPL2DGridSearch::destroy()
     //     searchStates2D_ = NULL;
     // }
 
-    printf("Destroying OPENBLIST\n");
     if (OPEN2DBLIST_ != NULL) {
         delete OPEN2DBLIST_;
         OPEN2DBLIST_ = NULL;

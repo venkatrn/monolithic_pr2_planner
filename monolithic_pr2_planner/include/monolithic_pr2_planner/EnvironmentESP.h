@@ -1,6 +1,7 @@
 #pragma once
 #include <ros/ros.h>
 #include <esp_planner/esp_environment.h>
+#include <sbpl/headers.h>
 #include <monolithic_pr2_planner/ParameterCatalog.h>
 #include <monolithic_pr2_planner/CollisionSpaceMgr.h>
 #include <monolithic_pr2_planner/HashManager.h>
@@ -23,7 +24,7 @@ namespace monolithic_pr2_planner {
      * information.
      */
     typedef std::pair<int, int> Edge;
-    class Environment : public EnvironmentESP {
+    class Environment : public virtual EnvironmentESP, public virtual EnvironmentMHA {
         public:
             Environment(ros::NodeHandle nh);
             CSpaceMgrPtr getCollisionSpace(){ return m_cspace_mgr; };
@@ -58,6 +59,9 @@ namespace monolithic_pr2_planner {
             int GetGoalHeuristic(int state_id) override;
             bool EvaluateEdge(int parent_id, int child_id) override;
 
+            int NumHeuristics();
+            using EnvironmentMHA::StateID2IndexMapping;
+
 
         protected:
             bool setStartGoal(SearchRequestPtr search_request, 
@@ -79,6 +83,7 @@ namespace monolithic_pr2_planner {
             int m_planner_type;
             bool m_use_new_heuristics;
             std::map<Edge, int> m_true_cost_cache;
+            std::map<Edge, TransitionData> m_t_data_cache;
 
         // SBPL interface stuff
         public:

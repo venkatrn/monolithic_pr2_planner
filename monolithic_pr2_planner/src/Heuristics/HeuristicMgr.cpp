@@ -428,11 +428,11 @@ void HeuristicMgr::setGoal(GoalState& goal_state){
             int(i));
         m_heuristics[i]->setGoal(goal_state);
     }
-    // {
-    //     // Create additional heuristics for MHA planner
-    //     int cost_multiplier = 1;
-    //     initializeMHAHeuristics(cost_multiplier);
-    // }
+    {
+        // Create additional heuristics for MHA planner
+        int cost_multiplier = 1;
+        initializeMHAHeuristics(cost_multiplier);
+    }
 }
 
 void HeuristicMgr::getGoalHeuristic(const GraphStatePtr& state, std::unique_ptr<stringintmap>& values)
@@ -647,27 +647,29 @@ void HeuristicMgr::initializeMHAHeuristics(const int cost_multiplier){
     }
 
     clock_t new_heur_t0 = clock();
-    vector<sbpl_2Dpt_t> footprint;
-    double halfwidth = 0.39;
-    double halflength = 0.39;
-    sbpl_2Dpt_t pt_m;
-    pt_m.x = -halflength;
-    pt_m.y = -halfwidth;
-    footprint.push_back(pt_m);
-    pt_m.x = -halflength;
-    pt_m.y = halfwidth;
-    footprint.push_back(pt_m);
-    pt_m.x = halflength;
-    pt_m.y = halfwidth;
-    footprint.push_back(pt_m);
-    pt_m.x = halflength;
-    pt_m.y = -halfwidth;
-    footprint.push_back(pt_m);
-    for(int i=0; i<m_resolution_params.num_base_angles; i++){
-      ROS_ERROR("init bfsRotFoot %d",i);
-      double theta = DiscTheta2Cont(i, m_resolution_params.num_base_angles);
-      addBFS2DRotFootprint("bfsRotFoot" + std::to_string(i), 1, theta, footprint, radius_around_goal+0.15);
-    }
+
+    // We are not using BFSRot heuristics
+    // vector<sbpl_2Dpt_t> footprint;
+    // double halfwidth = 0.39;
+    // double halflength = 0.39;
+    // sbpl_2Dpt_t pt_m;
+    // pt_m.x = -halflength;
+    // pt_m.y = -halfwidth;
+    // footprint.push_back(pt_m);
+    // pt_m.x = -halflength;
+    // pt_m.y = halfwidth;
+    // footprint.push_back(pt_m);
+    // pt_m.x = halflength;
+    // pt_m.y = halfwidth;
+    // footprint.push_back(pt_m);
+    // pt_m.x = halflength;
+    // pt_m.y = -halfwidth;
+    // footprint.push_back(pt_m);
+    // for(int i=0; i<m_resolution_params.num_base_angles; i++){
+    //   ROS_ERROR("init bfsRotFoot %d",i);
+    //   double theta = DiscTheta2Cont(i, m_resolution_params.num_base_angles);
+    //   addBFS2DRotFootprint("bfsRotFoot" + std::to_string(i), 1, theta, footprint, radius_around_goal+0.15);
+    // }
 
     ROS_ERROR("init arm_angles_folded");
     ContBaseState dummy_base;

@@ -24,11 +24,13 @@ bool MotionPrimitivesMgr::loadMPrims(const MotionPrimitiveParams& params){
     ArmTuckMotionPrimitivePtr tuckAMP = make_shared<ArmTuckMotionPrimitive>();
     ArmUntuckMotionPrimitivePtr untuckAMP = make_shared<ArmUntuckMotionPrimitive>(true);
     ArmUntuckMotionPrimitivePtr untuckPartialAMP = make_shared<ArmUntuckMotionPrimitive>(false);
+    ArmSnapMotionPrimitivePtr armSnapAMP = make_shared<ArmSnapMotionPrimitive>();
 
     MPrimList arm_amps;
     arm_amps.push_back(armAMP);
     arm_amps.push_back(tuckAMP);
-    arm_amps.push_back(untuckAMP);
+    arm_amps.push_back(untuckPartialAMP);
+    arm_amps.push_back(armSnapAMP);
 
     MPrimList base_amps;
     int NEG_TURN = -1;

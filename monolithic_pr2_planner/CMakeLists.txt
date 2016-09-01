@@ -82,6 +82,7 @@ add_library(monolithic_pr2_planner src/StateReps/RobotState.cpp
                                             src/MotionPrimitives/ArmAdaptiveMotionPrimitive.cpp
                                             src/MotionPrimitives/ArmTuckMotionPrimitive.cpp
                                             src/MotionPrimitives/ArmUntuckMotionPrimitive.cpp
+                                            src/MotionPrimitives/ArmSnapMotionPrimitive.cpp
                                             src/MotionPrimitives/TorsoMotionPrimitive.cpp
 
                                             src/Heuristics/DistanceTransform2D.cpp

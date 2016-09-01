@@ -6,6 +6,7 @@
 #include <monolithic_pr2_planner/MotionPrimitives/ArmAdaptiveMotionPrimitive.h>
 #include <monolithic_pr2_planner/MotionPrimitives/ArmTuckMotionPrimitive.h>
 #include <monolithic_pr2_planner/MotionPrimitives/ArmUntuckMotionPrimitive.h>
+#include <monolithic_pr2_planner/MotionPrimitives/ArmSnapMotionPrimitive.h>
 #include <monolithic_pr2_planner/MotionPrimitives/ArmMotionPrimitive.h>
 #include <monolithic_pr2_planner/MotionPrimitives/BaseMotionPrimitive.h>
 #include <monolithic_pr2_planner/MotionPrimitives/TorsoMotionPrimitive.h>

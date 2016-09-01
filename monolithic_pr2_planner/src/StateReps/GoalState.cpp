@@ -22,6 +22,16 @@ GoalState::GoalState(DiscObjectState obj_goal, double xyz_tol,
     m_tolerances[Tolerances::YAW] = yaw_tol;
 }
 
+double GoalState::endeffectorXYDistanceSqr(const GraphStatePtr& graph_state){
+    ContObjectState obj = ContObjectState(graph_state->getObjectStateRelMap());
+    ContObjectState cont_goal = ContObjectState(m_goal_state);
+
+    double dX = abs(obj.x() - cont_goal.x());
+    double dY = abs(obj.y() - cont_goal.y());
+    double dZ = abs(obj.z() - cont_goal.z());
+    return dX * dX + dY * dY + dZ * dZ;
+}
+
 bool GoalState::withinXYZTol(const GraphStatePtr& graph_state){
     // not sure why there's a .005 here. ask ben
     ContObjectState c_tol(m_tolerances[Tolerances::XYZ]-.005, 
@@ -89,17 +99,19 @@ bool GoalState::isSatisfiedBy(const GraphStatePtr& graph_state){
                            abs(m_goal_state.yaw()-obj.yaw()) < d_tol.yaw());
 
     bool within_quat_tol;
-     tf::Quaternion quat_state(m_goal_state.yaw(),m_goal_state.pitch(),m_goal_state.roll());
-     tf::Quaternion quat_goal(obj.yaw(),obj.pitch(),obj.roll());
+    ContObjectState cont_goal_obj(m_goal_state);
+    ContObjectState cont_current_obj(obj);
+     tf::Quaternion quat_state(cont_goal_obj.yaw(),cont_goal_obj.pitch(),cont_goal_obj.roll());
+     tf::Quaternion quat_goal(cont_current_obj.yaw(),cont_current_obj.pitch(),cont_current_obj.roll());
 
     double diff = quat_state.angleShortestPath(quat_goal);
 
-    within_quat_tol = fabs(diff) < d_tol.roll();      //should be another parameter d_tol.quat()
+    within_quat_tol = fabs(diff) < m_tolerances[Tolerances::YAW];      //should be another parameter d_tol.quat()
 
-    // if (within_xyz_tol && within_quat_tol){
+    if (within_xyz_tol && within_quat_tol){
     // Revert to RPY tolerance checking; quaternion tolerance needs another
     // look.
-    if (within_xyz_tol && within_rpy_tol){
+    // if (within_xyz_tol && within_rpy_tol){
         return true;
     } else {
         return false;

@@ -145,12 +145,11 @@ bool CollisionSpaceMgr::isValidSuccessorOnlySelf(const GraphState& successor,
     if (onlyBaseMotion){
       return true;
     } else if (onlyArmMotion){
-        bool isvalid = m_cspace->checkSelfCollision(l_arm, r_arm, body_pose, 
-                                                 verbose, dist, debug);
+        bool isvalid = m_cspace->checkRobotAgainstRobot(l_arm, r_arm, body_pose, 
+                                                 verbose, dist);
         return isvalid;
     } else if (t_data.motion_type() == MPrim_Types::TORSO){
-        return m_cspace->checkSelfCollision(l_arm, r_arm, body_pose, verbose, 
-                                          dist, debug);
+        return m_cspace->checkRobotAgainstRobot(l_arm, r_arm, body_pose, verbose, dist);
     } else {
         throw std::invalid_argument("not a valid motion primitive type");
     }
@@ -240,14 +239,14 @@ bool CollisionSpaceMgr::isValidTransitionStatesOnlySelf(const TransitionData& t_
             ROS_DEBUG_NAMED(CSPACE_LOG, "skipping the intermediate points for arms because there are none.");
         } else if (t_data.motion_type() == MPrim_Types::ARM_ADAPTIVE) {
             BodyPose body_pose = robot_state.getContBaseState().body_pose();
-            if(!m_cspace->checkSelfCollision(l_arm, r_arm, body_pose, 
-                                                 verbose, dist, debug)) {
+            if(!m_cspace->checkRobotAgainstRobot(l_arm, r_arm, body_pose, 
+                                                 verbose, dist)) {
                 return false;
             }
         } else if (t_data.motion_type() == MPrim_Types::TORSO) {
             BodyPose body_pose = robot_state.getContBaseState().body_pose();
-            if (!m_cspace->checkSelfCollision(l_arm, r_arm, body_pose, verbose, 
-                                                      dist, debug)) {
+            if (!m_cspace->checkRobotAgainstRobot(l_arm, r_arm, body_pose, verbose, 
+                                                      dist)) {
                 return false;
             }
         } else {

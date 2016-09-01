@@ -55,6 +55,33 @@ vector<FullBodyState> PathPostProcessor::reconstructPath(vector<int> soln_path,
     return final_path;
 }
 
+vector<FullBodyState> PathPostProcessor::reconstructPath(vector<int> soln_path,
+                                                         GoalState& goal_state,
+                                                         vector<MotionPrimitivePtr> mprims, const std::map<Edge, TransitionData>& t_data_cache){
+    double temptime = clock();
+    vector<TransitionData> transition_states;
+    // the last state in the soln path return by the SBPL planner will always be
+    // the goal state ID. Since this doesn't actually correspond to a real state
+    // in the heap, we have to look it up.
+    soln_path[soln_path.size()-1] = goal_state.getSolnState()->id();
+    ROS_DEBUG_NAMED(SEARCH_LOG, "setting goal state id to %d", 
+                                 goal_state.getSolnState()->id());
+    for (size_t i=0; i < soln_path.size()-1; i++){
+        auto it = t_data_cache.find(Edge(soln_path[i], soln_path[i+1]));
+        bool success = (it != t_data_cache.end());
+        if (success){
+            TransitionData best_transition  = it->second;
+            transition_states.push_back(best_transition);
+        } else {
+            ROS_ERROR("T data not found in cache!");
+        }
+    }
+    std::vector<FullBodyState> final_path = shortcutPath(soln_path,
+        transition_states, goal_state);
+    // ROS_INFO("Shortcutting took %.3f", (clock()-temptime)/(double)CLOCKS_PER_SEC);
+    return final_path;
+}
+
 
 std::vector<FullBodyState> PathPostProcessor::shortcutPath(const vector<int>&
     state_ids, const vector<TransitionData>& transition_states, GoalState& goal_state){
@@ -268,6 +295,10 @@ bool PathPostProcessor::findBestTransition(int start_id, int end_id,
             best_transition.successor_id(successor->id());
         }
 
+    }
+    if (best_cost == 1000000) {
+      ROS_ERROR("Could not find a transition between %d and %d\n", 
+          start_id, end_id);
     }
     return (best_cost != 1000000);
 }

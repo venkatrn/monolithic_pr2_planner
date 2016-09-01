@@ -190,19 +190,25 @@ bool GraphState::applyMPrim(const GraphStateMotion& mprim){
     if (ik_success){
         m_robot_pose = *new_robot_pose;
         updateStateFromRobotState();
+        // Different RPY's can lead to same orientation/quaternion. So we'll
+        // simply set the new object's RPY to the old one.
+        m_coord[GraphStateElement::OBJ_ROLL] = obj_state.roll();
+        m_coord[GraphStateElement::OBJ_PITCH] = obj_state.pitch();
+        m_coord[GraphStateElement::OBJ_YAW] = obj_state.yaw();
+        
 
         DiscObjectState obj = m_robot_pose.getObjectStateRelBody();
 
         assert(obj_state.x() == obj.x());
         assert(obj_state.y() == obj.y());
         assert(obj_state.z() == obj.z());
-        if (obj_state.roll() != obj.roll()){
-            ROS_ERROR("angles don't match %d %d", obj_state.roll(), obj.roll());
-            return false;
-        }
-        assert(obj_state.roll() == obj.roll());
-        assert(obj_state.pitch() == obj.pitch());
-        assert(obj_state.yaw() == obj.yaw());
+        // if (obj_state.roll() != obj.roll()){
+        //     ROS_ERROR("angles don't match %d %d", obj_state.roll(), obj.roll());
+        //     return false;
+        // }
+        // assert(obj_state.roll() == obj.roll());
+        // assert(obj_state.pitch() == obj.pitch());
+        // assert(obj_state.yaw() == obj.yaw());
         assert(r_fa == m_robot_pose.right_arm().getDiscFreeAngle());
         assert(l_fa == m_robot_pose.left_arm().getDiscFreeAngle());
     }

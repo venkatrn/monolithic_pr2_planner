@@ -158,6 +158,8 @@ void ParameterCatalog::parseArmMPrimFileHeader(const std::string& mprim_file,
         params.num_rpy_angles = static_cast<int>(360 / dvalue + 0.5);
         ROS_DEBUG_NAMED(CONFIG_LOG, "obj_num_rpy_angles set to %d", 
                         params.num_rpy_angles);
+        ROS_ERROR("obj_num_rpy_angles set to %d", 
+                        params.num_rpy_angles);
     } 
 
     getNextLine(file, ss, line);

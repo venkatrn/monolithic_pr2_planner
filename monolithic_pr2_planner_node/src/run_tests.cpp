@@ -1,8 +1,15 @@
-#include<ros/ros.h>
-#include<monolithic_pr2_planner_node/GetMobileArmPlan.h>
+#include <ros/ros.h>
+#include <monolithic_pr2_planner_node/GetMobileArmPlan.h>
 #include <monolithic_pr2_planner/Constants.h>
 #include <monolithic_pr2_planner_node/fbp_stat_writer.h>
 #include <sbpl/planners/mha_planner.h>
+
+using monolithic_pr2_planner_node::GetMobileArmPlan;
+
+constexpr int PLANNER_ARA = GetMobileArmPlan::Request::PLANNER_ARA;
+constexpr int PLANNER_LAZY_ARA = GetMobileArmPlan::Request::PLANNER_LAZY_ARA;
+constexpr int PLANNER_ESP = GetMobileArmPlan::Request::PLANNER_ESP;
+constexpr int PLANNER_MHA = GetMobileArmPlan::Request::PLANNER_MHA;
 
 void printUsage(){
   printf("usage: runTests [imha | smha] [rr | ma | dts] path_to_test_file.yaml\n");
@@ -10,15 +17,15 @@ void printUsage(){
 }
 
 int main(int argc, char** argv){
-  if(argc != 4 && argc != 3){
+  if(argc < 2){
     printUsage();
     return 1;
   }
   ros::init(argc,argv,"run_tests");
   ros::NodeHandle nh;
 
-  monolithic_pr2_planner_node::GetMobileArmPlan::Request req;
-  monolithic_pr2_planner_node::GetMobileArmPlan::Response res;
+  GetMobileArmPlan::Request req;
+  GetMobileArmPlan::Response res;
 
   bool gotFilename = false;
   bool gotPlannerType = false;
@@ -26,68 +33,37 @@ int main(int argc, char** argv){
   req.use_ompl = false;
   char* filename;
   // Defaults
-  req.mha_type = mha_planner::MHAType::ORIGINAL;
+  req.planner_type = PLANNER_ARA;
+  req.mha_type = mha_planner::MHAType::FOCAL;
   req.planner_type = mha_planner::PlannerType::SMHA;
   req.meta_search_type = mha_planner::MetaSearchType::ROUND_ROBIN;
 
   for(int i=1; i<argc; i++){
-    if(strcmp(argv[i],"imha")==0){
-      req.planner_type = mha_planner::PlannerType::IMHA;
-      gotPlannerType = true;
-    }
-    else if(strcmp(argv[i],"smha")==0){
-      req.planner_type = mha_planner::PlannerType::SMHA;
-      gotPlannerType = true;
-    }
-    else if(strcmp(argv[i],"rr")==0){
-      req.meta_search_type = mha_planner::MetaSearchType::ROUND_ROBIN;
-      req.mha_type = mha_planner::MHAType::ORIGINAL;
-      gotMetaType = true;
-    }
-    else if(strcmp(argv[i],"ma")==0){
-      req.meta_search_type = mha_planner::MetaSearchType::META_A_STAR;
-      req.mha_type = mha_planner::MHAType::ORIGINAL;
-      gotMetaType = true;
-    }
-    else if(strcmp(argv[i],"dts")==0){
-      req.meta_search_type = mha_planner::MetaSearchType::DTS;
-      req.mha_type = mha_planner::MHAType::ORIGINAL;
-      gotMetaType = true;
-    }
-    else if(strcmp(argv[i],"original_mha")==0){
-      req.meta_search_type = mha_planner::MetaSearchType::DTS;
-      req.mha_type = mha_planner::MHAType::ORIGINAL;
-      gotMetaType = true;
-    }
-    else if(strcmp(argv[i],"mha_plus")==0){
-      req.meta_search_type = mha_planner::MetaSearchType::DTS;
-      req.mha_type = mha_planner::MHAType::PLUS;
-      gotMetaType = true;
-    }
-    else if(strcmp(argv[i],"focal_mha")==0){
-      req.meta_search_type = mha_planner::MetaSearchType::DTS;
-      req.mha_type = mha_planner::MHAType::FOCAL;
-      gotMetaType = true;
-    }
-    else if(strcmp(argv[i],"unconstrained_mha")==0){
-      req.meta_search_type = mha_planner::MetaSearchType::DTS;
-      req.mha_type = mha_planner::MHAType::UNCONSTRAINED;
-      gotMetaType = true;
-    }
-    else if(strcmp(argv[i],"gbfs")==0){
-      req.meta_search_type = mha_planner::MetaSearchType::ROUND_ROBIN;
-      req.mha_type = mha_planner::MHAType::GBFS;
-      gotMetaType = true;
-    }
-    else if(strcmp(argv[i],"rrt")==0){
+    if(strcmp(argv[i],"rrt")==0){
       req.use_ompl = true;
       gotMetaType = true;
+    }
+    else if(strcmp(argv[i],"ara")==0){
+      req.planner_type = PLANNER_ARA;
+    }
+    else if(strcmp(argv[i],"lazy_ara")==0){
+      req.planner_type = PLANNER_LAZY_ARA;
+    }
+    else if(strcmp(argv[i],"esp")==0){
+      req.planner_type = PLANNER_ESP;
+    }
+    else if(strcmp(argv[i],"mha")==0){
+      req.planner_type = PLANNER_MHA;
+      req.meta_search_type = mha_planner::MetaSearchType::DTS;
+      req.mha_type = mha_planner::MHAType::FOCAL;
     }
     else{
       filename = argv[i];
       gotFilename = true;
     }
   }
+  gotMetaType = true;
+  gotPlannerType = true;
 
   if(!gotFilename || !( (gotPlannerType && gotMetaType) || req.use_ompl)){
     printUsage();
@@ -118,7 +94,7 @@ int main(int argc, char** argv){
   req.roll_tolerance = .1;
   req.pitch_tolerance = .1;
   req.yaw_tolerance = .1;
-  req.allocated_planning_time = 100;
+  req.allocated_planning_time = 60;
   req.planning_mode = monolithic_pr2_planner::PlanningModes::RIGHT_ARM_MOBILE;
 
   req.body_start.resize(4);

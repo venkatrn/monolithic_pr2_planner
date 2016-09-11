@@ -25,9 +25,8 @@ bool ArmUntuckMotionPrimitive::apply(const GraphState& source_state,
 
     t_data.motion_type(motion_type());
     t_data.cost(cost());
-    computeIntermSteps(source_state, *successor, t_data);
+    return computeIntermSteps(source_state, *successor, t_data);
 
-    return true;
 }
 
 void ArmUntuckMotionPrimitive::print() const {
@@ -39,7 +38,7 @@ void ArmUntuckMotionPrimitive::computeCost(const MotionPrimitiveParams& params){
     m_cost = 1;
 }
 
-void ArmUntuckMotionPrimitive::computeIntermSteps(const GraphState& source_state, 
+bool ArmUntuckMotionPrimitive::computeIntermSteps(const GraphState& source_state, 
                         const GraphState& successor, 
                         TransitionData& t_data){
     std::vector<RobotState> interp_steps;
@@ -63,4 +62,5 @@ void ArmUntuckMotionPrimitive::computeIntermSteps(const GraphState& source_state
     ContBaseState c_base = source_state.robot_pose().base_state();
     std::vector<ContBaseState> cont_base_states(interp_steps.size(), c_base);
     t_data.cont_base_interm_steps(cont_base_states);
+    return true;
 }

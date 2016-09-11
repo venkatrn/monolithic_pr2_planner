@@ -2,13 +2,16 @@
 
 rm -r /tmp/planning_stats/*
 
+# for i in {0..9}; do
 for i in {0..9}; do
   #the planner expects the environment to stored at tableObstacles.yaml
   #so move the numbered one to this path
   cp experiments/tableObstacles$i.yaml experiments/tableObstacles.yaml
 
   #for method in unconstrained_mha focal_mha mha_plus original_mha; do
-  for method in esp; do
+  # for method in esp mha; do
+  for method in esp mha; do
+  # for method in esp mha ara; do
   #for method in gbfs; do
 
     #create necessary folders
@@ -17,10 +20,9 @@ for i in {0..9}; do
 
     #start the planner
     echo "starting planner";
-    screen -dmS planner bash -c "source /opt/ros/indigo/setup.bash; source
-    ~/fbp_workspace/devel/setup.bash; roslaunch monolithic_pr2_planner_node run_experiments.launch; exec bash" 
+    screen -dmS planner bash -c "source ~/.bashrc; roslaunch monolithic_pr2_planner_node run_experiments.launch; exec bash" 
     #a hack because the planner takes a while to start
-    sleep 60 #50
+    sleep 70 #50
 
     #send the tests
     echo "sending goals from environment $i using the $method method"
@@ -29,7 +31,7 @@ for i in {0..9}; do
       rosrun monolithic_pr2_planner_node runTests experiments/fbp_tests$i.yaml $method
     else
         echo "Calling planner"
-      rosrun monolithic_pr2_planner_node runTests experiments/fbp_tests$i.yaml smha $method
+      rosrun monolithic_pr2_planner_node runTests experiments/fbp_tests$i.yaml $method
     fi
 
     #when the trials are done, kill the planner

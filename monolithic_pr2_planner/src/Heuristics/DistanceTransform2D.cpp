@@ -182,6 +182,7 @@ void DistanceTransform2D::ComputeProbabilityHeuristic(double prob_multiplier) {
   cv::normalize(prob_heuristic, colored_mat, 0, 255, cv::NORM_MINMAX,
                 CV_8UC1);
   cv::applyColorMap(colored_mat, colored_mat, cv::COLORMAP_JET);
+  colored_mat.setTo(cv::Vec3b(0, 0, 0), prob_heuristic == 0);
   std::string name = "/tmp/prob_heuristic" + std::to_string(prob_multiplier) + ".png";
   cv::imwrite(name.c_str(), colored_mat);
   ROS_INFO("Printed prob heuristic");
@@ -229,7 +230,26 @@ int DistanceTransform2D::getGoalHeuristic(GraphStatePtr state) {
     return INFINITECOST;
   }
 
+  
+  if (cost_base == INFINITECOST) {
+    return INFINITECOST;
+  } 
+
+  if (cost_base == 0 || cost_endeff == 0) {
+    return 0;
+  } 
+
   return std::max(cost_base, cost_endeff);
+  
+  // ContObjectState cont_obj_state(obj_state);
+  // ContBaseState cont_base = state->robot_pose().base_state();
+
+  // double bx = cont_base.x();
+  // double by = cont_base.y();
+  // double ox = cont_obj_state.x();
+  // double oy = cont_obj_state.y();
+  // double dist = (bx - ox) * (bx - ox) + (by - oy) * (by - oy);
+  // return static_cast<int>(cost_base * (dist + 1));
   // return static_cast<int>(0.45 * cost_base + 0.05 * cost_endeff);
 }
 

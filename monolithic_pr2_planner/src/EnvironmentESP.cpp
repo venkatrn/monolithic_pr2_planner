@@ -115,7 +115,7 @@ int Environment::GetGoalHeuristic(int heuristic_id, int stateID) {
 
   double w_bfsRot = 0.2;
   double w_armFold = 0.2;
-  int inad_arm_heur = static_cast<int>(0.1*(*values).at("endeff_rot_goal") + 0.1*ad_endeff);
+  int inad_arm_heur = static_cast<int>(0.1*(*values).at("endeff_rot_goal") + 0.3*ad_endeff);
   // if (ad_base > 1000) //TODO: check multiplier
   // { 
   //   inad_arm_heur = (*values).at("arm_angles_folded");
@@ -300,8 +300,18 @@ void Environment::GetLazySuccs(int q_id, int sourceStateID,
     bool valid_successor = false;
     const bool is_goal_state = m_goal->isSatisfiedBy(successor);
     const bool is_near_goal = (m_goal->endeffectorXYDistanceSqr(successor) < kNearGoalThreshSqr); 
+
+    
+    const auto& successor_base = successor->robot_pose().getContBaseState();
+    const auto& start_base = m_start->robot_pose().getContBaseState();
+    const double dX = successor_base.x() - start_base.x();
+    const double dY = successor_base.y() - start_base.y();
+    const double start_dist_sqr = dX * dX + dY *dY;
+    const bool is_near_start = (start_dist_sqr < kNearGoalThreshSqr); 
+
+
     // cout << "Dist: " << m_goal->endeffectorXYDistanceSqr(successor) << endl;
-    if (is_near_goal) {
+    if (is_near_goal || is_near_start) {
       // If the successor is a goal state, then do full collision cheking as
       // well.
       valid_successor = (m_cspace_mgr->isValidSuccessor(*successor, t_data) &&
@@ -344,7 +354,7 @@ void Environment::GetLazySuccs(int q_id, int sourceStateID,
     if (true_cost_it != m_true_cost_cache.end()) {
       costs->push_back(true_cost_it->second);
       isTrueCost->push_back(true);
-    } else if (is_near_goal) {
+    } else if (is_near_goal || is_near_start) {
       costs->push_back(t_data.cost());
       isTrueCost->push_back(true);
     } else {
@@ -494,6 +504,7 @@ bool Environment::setStartGoal(SearchRequestPtr search_request,
   //std::cin.get();
 
   GraphStatePtr start_graph_state = make_shared<GraphState>(start_pose);
+  m_start = start_graph_state;
   m_hash_mgr->save(start_graph_state);
   start_id = start_graph_state->id();
   assert(m_hash_mgr->getGraphState(start_graph_state->id()) ==

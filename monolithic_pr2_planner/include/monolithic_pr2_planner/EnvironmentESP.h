@@ -76,6 +76,7 @@ namespace monolithic_pr2_planner {
             HashManagerPtr m_hash_mgr;
             ros::NodeHandle m_nodehandle;
             GoalStatePtr m_goal;
+            GraphStatePtr m_start;
             bool m_using_lazy;
             MotionPrimitivesMgr m_mprims;
             HeuristicMgrPtr m_heur_mgr;

@@ -18,13 +18,13 @@ bool ArmTuckMotionPrimitive::apply(const GraphState& source_state,
 
     t_data.motion_type(motion_type());
     t_data.cost(cost());
-    computeIntermSteps(source_state, *successor, t_data);
+    return computeIntermSteps(source_state, *successor, t_data);
 
-    return true;
+    // return true;
 }
 
 
-void ArmTuckMotionPrimitive::computeIntermSteps(const GraphState& source_state, 
+bool ArmTuckMotionPrimitive::computeIntermSteps(const GraphState& source_state, 
                         const GraphState& successor, 
                         TransitionData& t_data){
     std::vector<RobotState> interp_steps;
@@ -48,6 +48,7 @@ void ArmTuckMotionPrimitive::computeIntermSteps(const GraphState& source_state,
     ContBaseState c_base = source_state.robot_pose().base_state();
     std::vector<ContBaseState> cont_base_states(interp_steps.size(), c_base);
     t_data.cont_base_interm_steps(cont_base_states);
+    return true;
 }
 
 
